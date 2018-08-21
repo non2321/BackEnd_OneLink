@@ -1,0 +1,52 @@
+{
+  "name": "api-back-end",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "form-data": "^2.3.2",
+    "node-fetch": "^2.2.0",
+    "react": "15.5.4",
+    "react-dom": "15.5.4",
+    "react-scripts": "1.0.14",
+    "uuid": "^3.2.1"
+  },
+  "scripts": {
+    "server": "nodemon ./server/app.js"
+  },
+  "devDependencies": {
+    "activedirectory": "^0.7.2",
+    "babel-core": "^6.26.0",
+    "babel-loader": "^7.1.2",
+    "babel-preset-env": "^1.6.0",
+    "babel-preset-es2015": "^6.24.1",
+    "babel-preset-stage-2": "^6.24.1",
+    "bootstrap": "^3.3.7",
+    "browser-detect": "^0.2.26",
+    "copy-webpack-plugin": "^4.5.1",
+    "css-loader": "^0.28.7",
+    "detect-browser": "^2.4.0",
+    "history": "^4.7.2",
+    "html-loader": "^0.5.5",
+    "html-webpack-plugin": "^2.30.1",
+    "imports-loader": "^0.8.0",
+    "jquery": "^3.3.1",
+    "jquery-color": "^1.0.0",
+    "jquery-ui": "^1.12.1",
+    "jquery-ui-npm": "^1.12.0",
+    "jquery-validation": "^1.17.0",
+    "jsonwebtoken": "^8.2.1",
+    "jwt-decode": "^2.2.0",
+    "location": "0.0.1",
+    "mssql": "^4.1.0",
+    "react-bootstrap": "0.31.0",
+    "request-ip": "^2.0.2",
+    "rimraf": "^2.6.2",
+    "script-loader": "^0.7.2",
+    "smartadmin-plugins": "1.0.20",
+    "style-loader": "^0.19.0",
+    "url-loader": "^0.6.2",
+    "webpack": "^3.7.1",
+    "webpack-dev-middleware": "^1.12.0",
+    "webpack-dev-server": "^2.9.1"
+  }
+}
