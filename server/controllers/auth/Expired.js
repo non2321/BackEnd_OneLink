@@ -19,7 +19,7 @@ async function Expired(req, res, data) {
         const authData = (decoded != null) ? decoded.jwtdata : null;
         
         // Current DateTime
-        const datetime = new Date().toLocaleString();
+        const datetime = new Date().toLocaleString().replace(',','');
         //Browser
         const browser = JSON.stringify(browserdetect(req.headers['user-agent']));
      

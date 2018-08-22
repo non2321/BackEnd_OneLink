@@ -25,7 +25,7 @@ async function GenTokenTableau(req, res, reqBody, authData) {
     let module_name = ''
     try {
         // Current DateTime
-        const datetime = new Date().toLocaleString()
+        const datetime = new Date().toLocaleString().replace(',','')
         //Browser
         const browser = JSON.stringify(browserdetect(req.headers['user-agent']))
 

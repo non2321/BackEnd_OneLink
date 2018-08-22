@@ -14,7 +14,7 @@ module.exports.Logout = Logout;
 async function Logout(req, res, reqBody, authData)  {
     try {
         // Current DateTime
-        const datetime = new Date().toLocaleString();
+        const datetime = new Date().toLocaleString().replace(',','');
         //Browser
         const browser = JSON.stringify(browserdetect(req.headers['user-agent']));
 

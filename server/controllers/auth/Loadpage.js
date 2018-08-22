@@ -33,7 +33,7 @@ async function Loadpage(req, res, reqBody, authData) {
         const modify = await menu.GetModifyData(prm)
 
         // Current DateTime
-        const datetime = new Date().toLocaleString();
+        const datetime = new Date().toLocaleString().replace(',','');
         //Browser
         const browser = JSON.stringify(browserdetect(req.headers['user-agent']));
 

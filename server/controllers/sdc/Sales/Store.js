@@ -115,7 +115,9 @@ async function AddStoreConfig(req, res, reqBody, authData) {
 
     try {
         // Current DateTime
-        const datetime = new Date().toLocaleString();
+        const datetime = new Date().toLocaleString().replace(',','');
+        console.log(new Date())
+        console.log(datetime)
         //Browser
         const browser = JSON.stringify(browserdetect(req.headers['user-agent']));
 
@@ -258,7 +260,7 @@ async function EditStoreConfig(req, res, reqBody, authData) {
 
     try {
         // Current DateTime
-        const datetime = new Date().toLocaleString();
+        const datetime = new Date().toLocaleString().replace(',','');
         //Browser
         const browser = JSON.stringify(browserdetect(req.headers['user-agent']));
 
@@ -400,7 +402,7 @@ async function DeleteStoreConfig(req, res, reqBody, authData) {
 
     try {
         // Current DateTime
-        const datetime = new Date().toLocaleString();
+        const datetime = new Date().toLocaleString().replace(',','');
         //Browser
         const browser = JSON.stringify(browserdetect(req.headers['user-agent']));
 

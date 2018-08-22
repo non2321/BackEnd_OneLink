@@ -50,7 +50,7 @@ async function AddCompany(req, res, reqBody, authData) {
 
     try {
         // Current DateTime
-        const datetime = new Date().toLocaleString();
+        const datetime = new Date().toLocaleString().replace(',','');
         //Browser
         const browser = JSON.stringify(browserdetect(req.headers['user-agent']));
 
@@ -252,7 +252,7 @@ async function EditCompany(req, res, reqBody, authData) {
 
     try {
         // Current DateTime
-        const datetime = new Date().toLocaleString();
+        const datetime = new Date().toLocaleString().replace(',','');
         //Browser
         const browser = JSON.stringify(browserdetect(req.headers['user-agent']));
 
@@ -449,7 +449,7 @@ async function DeleteCompany(req, res, reqBody, authData) {
 
     try {
         // Current DateTime
-        const datetime = new Date().toLocaleString();
+        const datetime = new Date().toLocaleString().replace(',','');
         //Browser
         const browser = JSON.stringify(browserdetect(req.headers['user-agent']));
 
@@ -602,7 +602,7 @@ async function AddCompanyAccount(req, res, reqBody, authData) {
 
     try {
         // Current DateTime
-        const datetime = new Date().toLocaleString();
+        const datetime = new Date().toLocaleString().replace(',','');
         //Browser
         const browser = JSON.stringify(browserdetect(req.headers['user-agent']));
 
@@ -807,7 +807,7 @@ async function EditCompanyAccount(req, res, reqBody, authData) {
 
     try {
         // Current DateTime
-        const datetime = new Date().toLocaleString();
+        const datetime = new Date().toLocaleString().replace(',','');
         //Browser
         const browser = JSON.stringify(browserdetect(req.headers['user-agent']));
 

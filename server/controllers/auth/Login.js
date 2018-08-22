@@ -43,7 +43,7 @@ async function Login(req, res, reqBody) {
         const ip = req.clientIp
 
         // Current DateTime
-        const datetime = new Date().toLocaleString();
+        const datetime = new Date().toLocaleString().replace(',','');
         //Browser
         const browser = JSON.stringify(browserdetect(req.headers['user-agent']));
         //Replace Format AD User
