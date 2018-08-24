@@ -50,8 +50,7 @@ async function StampInventory(req, res, reqBody, authData) {
         }
 
         if (stamp == 'option1') {
-            const StampCount = await Inventory.CountStampInventory(prmcount)
-
+            const StampCount = await Inventory.CountStampInventory(prmcount)          
             const prmLog = {
                 audit_trail_date: datetime,
                 module: module_name,
@@ -68,7 +67,7 @@ async function StampInventory(req, res, reqBody, authData) {
             let AuditTrail = await log.InsertLogAuditTrail(prmLog)
 
             if (StampCount.rowsAffected > 0) {
-
+                
                 if (AuditTrail.uid) {
                     //Add Log Audit
                     const tempdata = {

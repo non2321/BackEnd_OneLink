@@ -351,28 +351,27 @@ async function SearchTempStampInventory(prm) {
 }
 
 async function CountStampInventory(prm) {
-    let res = {}
+    let res = {}    
     try {
         let querysql = `SELECT * 
                 FROM   ACC_STAMPCLOSEDATA 
                 WHERE  START_DATE >= @input_datefrom
                     AND END_DATE <= @input_dateto
                     AND STATUS = 'A' 
-                    AND TABLE_NAME = '@input_post_date_type'`
-
+                    AND TABLE_NAME = @input_post_date_type`      
         const input_datefrom = 'input_datefrom'
         const input_dateto = 'input_dateto'
         const input_post_date_type = 'input_post_date_type'
 
         let pool = await sql.connect(settings.dbConfig)
         let result = await pool.request()
-            .input(input_datefrom, sql.NVarChar, prm.datefrom.trim())
-            .input(input_dateto, sql.NVarChar, prm.dateto.trim())
-            .input(input_post_date_type, sql.NVarChar, prm.post_date_type.trim())
-            .query(querysql)
+            .input(input_datefrom, sql.NVarChar, prm.datefrom)
+            .input(input_dateto, sql.NVarChar, prm.dateto)
+            .input(input_post_date_type, sql.NVarChar, prm.post_date_type)
+            .query(querysql)           
         res = result
 
-    } catch (err) {
+    } catch (err) {        
     } finally {
         await sql.close()
     }
