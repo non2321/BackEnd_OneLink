@@ -33,6 +33,7 @@ const StampCloseDailyFins = require('./controllers/sdc/Sales/StampCloseDailyFins
 
 //--Inventory
 const AccountCodeForInventory = require('./controllers/sdc/Inventory/AccountCodeForInventory')
+const StampInventory = require('./controllers/sdc/Inventory/StampInventory')
 
 //Report
 //--SDC
@@ -646,6 +647,24 @@ app.put('/api/accountcodeforinventory', verifyToken, (req, res) => {
     } else {
       const user = authData.jwtdata
       AccountCodeForInventory.Edit(req, res, req.body, user);
+    }
+  })
+})
+
+//Stemp Inventory
+app.post('/api/stampinventory', verifyToken, (req, res) => {
+  console.log('stampinventory')
+  jwt.verify(req.token, settings.secretkey, (err, authData) => {
+    if (err) {
+      const data = {
+        status: status_type.Unauthorized,
+        Code: msg_type.CodeW0002,
+      }
+      authExpired.Expired(req, res, data)
+
+    } else {
+      const user = authData.jwtdata
+      StampInventory.StampInventory(req, res, req.body, user);
     }
   })
 })

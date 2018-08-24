@@ -5,6 +5,7 @@ const settings = require('../../../settings')
 const digit = require('../digit_number')
 const utils = require('../../models/Services/utils')
 
+//Account Code For Inventory
 module.exports.GetAccountCodeForInventory = GetAccountCodeForInventory
 module.exports.GetDropDownGrpBy = GetDropDownGrpBy
 module.exports.GetDropDownCatCode = GetDropDownCatCode
@@ -13,6 +14,12 @@ module.exports.CheckDuplicateAccountCodeForInventory = CheckDuplicateAccountCode
 module.exports.InsertAccountCodeForInventory = InsertAccountCodeForInventory
 module.exports.GetTempAccountCodeForInventory = GetTempAccountCodeForInventory
 module.exports.EditAccountCodeForInventory = EditAccountCodeForInventory
+
+//Stamp Inventory
+module.exports.SearchTempStampInventory = SearchTempStampInventory
+module.exports.CountStampInventory = CountStampInventory
+module.exports.AddStampInventory = AddStampInventory
+module.exports.EditStampInventory = EditStampInventory
 
 async function GetAccountCodeForInventory() {
     let res = {}
@@ -315,5 +322,149 @@ async function EditAccountCodeForInventory(prm) {
     }
     return await res
 }
+
+async function SearchTempStampInventory(prm) {
+    let res = {}
+    try {
+        let querysql = ` SELECT * FROM ACC_STAMPCLOSEDATA 
+            WHERE TABLE_NAME = @input_post_date_type
+                AND START_DATE = @input_datefrom
+                AND END_DATE = @input_dateto
+                AND STATUS = 'A' `
+
+        const input_post_date_type = 'input_post_date_type'
+        const input_datefrom = 'input_datefrom'
+        const input_dateto = 'input_dateto'
+        let pool = await sql.connect(settings.dbConfig)
+        let result = await pool.request()
+            .input(input_post_date_type, sql.NVarChar, prm.post_date_type)
+            .input(input_datefrom, sql.NVarChar, prm.datefrom)
+            .input(input_dateto, sql.NVarChar, prm.dateto)
+            .query(querysql)
+        res = result
+    } catch (err) {
+
+    } finally {
+        await sql.close()
+    }
+    return await res
+}
+
+async function CountStampInventory(prm) {
+    let res = {}
+    try {
+        let querysql = `SELECT * 
+                FROM   ACC_STAMPCLOSEDATA 
+                WHERE  START_DATE >= @input_datefrom
+                    AND END_DATE <= @input_dateto
+                    AND STATUS = 'A' 
+                    AND TABLE_NAME = '@input_post_date_type'`
+
+        const input_datefrom = 'input_datefrom'
+        const input_dateto = 'input_dateto'
+        const input_post_date_type = 'input_post_date_type'
+
+        let pool = await sql.connect(settings.dbConfig)
+        let result = await pool.request()
+            .input(input_datefrom, sql.NVarChar, prm.datefrom.trim())
+            .input(input_dateto, sql.NVarChar, prm.dateto.trim())
+            .input(input_post_date_type, sql.NVarChar, prm.post_date_type.trim())
+            .query(querysql)
+        res = result
+
+    } catch (err) {
+    } finally {
+        await sql.close()
+    }
+    return await res
+}
+
+async function AddStampInventory(prm) {
+    let res
+    try {
+        if (prm.owner && prm.datefrom && prm.post_date_type && prm.dateto && prm.create_date && prm.create_by) {
+            const querysql = `INSERT INTO ACC_STAMPCLOSEDATA
+                    (TABLE_NAME, 
+                        OWNER, 
+                        START_DATE, 
+                        END_DATE,
+                        CREATE_DATE, 
+                        CREATE_BY,
+                        STATUS) 
+            VALUES  (@input_post_date_type, 
+                    @input_user_id, 
+                    @input_datefrom, 
+                    @input_dateto, 
+                    @input_create_date, 
+                    @input_create_by,
+                    'A') `
+
+            const input_post_date_type = 'input_post_date_type'
+            const input_user_id = 'input_user_id'
+            const input_datefrom = 'input_datefrom'
+            const input_dateto = 'input_dateto'
+            const input_create_date = 'input_create_date'
+            const input_create_by = 'input_create_by'
+
+            let pool = await sql.connect(settings.dbConfig)
+            let result = await pool.request()
+                .input(input_post_date_type, sql.NVarChar, prm.post_date_type)
+                .input(input_user_id, sql.NVarChar, prm.owner)
+                .input(input_datefrom, sql.NVarChar, prm.datefrom)
+                .input(input_dateto, sql.NVarChar, prm.dateto)
+                .input(input_create_date, sql.NVarChar, prm.create_date)
+                .input(input_create_by, sql.NVarChar, prm.create_by)
+                .query(querysql)
+            if (result !== undefined) {
+                if (result.rowsAffected > 0) res = true
+            }
+        }
+    } catch (err) {
+    } finally {
+        await sql.close()
+    }
+    return await res
+}
+
+async function EditStampInventory(prm) {
+    let res
+    try {
+        if (prm.datefrom && prm.post_date_type && prm.dateto && prm.update_date && prm.update_by) {
+
+            const querysql = `UPDATE ACC_STAMPCLOSEDATA 
+            SET    STATUS = 'I', 
+                   UPDATE_DATE = @input_update_date, 
+                   UPDATE_BY = @input_update_by                  
+            WHERE  START_DATE >= @input_datefrom 
+                   AND END_DATE <= @input_dateto 
+                   AND STATUS = 'A' 
+                   AND TABLE_NAME = @input_post_date_type `
+
+            const input_datefrom = 'input_datefrom'
+            const input_dateto = 'input_dateto'
+            const input_update_date = 'input_update_date'
+            const input_update_by = 'input_update_by'
+            const input_post_date_type = 'input_post_date_type'
+
+            let pool = await sql.connect(settings.dbConfig)
+            let result = await pool.request()
+                .input(input_datefrom, sql.NVarChar, prm.datefrom)
+                .input(input_dateto, sql.NVarChar, prm.dateto)
+                .input(input_update_date, sql.NVarChar, prm.update_date)
+                .input(input_update_by, sql.NVarChar, prm.update_by)
+                .input(input_post_date_type, sql.NVarChar, prm.post_date_type)
+                .query(querysql)
+            if (result !== undefined) {
+                if (result.rowsAffected > 0) res = true
+            }
+        }
+    } catch (err) {
+    } finally {
+        await sql.close()
+    }
+    return await res
+}
+
+
 
 
