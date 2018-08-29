@@ -33,6 +33,8 @@ const StampCloseDailyFins = require('./controllers/sdc/Sales/StampCloseDailyFins
 
 //--Inventory
 const AccountCodeForInventory = require('./controllers/sdc/Inventory/AccountCodeForInventory')
+const Receipts = require('./controllers/sdc/Inventory/Receipts')
+const ImportToJDE = require('./controllers/sdc/Inventory/ImportToJDE')
 const StampInventory = require('./controllers/sdc/Inventory/StampInventory')
 
 //Report
@@ -77,16 +79,16 @@ app.post('/api/login', (req, res) => {
 //Logout Page
 app.post('/api/logout', verifyToken, (req, res) => {
   console.log('logout')
-  
+
   jwt.verify(req.token, settings.secretkey, (err, authData) => {
-    if (err) {      
+    if (err) {
       const data = {
         status: status_type.Unauthorized,
         Code: msg_type.CodeW0002,
       }
       authExpired.Expired(req, res, data)
 
-    } else {      
+    } else {
       const user = authData.jwtdata
       authLogout.Logout(req, res, req.body, user);
     }
@@ -97,7 +99,7 @@ app.post('/api/logout', verifyToken, (req, res) => {
 app.post('/api/loadpage', verifyToken, (req, res) => {
   console.log('loadpage')
   jwt.verify(req.token, settings.secretkey, (err, authData) => {
-    if (err) {     
+    if (err) {
       const data = {
         status: status_type.Unauthorized,
         Code: msg_type.CodeW0002,
@@ -105,7 +107,7 @@ app.post('/api/loadpage', verifyToken, (req, res) => {
       authExpired.Expired(req, res, data)
 
     } else {
-      const user = authData.jwtdata      
+      const user = authData.jwtdata
       authLoadpage.Loadpage(req, res, req.body, user);
     }
   })
@@ -557,9 +559,7 @@ app.post('/api/stampclosedailyfins', verifyToken, (req, res) => {
 })
 
 
-
 //Report
-
 //Get AllStore / ForDropDown
 app.get('/api/report/storeall', (req, res) => {
   console.log('getallstore')
@@ -584,7 +584,7 @@ app.post('/api/report/gentokentableau', verifyToken, (req, res) => {
       authExpired.Expired(req, res, data)
 
     } else {
-      const user = authData.jwtdata     
+      const user = authData.jwtdata
       GenToken.GenTokenTableau(req, res, req.body, user);
     }
   })
@@ -668,6 +668,25 @@ app.post('/api/stampinventory', verifyToken, (req, res) => {
     }
   })
 })
+
+//Get Import To JDE /DropDown Period
+app.get('/api/importtojde/ddlperiod', (req, res) => {
+  console.log('importtojde/ddlperiod')
+  ImportToJDE.GetDropDownPeriod(req, res, req.body)
+})
+
+//Get Receipts
+app.get('/api/receipts/:store/:datefrom/:dateto', (req, res) => {
+  console.log('receipts')  
+  Receipts.GetDataTable(req, res, req.body)    
+})
+
+//Get Receipts
+app.get('/api/receipts/:store/:datefrom/:dateto/:invoice*', (req, res) => {
+  console.log('receipts') 
+  Receipts.GetDataTable(req, res, req.body)    
+})
+
 
 // Serve the files on port.
 app.listen(settings.webPort, function () {

@@ -37,15 +37,15 @@ async function GenTokenTableau(req, res, reqBody, authData) {
             module_name = screen.MODULE
         }
 
-        // const form = new FormData();
-        // form.append('username', settings.tableautoken.username)       
-        // const response = await fetch(settings.tableautoken.path, { method: 'POST', body: form })
-        // const tableautoken = await response.text()
+        const form = new FormData();
+        form.append('username', settings.tableautoken.username)       
+        const response = await fetch(settings.tableautoken.path, { method: 'POST', body: form })
+        const tableautoken = await response.text()
            
        
         //Mock api gen token tableau 192.168.151.113:3000
-        const response = await fetch('http://192.168.151.113:3000/api/test', { method: 'GET'})
-        const tableautoken = await response.text()
+        // const response = await fetch('http://192.168.151.113:3000/api/test', { method: 'GET'})
+        // const tableautoken = await response.text()
        
         if (tableautoken.length > 5) {           
             const prmLog = {

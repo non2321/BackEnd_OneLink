@@ -15,6 +15,13 @@ module.exports.InsertAccountCodeForInventory = InsertAccountCodeForInventory
 module.exports.GetTempAccountCodeForInventory = GetTempAccountCodeForInventory
 module.exports.EditAccountCodeForInventory = EditAccountCodeForInventory
 
+//Receipts
+module.exports.GetReceipts = GetReceipts
+
+
+//Import To JDE
+module.exports.GetDropDownPeriod = GetDropDownPeriod
+
 //Stamp Inventory
 module.exports.SearchTempStampInventory = SearchTempStampInventory
 module.exports.CountStampInventory = CountStampInventory
@@ -323,6 +330,79 @@ async function EditAccountCodeForInventory(prm) {
     return await res
 }
 
+async function GetReceipts(prm) {
+    let res
+    try {
+        const querysql = `SELECT S.STORE_ID, 
+                                S.STORE_NAME, 
+                                N.STOCK_NUM, 
+                                R.RECEIPT_DATE, 
+                                CONVERT(VARCHAR, R.RECEIPT_DATE, 103) RECEIPT_DATE_DESC, 
+                                R.RECEIVED, 
+                                R.INVOICE_AMOUNT, 
+                                R.INVOICE, 
+                                V.VENDOR, 
+                                V.VENDOR_NAME, 
+                                N.UNITS_DESC, 
+                                I.INV_ITEM_DESC, 
+                                I.INV_ITEM, 
+                                R.RECEIPT, 
+                                R.S_RECEIVED, 
+                                R.S_INVOICE_AMOUNT 
+                        FROM   ACC_RECEIPTS R
+                                INNER JOIN PH_STORES S
+                                        ON R.STORE = S.STORE_ID 
+                                INNER JOIN ACC_M_STOCK_NUMS N
+                                        ON R.INV_ITEM = N.INV_ITEM 
+                                INNER JOIN ACC_M_VENDORS V
+                                        ON R.VENDOR = V.VENDOR 
+                                INNER JOIN ACC_INV_ITEMS I
+                                        ON R.INV_ITEM = I.INV_ITEM 
+                        WHERE  R.STORE = @input_store      
+                                        AND R.RECEIPT_DATE BETWEEN @input_datefrom AND @input_dateto 
+                               ${(prm.invoice != undefined) ? `AND R.INVOICE LIKE @input_invoice +'%' `  : ''}          
+                        ORDER  BY R.RECEIPT_DATE, 
+                                R.INVOICE, 
+                                N.STOCK_NUM ASC`     
+       
+        const input_store = 'input_store'
+        const input_datefrom = 'input_datefrom'
+        const input_dateto = 'input_dateto'
+        const input_invoice = 'input_invoice'
+
+        let pool = await sql.connect(settings.dbConfig)
+       
+        let result = await pool.request()
+        await result.input(input_store, sql.NVarChar, prm.store)
+        await result.input(input_datefrom, sql.NVarChar, prm.datefrom)
+        await result.input(input_dateto, sql.NVarChar, prm.dateto)
+        if (prm.invoice != undefined) await result.input(input_invoice, sql.NVarChar, prm.invoice)
+        res = await result.query(querysql)     
+    } catch (err) {
+    } finally {
+        await sql.close()
+    }
+    return res
+}
+
+async function GetDropDownPeriod() {
+    let res = {}
+    try {
+        let querysql = `SELECT DISTINCT PERIOD_ID, 
+                Format(PE_DATE, 'dd/MM/yyyy') AS Expr1, 
+                YEAR_ID 
+        FROM ACC_PERIODS`
+
+        let pool = await sql.connect(settings.dbConfig)
+        let result = await pool.request().query(querysql)
+        res = result
+    } catch (err) {
+    } finally {
+        await sql.close()
+    }
+    return await res
+}
+
 async function SearchTempStampInventory(prm) {
     let res = {}
     try {
@@ -351,14 +431,14 @@ async function SearchTempStampInventory(prm) {
 }
 
 async function CountStampInventory(prm) {
-    let res = {}    
+    let res = {}
     try {
         let querysql = `SELECT * 
                 FROM   ACC_STAMPCLOSEDATA 
                 WHERE  START_DATE >= @input_datefrom
                     AND END_DATE <= @input_dateto
                     AND STATUS = 'A' 
-                    AND TABLE_NAME = @input_post_date_type`      
+                    AND TABLE_NAME = @input_post_date_type`
         const input_datefrom = 'input_datefrom'
         const input_dateto = 'input_dateto'
         const input_post_date_type = 'input_post_date_type'
@@ -368,10 +448,10 @@ async function CountStampInventory(prm) {
             .input(input_datefrom, sql.NVarChar, prm.datefrom)
             .input(input_dateto, sql.NVarChar, prm.dateto)
             .input(input_post_date_type, sql.NVarChar, prm.post_date_type)
-            .query(querysql)           
+            .query(querysql)
         res = result
 
-    } catch (err) {        
+    } catch (err) {
     } finally {
         await sql.close()
     }
