@@ -33,6 +33,7 @@ const StampCloseDailyFins = require('./controllers/sdc/Sales/StampCloseDailyFins
 
 //--Inventory
 const AccountCodeForInventory = require('./controllers/sdc/Inventory/AccountCodeForInventory')
+const EndingInventory = require('./controllers/sdc/Inventory/EndingInventory')
 const Receipts = require('./controllers/sdc/Inventory/Receipts')
 const ImportToJDE = require('./controllers/sdc/Inventory/ImportToJDE')
 const StampInventory = require('./controllers/sdc/Inventory/StampInventory')
@@ -686,6 +687,19 @@ app.get('/api/receipts/:store/:datefrom/:dateto/:invoice*', (req, res) => {
   console.log('receipts') 
   Receipts.GetDataTable(req, res, req.body)    
 })
+
+//Get Ending Inventory Period
+app.get('/api/endinginventory/getperiod/:year/:month', (req, res) => {
+  console.log('endinginventory/getperiod')  
+  EndingInventory.GetPeriod(req, res, req.body)    
+})
+
+//Get Ending Inventory
+app.get('/api/endinginventory/:stamp/:store/:diff/:period', (req, res) => {
+  console.log('get_endinginventory')  
+  EndingInventory.GetDataTable(req, res, req.body)    
+})
+
 
 
 // Serve the files on port.

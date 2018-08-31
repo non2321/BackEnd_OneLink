@@ -15,6 +15,10 @@ module.exports.InsertAccountCodeForInventory = InsertAccountCodeForInventory
 module.exports.GetTempAccountCodeForInventory = GetTempAccountCodeForInventory
 module.exports.EditAccountCodeForInventory = EditAccountCodeForInventory
 
+//Ending Inventory
+module.exports.GetEndingInventory = GetEndingInventory
+module.exports.GetEndingInventoryPeriod = GetEndingInventoryPeriod
+
 //Receipts
 module.exports.GetReceipts = GetReceipts
 
@@ -330,6 +334,155 @@ async function EditAccountCodeForInventory(prm) {
     return await res
 }
 
+async function GetEndingInventory(prm) {
+    let res = {}
+    try {
+        if (prm.stamp == 'option1') {
+            let querysql = `SELECT A.STORE_ID, 
+                                    A.store_name, 
+                                    Isnull(Sum(A.acc), 0) + Isnull(Sum(B.acc), 0) AS ACC, 
+                                    Isnull(Sum(A.str), 0) + Isnull(Sum(B.str), 0) AS STR 
+                            FROM   (SELECT STORE_ID, 
+                                            store_name, 
+                                            0 AS ACC, 
+                                            0 AS STR 
+                                    FROM   PH_STORES 
+                                    WHERE  stores_status = 'A' 
+                                            AND cfm_store = 'Y' 
+                                            AND STORE_ID = @input_store) A 
+                                    LEFT OUTER JOIN (SELECT p.store, 
+                                                            Sum(P.p_ending_inv)   AS ACC, 
+                                                            Sum(P.s_p_ending_inv) AS STR 
+                                                    FROM   ACC_PERIODIC_INV p 
+                                                            INNER JOIN ACC_INV_ITEMS i 
+                                                                    ON p.inv_item = i.inv_item 
+                                                            INNER JOIN ACC_M_STOCK_NUMS n 
+                                                                    ON p.inv_item = n.inv_item 
+                                                            INNER JOIN PH_STORES s 
+                                                                    ON p.store = s.STORE_ID 
+                                                            INNER JOIN ACC_M_INV_ITEM_CLASSES c 
+                                                                    ON i.inv_item_class = c.inv_item_class 
+                                                            INNER JOIN ACC_PERIODS r 
+                                                                    ON p.period_id = r.period_id 
+                                                    WHERE  r.year_id >= 2014 
+                                                            AND p.period_id = @input_period 
+                                                            AND p.store = @input_store 
+                                                    GROUP  BY p.store) B 
+                                                ON A.STORE_ID = B.store 
+                            GROUP  BY A.STORE_ID, 
+                                    A.store_name 
+                            HAVING ( Isnull(Sum(A.str), 0) + Isnull(Sum(B.str), 0) = 0 ) `
+
+            const input_store = 'input_store'
+            const input_period = 'input_period'
+            let pool = await sql.connect(settings.dbConfig)
+            let result = await pool.request()
+                .input(input_store, sql.NVarChar, prm.store)
+                .input(input_period, sql.NVarChar, prm.period)
+                .query(querysql)
+            res = result
+        } else if (prm.stamp == 'option2') {
+            let querysql = `SELECT a.inv_item, 
+                                        b.store, 
+                                        b.store_name, 
+                                        b.period_id, 
+                                        Isnull(a.p_ending_inv, 0)                               AS p_ending_inv, 
+                                        Isnull(a.s_p_ending_inv, 0)                             AS s_p_ending_inv , 
+                                        a.inv_item_desc, 
+                                        a.stock_num, 
+                                        a.inv_item_class, 
+                                        a.uom, 
+                                        a.class, 
+                                        Isnull(a.p_ending_inv, 0) - Isnull(a.s_p_ending_inv, 0) AS diff 
+                                FROM   (SELECT p.inv_item, 
+                                                p.store, 
+                                                s.store_name, 
+                                                p.period_id, 
+                                                p.p_ending_inv, 
+                                                p.s_p_ending_inv, 
+                                                i.inv_item_desc, 
+                                                n.stock_num, 
+                                                i.inv_item_class, 
+                                                i.count_desc       AS uom, 
+                                                c.inv_item_cl_desc AS Class, 
+                                                r.year_id 
+                                        FROM   ACC_PERIODIC_INV p 
+                                                INNER JOIN ACC_INV_ITEMS i 
+                                                        ON p.inv_item = i.inv_item 
+                                                INNER JOIN ACC_M_STOCK_NUMS n 
+                                                        ON p.inv_item = n.inv_item 
+                                                INNER JOIN PH_STORES s 
+                                                        ON p.store = s.STORE_ID 
+                                                INNER JOIN ACC_M_INV_ITEM_CLASSES c 
+                                                        ON i.inv_item_class = c.inv_item_class 
+                                                INNER JOIN ACC_PERIODS r 
+                                                        ON p.period_id = r.period_id 
+                                        WHERE  r.year_id >= 2014) a 
+                                        RIGHT OUTER JOIN (SELECT d.store, 
+                                                                d.financial_code, 
+                                                                p.period_id, 
+                                                                s.store_name, 
+                                                                Sum(d.daily_fin) AS Expr1 
+                                                        FROM   ACC_DAILY_FINS d 
+                                                                INNER JOIN PH_STORES s 
+                                                                        ON d.store = s.STORE_ID 
+                                                                CROSS JOIN ACC_PERIODS p 
+                                                        WHERE  d.financial_date BETWEEN p.pb_date AND p.pe_date 
+                                                        GROUP  BY d.store, 
+                                                                    d.financial_code, 
+                                                                    p.period_id, 
+                                                                    s.store_name 
+                                                        HAVING d.financial_code = 1 
+                                                                AND Sum(d.daily_fin) <> 0) b 
+                                                    ON a.store = b.store 
+                                                        AND a.period_id = b.period_id 
+                                WHERE  b.period_id = @input_period
+                                        AND b.store = @input_store 
+                                        AND (Isnull(a.p_ending_inv, 0) - Isnull(a.s_p_ending_inv, 0)) <> @input_diff
+                                ORDER  BY b.store, 
+                                        a.stock_num `
+
+            const input_store = 'input_store'
+            const input_diff = 'input_diff'
+            const input_period = 'input_period'
+            let pool = await sql.connect(settings.dbConfig)
+            let result = await pool.request()
+                .input(input_store, sql.NVarChar, prm.store)
+                .input(input_diff, sql.NVarChar, prm.diff)
+                .input(input_period, sql.NVarChar, prm.period)
+                .query(querysql)
+            res = result
+        }
+    } catch (err) {
+    } finally {
+        await sql.close()
+    }
+    return await res
+}
+
+async function GetEndingInventoryPeriod(prm) {
+    let res = {}
+    try {
+        let querysql = `SELECT PERIOD_ID  
+                    FROM [PHCDB_DEV].[dbo].[ACC_PERIODS] 
+                    WHERE MONTH(PE_DATE) = @input_month AND YEAR(PE_DATE) = @input_year `
+
+        const input_month = 'input_month'
+        const input_year = 'input_year'
+
+        let pool = await sql.connect(settings.dbConfig)
+        let result = await pool.request()
+            .input(input_month, sql.NVarChar, prm.month)
+            .input(input_year, sql.NVarChar, prm.year)
+            .query(querysql)
+        res = result
+    } catch (err) {
+    } finally {
+        await sql.close()
+    }
+    return await res
+}
+
 async function GetReceipts(prm) {
     let res
     try {
@@ -360,24 +513,24 @@ async function GetReceipts(prm) {
                                         ON R.INV_ITEM = I.INV_ITEM 
                         WHERE  R.STORE = @input_store      
                                         AND R.RECEIPT_DATE BETWEEN @input_datefrom AND @input_dateto 
-                               ${(prm.invoice != undefined) ? `AND R.INVOICE LIKE @input_invoice +'%' `  : ''}          
+                               ${(prm.invoice != undefined) ? `AND R.INVOICE LIKE @input_invoice +'%' ` : ''}          
                         ORDER  BY R.RECEIPT_DATE, 
                                 R.INVOICE, 
-                                N.STOCK_NUM ASC`     
-       
+                                N.STOCK_NUM ASC`
+
         const input_store = 'input_store'
         const input_datefrom = 'input_datefrom'
         const input_dateto = 'input_dateto'
         const input_invoice = 'input_invoice'
 
         let pool = await sql.connect(settings.dbConfig)
-       
+
         let result = await pool.request()
         await result.input(input_store, sql.NVarChar, prm.store)
         await result.input(input_datefrom, sql.NVarChar, prm.datefrom)
         await result.input(input_dateto, sql.NVarChar, prm.dateto)
         if (prm.invoice != undefined) await result.input(input_invoice, sql.NVarChar, prm.invoice)
-        res = await result.query(querysql)     
+        res = await result.query(querysql)
     } catch (err) {
     } finally {
         await sql.close()
