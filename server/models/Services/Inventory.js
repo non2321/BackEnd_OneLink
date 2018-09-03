@@ -22,6 +22,8 @@ module.exports.GetEndingInventoryPeriod = GetEndingInventoryPeriod
 //Receipts
 module.exports.GetReceipts = GetReceipts
 
+//Transfer Inventory
+module.exports.GetTransferInventory = GetTransferInventory
 
 //Import To JDE
 module.exports.GetDropDownPeriod = GetDropDownPeriod
@@ -538,6 +540,52 @@ async function GetReceipts(prm) {
     return res
 }
 
+async function GetTransferInventory(prm) {
+    let res = {}
+    try {
+        let querysql = `SELECT N.STOCK_NUM, 
+                                    I.INV_ITEM_DESC, 
+                                    ${(prm.stamp == 'option1') ? `CAST(O.DESTINATION AS VARCHAR) + ' - '+ S.STORE_NAME AS DESTINATION,` :
+                `CAST(S.STORE_ID AS VARCHAR) + ' - ' + S.STORE_NAME AS SOURCE, `}                                    
+                                    I.COUNT_DESC, 
+                                    O.NUM_TRANSFERRED, 
+                                    O.S_NUM_TRANSFERRED, 
+                                    O.COST_PER_COUNT, 
+                                    O.TRANSFER_DATE 
+                            FROM   ACC_TRANSFERS_OUT O 
+                                    INNER JOIN PH_STORES S 
+                                            ON O.STORE = S.STORE_ID
+                                    INNER JOIN ACC_INV_ITEMS I 
+                                            ON O.INV_ITEM = I.INV_ITEM 
+                                    INNER JOIN ACC_M_STOCK_NUMS N 
+                                            ON I.INV_ITEM = N.INV_ITEM 
+                            WHERE  I.INV_STAT = 'A' 
+                                    AND 
+                                    ${(prm.stamp == 'option1') ? `O.STORE = @input_store ` : ` O.DESTINATION = @input_store  `}
+                                    ${(prm.datefrom || prm.dateto) ?
+                (prm.dateto) ? `AND O.TRANSFER_DATE BETWEEN @input_datefrom AND @input_dateto` : (prm.datefrom) ? `AND O.TRANSFER_DATE BETWEEN @input_datefrom AND @input_datefrom ` : `` : ''}                                   
+                            ORDER  BY N.STOCK_NUM, 
+                                    I.INV_ITEM_DESC, 
+                                    O.DESTINATION, 
+                                    I.COUNT_DESC ASC; `
+       
+        const input_store = 'input_store'
+        const input_datefrom = 'input_datefrom'
+        const input_dateto = 'input_dateto'
+        let pool = await sql.connect(settings.dbConfig)
+        let result = await pool.request()
+            .input(input_store, sql.NVarChar, prm.store)
+            .input(input_datefrom, sql.NVarChar, prm.datefrom)
+            .input(input_dateto, sql.NVarChar, prm.dateto)
+            .query(querysql)
+        res = result
+    } catch (err) {
+    } finally {
+        await sql.close()
+    }
+    return await res
+}
+
 async function GetDropDownPeriod() {
     let res = {}
     try {
@@ -696,6 +744,7 @@ async function EditStampInventory(prm) {
     }
     return await res
 }
+
 
 
 

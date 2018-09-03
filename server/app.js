@@ -34,6 +34,7 @@ const StampCloseDailyFins = require('./controllers/sdc/Sales/StampCloseDailyFins
 //--Inventory
 const AccountCodeForInventory = require('./controllers/sdc/Inventory/AccountCodeForInventory')
 const EndingInventory = require('./controllers/sdc/Inventory/EndingInventory')
+const TransferInventory = require('./controllers/sdc/Inventory/TransferInventory')
 const Receipts = require('./controllers/sdc/Inventory/Receipts')
 const ImportToJDE = require('./controllers/sdc/Inventory/ImportToJDE')
 const StampInventory = require('./controllers/sdc/Inventory/StampInventory')
@@ -698,6 +699,12 @@ app.get('/api/endinginventory/getperiod/:year/:month', (req, res) => {
 app.get('/api/endinginventory/:stamp/:store/:diff/:period', (req, res) => {
   console.log('get_endinginventory')  
   EndingInventory.GetDataTable(req, res, req.body)    
+})
+
+//Get Transfer Inventory
+app.get('/api/transferinventory/:stamp/:store/:datefrom/:dateto', (req, res) => {
+  console.log('get_endinginventory') 
+  TransferInventory.GetDataTable(req, res, req.body)  
 })
 
 
