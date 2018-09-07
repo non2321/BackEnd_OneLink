@@ -43,6 +43,8 @@ exports.CodeE0001 = 'E0001'
 exports.CodeE0002 = 'E0002'
 exports.CodeE0003 = 'E0003'
 exports.CodeE0005 = 'E0005'
+exports.CodeE0007 = 'E0007'
+exports.CodeE0008 = 'E0008'
 exports.CodeE0009 = 'E0009'
 
 exports.CodeW0002 = 'W0002'

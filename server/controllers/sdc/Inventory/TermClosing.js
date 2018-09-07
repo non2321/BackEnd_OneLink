@@ -9,110 +9,41 @@ const message = require('../../../models/Services/Messsage')
 const action_type = require('../../../models/action_type')
 const status_type = require('../../../models/status_type')
 const msg_type = require('../../../models/msg_type')
+const utils = require('../../../models/Services/utils')
 
 const settings = require('../../../../settings')
 
-module.exports.Get = Get
-module.exports.GetDropDownGrpBy = GetDropDownGrpBy
-module.exports.GetDropDownCatCode = GetDropDownCatCode
-module.exports.GetDropDownAccType = GetDropDownAccType
+module.exports.GetDataTable = GetDataTable
 module.exports.Add = Add
 module.exports.Edit = Edit
 
-async function Get(req, res, reqBody) {
+async function GetDataTable(req, res, reqBody) {
     try {
-        let result = await Inventory.GetAccountCodeForInventory()
+        const result = await Inventory.GetTermClosing()
+
         const rowdata = {
             "aaData": result.recordset
         }
         await res.setHeader('Content-Type', 'application/json');
         await res.send(JSON.stringify(rowdata));
     } catch (err) {
-       res.sendStatus(500)
-    }
-}
-
-async function GetDropDownGrpBy(req, res, reqBody) {
-    try {
-        let result = await Inventory.GetDropDownGrpBy()
-
-        let data = []
-        let items = result.recordset
-        for (let item in items) {
-            data.push({ value: items[item]['LOV1'], label: items[item]['LOV_DESC'] })
-        }
-
-        await res.setHeader('Content-Type', 'application/json')
-        await res.send(data)
-    } catch (err) {
-        res.sendStatus(500)
-    }
-}
-
-async function GetDropDownCatCode(req, res, reqBody) {
-    try {
-        let result = await Inventory.GetDropDownCatCode()
-
-        let data = []
-        let items = result.recordset
-        for (let item in items) {
-            data.push({ value: items[item]['LOV1'], label: items[item]['LOV_DESC'] })
-        }
-
-        await res.setHeader('Content-Type', 'application/json')
-        await res.send(data)
-    } catch (err) {
-        res.sendStatus(500)
-    }
-}
-
-async function GetDropDownAccType(req, res, reqBody) {
-    try {
-        let result = await Inventory.GetDropDownAccType()
-
-        let data = []
-        let items = result.recordset
-        for (let item in items) {
-            data.push({ value: items[item]['LOV1'], label: items[item]['LOV1'] })
-        }
-
-        await res.setHeader('Content-Type', 'application/json')
-        await res.send(data)
-    } catch (err) {
         res.sendStatus(500)
     }
 }
 
 async function Add(req, res, reqBody, authData) {
-    if (reqBody.action_code == null) throw new Error("Input not valid")
-    if (reqBody.inv_class == null) throw new Error("Input not valid")
-    if (reqBody.action == null) throw new Error("Input not valid")
-    if (reqBody.obj_account == null) throw new Error("Input not valid")
-    if (reqBody.subsidary == null) throw new Error("Input not valid")
-    if (reqBody.grp_by == null) throw new Error("Input not valid")
-    if (reqBody.cat_code == null) throw new Error("Input not valid")
-    if (reqBody.acc_type == null) throw new Error("Input not valid")
-    if (reqBody.doc_no == null) throw new Error("Input not valid")
-    if (reqBody.remark == null) throw new Error("Input not valid")
+    if (reqBody.year == null) throw new Error("Input not valid")
     if (reqBody.screen_id == null) throw new Error("Input not valid")
 
-    const action_code = reqBody.action_code.trim()
-    const inv_class = reqBody.inv_class.trim()
-    const action = reqBody.action.trim()
-    const obj_account = reqBody.obj_account.trim()
-    const subsidary = reqBody.subsidary.trim()
-    const grp_by = reqBody.grp_by.trim()
-    const cat_code = reqBody.cat_code.trim()
-    const acc_type = reqBody.acc_type.trim()
-    const doc_no = reqBody.doc_no.trim()
-    const remark = reqBody.remark.trim()
+    const year = reqBody.year.toString().trim()
     const screen_id = reqBody.screen_id
     let screen_name = ''
     let module_name = ''
 
+
     try {
         // Current DateTime
-        const datetime = new Date().toLocaleString().replace(',','');
+        const datetime = new Date().toLocaleString().replace(',', '');
         //Browser
         const browser = JSON.stringify(browserdetect(req.headers['user-agent']));
 
@@ -123,33 +54,35 @@ async function Add(req, res, reqBody, authData) {
             screen_name = screen.SCREEN_NAME
             module_name = screen.MODULE
         }
+
         const prmchk = {
-            action_code: action_code,
-            inv_class: inv_class,
-            acc_type: acc_type
+            year: year,
         }
-        let dupdata = await Inventory.CheckDuplicateAccountCodeForInventory(prmchk)
+        const dupdata = await Inventory.CheckDuplicateTermClosingYear(prmchk)
 
         //Set object prm
         const prm = {
-            action_code: action_code,
-            inv_class: inv_class,
-            action: action,
-            obj_account: obj_account,
-            subsidary: subsidary,
-            grp_by: grp_by,
-            cat_code: cat_code,
-            acc_type: acc_type,
-            doc_no: doc_no,
-            remark: remark,
+            year: year,
             create_date: datetime,
             create_by: authData.id
         }
 
         if (dupdata) {
-            let result = await Inventory.InsertAccountCodeForInventory(prm)
-
-            if (result !== undefined) { //Insert Success            
+            //Check Periods
+            const checkPeriods = await Inventory.CheckPeriodsTermClosing(prm)
+            if (checkPeriods) {
+                let result = await Inventory.GetTermClosingForInsert(prm)
+                for (let item of result) {
+                    const prmInsert = {
+                        term_id: await utils.GetCountACC_TERM_CLOSING(),
+                        period_id: item['PERIOD_ID'],
+                        pb_date: item['PB_DATE'],
+                        pe_date: item['PE_DATE'],
+                        create_date: prm.create_date,
+                        create_by: prm.create_by
+                    }
+                    await Inventory.InsertTermClosing(prmInsert)
+                }
                 const prmLog = {
                     audit_trail_date: datetime,
                     module: module_name,
@@ -179,10 +112,8 @@ async function Add(req, res, reqBody, authData) {
                     }
                     await log.InsertLogAudit(prmLogAudit)
                 }
-
                 //Get Message Alert.
                 let messageAlert = await message.GetMessageByCode(msg_type.CodeS0001)
-
                 //Send JWT
                 const jwtdata = {
                     id: authData.id,
@@ -193,7 +124,6 @@ async function Add(req, res, reqBody, authData) {
                     mobile_no: authData.mobile_no,
                     phc_user: authData.phc_user,
                 }
-
                 await jwt.sign({ jwtdata }, settings.secretkey, { expiresIn: settings.tokenexpires }, (err, token) => {
                     res.json({
                         "status": status_type.Complate,
@@ -210,7 +140,7 @@ async function Add(req, res, reqBody, authData) {
                         }
                     })
                 })
-            } else {  //Insert UnSuccess
+            } else {
                 const prmLog = {
                     audit_trail_date: datetime,
                     module: module_name,
@@ -225,8 +155,8 @@ async function Add(req, res, reqBody, authData) {
                 // Add Log.
                 let AuditTrail = await log.InsertLogAuditTrail(prmLog)
                 if (AuditTrail.uid) {
-                    //Add Log Audit         
-                    const prmLogAudit = {
+                    //Add Log Audit 
+                    const prmLogAudit1 = {
                         audit_date: datetime,
                         action_type: action_type.Add,
                         user_id: authData.id,
@@ -238,19 +168,21 @@ async function Add(req, res, reqBody, authData) {
                         new_value: prm,
                         original_value: '',
                     }
-                    await log.InsertLogAudit(prmLogAudit)
+                    await log.InsertLogAudit(prmLogAudit1)
                 }
 
-                ////////////////////// Alert Message JSON ////////////////////// 
+                ////////////////////// Alert Message JSON //////////////////////            
 
+                //Get Message Alert.
+                const messageAlert = await message.GetMessageByCode(msg_type.CodeE0008)
                 const data = {
                     "status": status_type.UnComplate,
-                    "message": "ไม่สามารถบันทึกข้อมูลลงในระบบได้",
+                    "message": messageAlert,
                 }
                 await res.setHeader('Content-Type', 'application/json');
                 await res.send(JSON.stringify(data));
-
             }
+
         } else { //Duplicate Data        
             const prmLog = {
                 audit_trail_date: datetime,
@@ -282,14 +214,10 @@ async function Add(req, res, reqBody, authData) {
                 await log.InsertLogAudit(prmLogAudit1)
             }
 
-            ////////////////////// Alert Message JSON //////////////////////             
-            const prmMsg = {
-                action_code: prm.action_code,
-                inv_class: prm.inv_class,
-                acc_type: prm.acc_type
-            }
+            ////////////////////// Alert Message JSON //////////////////////            
+
             //Get Message Alert.
-            const messageAlert = await message.GetMessageByCode(msg_type.CodeE0005, prmMsg)
+            const messageAlert = await message.GetMessageByCode(msg_type.CodeE0007)
             const data = {
                 "status": status_type.UnComplate,
                 "message": messageAlert,
@@ -302,38 +230,18 @@ async function Add(req, res, reqBody, authData) {
     }
 }
 
-async function Edit(req, res, reqBody, authData) {
-    if (reqBody.action_code == null) throw new Error("Input not valid")
-    if (reqBody.inv_class == null) throw new Error("Input not valid")
-    if (reqBody.action == null) throw new Error("Input not valid")
-    if (reqBody.obj_account == null) throw new Error("Input not valid")
-    if (reqBody.subsidary == null) throw new Error("Input not valid")
-    if (reqBody.grp_by == null) throw new Error("Input not valid")
-    if (reqBody.cat_code == null) throw new Error("Input not valid")
-    if (reqBody.acc_type == null) throw new Error("Input not valid")
-    if (reqBody.doc_no == null) throw new Error("Input not valid")
-    if (reqBody.remark == null) throw new Error("Input not valid")
-    if (reqBody.screen_id == null) throw new Error("Input not valid")
+async function Edit(req, res, obj, authData) {
+    if (obj == null) throw new Error("Input not valid")
 
-    const action_code = reqBody.action_code
-    const inv_class = reqBody.inv_class.trim()
-    const action = reqBody.action.trim()
-    const obj_account = reqBody.obj_account.trim()
-    const subsidary = reqBody.subsidary.trim()
-    const grp_by = reqBody.grp_by.trim()
-    const cat_code = reqBody.cat_code.trim()
-    const acc_type = reqBody.acc_type.trim()
-    const doc_no = reqBody.doc_no.trim()
-    const remark = reqBody.remark.trim()
-    const screen_id = reqBody.screen_id
+    let screen_id = obj[0].screen_id
     let screen_name = ''
     let module_name = ''
 
     try {
         // Current DateTime
-        const datetime = new Date().toLocaleString().replace(',','')
+        const datetime = new Date().toLocaleString().replace(',', '');
         //Browser
-        const browser = JSON.stringify(browserdetect(req.headers['user-agent']))
+        const browser = JSON.stringify(browserdetect(req.headers['user-agent']));
 
         //Get Screen name && Module name
         const screen = await menu.GetScreenById(screen_id)
@@ -342,48 +250,71 @@ async function Edit(req, res, reqBody, authData) {
             screen_name = screen.SCREEN_NAME
             module_name = screen.MODULE
         }
-        //Set prmtemp
-        const prmtemp = {
-            action_code: action_code,
-            inv_class: inv_class,
-            acc_type: acc_type
+
+
+        const prmLog = {
+            audit_trail_date: datetime,
+            module: module_name,
+            screen_name: screen_name,
+            action_type: action_type.Edit,
+            status: status_type.Success,
+            user_id: authData.id,
+            client_ip: req.ip,
+            msg: msg_type.EditSuccess,
+            browser: browser
         }
-        const tempdata = await Inventory.GetTempAccountCodeForInventory(prmtemp)
+        // Add Log.
+        let AuditTrail = await log.InsertLogAuditTrail(prmLog)
 
-        //Set object prm
-        const prm = {
-            action_code: action_code,
-            inv_class: inv_class,
-            action: action,
-            obj_account: obj_account,
-            subsidary: subsidary,
-            grp_by: grp_by,
-            cat_code: cat_code,
-            acc_type: acc_type,
-            doc_no: doc_no,
-            remark: remark,
-            update_date: datetime,
-            update_by: authData.id
-        }
+        let rescheck = true
+        let itemsuccess = []
+        let itemerror = []
 
-        let result = await Inventory.EditAccountCodeForInventory(prm)
-
-        if (result !== undefined) { //Edit Success            
-            const prmLog = {
-                audit_trail_date: datetime,
-                module: module_name,
-                screen_name: screen_name,
-                action_type: action_type.Edit,
-                status: status_type.Success,
-                user_id: authData.id,
-                client_ip: req.ip,
-                msg: msg_type.EditSuccess,
-                browser: browser
+        for (let item of obj) {
+            const tempdata = await Inventory.GetTermClosingById(item.term_id)
+            const prm = {
+                term_id: item.term_id,
+                pb_date: item.pb_date,
+                pe_date: item.pe_date,
+                update_date: datetime,
+                update_by: authData.id
             }
-            // Add Log.
-            let AuditTrail = await log.InsertLogAuditTrail(prmLog)
+            const res = await Inventory.EditTermClosing(prm)
+            if (res != undefined) {
+                const prmitem = {
+                    term_id: item.term_id,
+                    pb_date: item.pb_date,
+                    pe_date: item.pe_date,
+                    update_date: datetime,
+                    update_by: authData.id,
+                    original_value: tempdata.recordset
+                }
+                itemsuccess.push(prmitem)
+            }
+            else if (res == undefined) {
+                const prmitem = {
+                    term_id: item.term_id,
+                    pb_date: item.pb_date,
+                    pe_date: item.pe_date,
+                    update_date: datetime,
+                    update_by: authData.id,
+                    original_value: tempdata.recordset
+                }
+                itemerror.push(prmitem)
+                rescheck = false
+            }
+        }
+
+        //Add Log Audit Success     
+        for (let item of itemsuccess) {
+            const new_value = {
+                term_id: item.term_id,
+                pb_date: item.pb_date,
+                pe_date: item.pe_date,
+                update_date: item.update_date,
+                update_by: item.update_by,
+            }
             if (AuditTrail.uid) {
-                //Add Log Audit         
                 const prmLogAudit = {
                     audit_date: datetime,
                     action_type: action_type.Edit,
@@ -393,12 +324,41 @@ async function Edit(req, res, reqBody, authData) {
                     status: status_type.Success,
                     audit_msg: msg_type.EditSuccess,
                     audit_trail_id: AuditTrail.uid,
-                    new_value: prm,
-                    original_value: tempdata.recordset,
+                    new_value: new_value,
+                    original_value: item.original_value,
                 }
                 await log.InsertLogAudit(prmLogAudit)
             }
+        }
 
+        //Add Log Audit Error
+        for (let item of itemerror) {
+            const new_value = {
+                term_id: item.term_id,
+                pb_date: item.pb_date,
+                pe_date: item.pe_date,
+                update_date: item.update_date,
+                update_by: item.update_by,
+            }
+
+            if (AuditTrail.uid) {
+                const prmLogAudit = {
+                    audit_date: datetime,
+                    action_type: action_type.Edit,
+                    user_id: authData.id,
+                    screen_name: screen_name,
+                    client_ip: req.ip,
+                    status: status_type.Error,
+                    audit_msg: msg_type.EditUnSuccess,
+                    audit_trail_id: AuditTrail.uid,
+                    new_value: new_value,
+                    original_value: item.original_value,
+                }
+                await log.InsertLogAudit(prmLogAudit)
+            }
+        }
+        //Respone Success
+        if (rescheck == true) {
             //Get Message Alert.
             let messageAlert = await message.GetMessageByCode(msg_type.CodeS0002)
 
@@ -412,9 +372,8 @@ async function Edit(req, res, reqBody, authData) {
                 mobile_no: authData.mobile_no,
                 phc_user: authData.phc_user,
             }
-
             await jwt.sign({ jwtdata }, settings.secretkey, { expiresIn: settings.tokenexpires }, (err, token) => {
-                res.json({                   
+                res.json({
                     "status": status_type.Complate,
                     "message": messageAlert,
                     "user": {
@@ -429,49 +388,15 @@ async function Edit(req, res, reqBody, authData) {
                     }
                 })
             })
-        } else {  //Edit UnSuccess
-            const prmLog = {
-                audit_trail_date: datetime,
-                module: module_name,
-                screen_name: screen_name,
-                action_type: action_type.Edit,
-                status: status_type.Error,
-                user_id: authData.id,
-                client_ip: req.ip,
-                msg: msg_type.EditUnSuccess,
-                browser: browser
-            }
-            // Add Log.
-            let AuditTrail = await log.InsertLogAuditTrail(prmLog)
-            if (AuditTrail.uid) {
-                //Add Log Audit         
-                const prmLogAudit = {
-                    audit_date: datetime,
-                    action_type: action_type.Edit,
-                    user_id: authData.id,
-                    screen_name: screen_name,
-                    client_ip: req.ip,
-                    status: status_type.Error,
-                    audit_msg: msg_type.EditUnSuccess,
-                    audit_trail_id: AuditTrail.uid,
-                    new_value: prm,
-                    original_value: tempdata.recordset,
-                }
-                await log.InsertLogAudit(prmLogAudit)
-            }
-
-            ////////////////////// Alert Message JSON ////////////////////// 
-
+        } else { //Respone Error 
             const data = {
                 "status": status_type.UnComplate,
-                "message": "ไม่สามารถบันทึกข้อมูลลงในระบบได้",
-            }
+                "message": `Term Closing ${itemerror.map((item) => { return item['term_id'] })} ไม่สามารถบันทึกข้อมูลลงในระบบได้`
+            }           
             await res.setHeader('Content-Type', 'application/json');
             await res.send(JSON.stringify(data));
         }
-
     } catch (err) {
         res.sendStatus(500)
     }
 }
-

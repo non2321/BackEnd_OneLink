@@ -36,6 +36,7 @@ const AccountCodeForInventory = require('./controllers/sdc/Inventory/AccountCode
 const EndingInventory = require('./controllers/sdc/Inventory/EndingInventory')
 const TransferInventory = require('./controllers/sdc/Inventory/TransferInventory')
 const Receipts = require('./controllers/sdc/Inventory/Receipts')
+const TermClosing = require('./controllers/sdc/Inventory/TermClosing')
 const ImportToJDE = require('./controllers/sdc/Inventory/ImportToJDE')
 const StampInventory = require('./controllers/sdc/Inventory/StampInventory')
 
@@ -688,6 +689,51 @@ app.get('/api/receipts/:store/:datefrom/:dateto/:invoice*', (req, res) => {
   console.log('receipts') 
   Receipts.GetDataTable(req, res, req.body)    
 })
+
+//Get Term Closing
+app.get('/api/termclosing', (req, res) => {
+  console.log('termclosing')
+  TermClosing.GetDataTable(req, res, req.body)    
+})
+
+//Add Term Closing
+app.post('/api/termclosing', verifyToken, (req, res) => {
+  console.log('add_termclosing')
+  jwt.verify(req.token, settings.secretkey, (err, authData) => {
+    if (err) {
+      const data = {
+        status: status_type.Unauthorized,
+        Code: msg_type.CodeW0002,
+      }
+      authExpired.Expired(req, res, data)
+
+    } else {
+      const user = authData.jwtdata
+      TermClosing.Add(req, res, req.body, user);
+    }
+  })
+})
+
+//Edit Term Closing
+app.put('/api/termclosing', verifyToken, (req, res) => {
+  console.log('edit_termclosing')
+  jwt.verify(req.token, settings.secretkey, (err, authData) => {
+    if (err) {
+      const data = {
+        status: status_type.Unauthorized,
+        Code: msg_type.CodeW0002,
+      }
+      authExpired.Expired(req, res, data)
+
+    } else {
+      const user = authData.jwtdata
+      const obj = req.body['obj']
+
+      TermClosing.Edit(req, res, obj, user);
+    }
+  })
+})
+
 
 //Get Ending Inventory Period
 app.get('/api/endinginventory/getperiod/:year/:month', (req, res) => {

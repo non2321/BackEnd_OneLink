@@ -192,7 +192,7 @@ async function EditFinancialCode(req, res, obj, authData) {
         } else { //Respone Error
             const data = {
                 "status": status_type.UnComplate,
-                "message": `Financial Code ${itemsuccess.map((item)=>{return item['fin_code']})} ไม่สามารถบันทึกข้อมูลลงในระบบได้`
+                "message": `Financial Code ${itemerror.map((item)=>{return item['fin_code']})} ไม่สามารถบันทึกข้อมูลลงในระบบได้`
             }
             await res.setHeader('Content-Type', 'application/json');
             await res.send(JSON.stringify(data));

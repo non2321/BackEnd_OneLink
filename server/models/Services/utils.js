@@ -7,6 +7,8 @@ module.exports.GetCountLOVId = GetCountLOVId;
 module.exports.GetCountACC_M_ACCOUNT_SALE = GetCountACC_M_ACCOUNT_SALE;
 module.exports.ObjectToString_UpperName = ObjectToString_UpperName;
 
+module.exports.GetCountACC_TERM_CLOSING = GetCountACC_TERM_CLOSING
+
 //Fromat integer to a specific length.
 function FormatNumberLength(num, length) {
     var r = "" + num;
@@ -97,4 +99,25 @@ async function ObjectToString_UpperName(obj) {
         }
     }
     return await res
+}
+
+//Count ACC_TERM_CLOSING
+async function GetCountACC_TERM_CLOSING() {
+    let count = 0;
+    try {
+        const querysql = `SELECT ISNULL((MAX(CONVERT(INT, CASE WHEN ISNUMERIC(TERM_ID) = 1 THEN TERM_ID ELSE 0 END))),0) + 1 ID from ACC_TERM_CLOSING`
+        let pool = await sql.connect(settings.dbConfig)
+        let result = await pool.request()
+            .query(querysql)
+        await sql.close()
+        if (result.rowsAffected > 0) {
+            count = result.recordset[0].ID
+        } else {
+            count = 0;
+        }
+    } catch (err) {
+        //400 Bad Request
+    }
+
+    return count;
 }

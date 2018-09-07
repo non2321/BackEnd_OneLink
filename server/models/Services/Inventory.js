@@ -2,7 +2,6 @@ const sql = require('mssql') // MS Sql Server client
 const uuid = require('uuid/v1');
 
 const settings = require('../../../settings')
-const digit = require('../digit_number')
 const utils = require('../../models/Services/utils')
 
 //Account Code For Inventory
@@ -21,6 +20,15 @@ module.exports.GetEndingInventoryPeriod = GetEndingInventoryPeriod
 
 //Receipts
 module.exports.GetReceipts = GetReceipts
+
+//Term Closing
+module.exports.GetTermClosing = GetTermClosing
+module.exports.GetTermClosingById = GetTermClosingById
+module.exports.CheckDuplicateTermClosingYear = CheckDuplicateTermClosing
+module.exports.CheckPeriodsTermClosing = CheckPeriodsTermClosing
+module.exports.GetTermClosingForInsert = GetTermClosingForInsert
+module.exports.InsertTermClosing = InsertTermClosing
+module.exports.EditTermClosing = EditTermClosing
 
 //Transfer Inventory
 module.exports.GetTransferInventory = GetTransferInventory
@@ -540,6 +548,217 @@ async function GetReceipts(prm) {
     return res
 }
 
+async function GetTermClosing() {
+    let res
+    try {
+        const querysql = `SELECT *, 
+                                CONVERT(VARCHAR, PB_DATE, 103) PB_DATE_DESC, 
+                                CONVERT(VARCHAR, PE_DATE, 103) PE_DATE_DESC 
+                        FROM   acc_term_closing 
+                        WHERE  term_id > 0 
+                        ORDER  BY term_id DESC`
+        let pool = await sql.connect(settings.dbConfig)
+        res = await pool.request().query(querysql)
+
+    } catch (err) {
+    } finally {
+        await sql.close()
+    }
+    return res
+}
+
+async function GetTermClosingById(term_id) {
+    let res = {}
+    try {
+        let querysql = `SELECT * FROM ACC_TERM_CLOSING  WHERE TERM_ID = @input_term_id `
+        const input_term_id = 'input_term_id'
+        let pool = await sql.connect(settings.dbConfig)
+        let result = await pool.request().input(input_term_id, sql.NVarChar, term_id).query(querysql)
+        if (result !== undefined) {
+            if (result.rowsAffected > 0) res = result
+        }
+
+    } catch (err) {
+
+    } finally {
+        await sql.close()
+    }
+
+    return await res
+}
+
+async function CheckDuplicateTermClosing(prm) {
+    let res = true
+    try {
+        let querysql = `SELECT * FROM ACC_TERM_CLOSING WHERE YEAR(PB_DATE) = @input_year`
+
+        const input_year = 'input_year'
+
+        let pool = await sql.connect(settings.dbConfig)
+
+        let result = await pool.request()
+            .input(input_year, sql.NVarChar, prm.year.trim())
+            .query(querysql)
+
+        if (result !== undefined) {
+            if (result.rowsAffected > 0) res = false
+        }
+
+    } catch (err) {
+
+    } finally {
+        await sql.close()
+    }
+
+    return await res
+}
+
+async function CheckPeriodsTermClosing(prm) {
+    let res = true
+    try {
+        let querysql = `SELECT COUNT(*) PERIOSDS FROM ACC_PERIODS 
+                        WHERE YEAR_ID = @input_year`
+
+        const input_year = 'input_year'
+
+        let pool = await sql.connect(settings.dbConfig)
+
+        let result = await pool.request()
+            .input(input_year, sql.NVarChar, prm.year.trim())
+            .query(querysql)
+
+        if (result !== undefined) {
+            if (result.rowsAffected > 0) {
+                if (result.recordset[0]['PERIOSDS'] != 12) {
+                    res = false
+                }
+            }
+        }
+
+    } catch (err) {
+
+    } finally {
+        await sql.close()
+    }
+
+    return await res
+}
+
+async function GetTermClosingForInsert(prm) {
+    let res    
+    try {
+        let querysql = `SELECT * FROM ACC_PERIODS 
+                        WHERE YEAR_ID =  @input_year`
+
+        const input_year = 'input_year'
+
+        let pool = await sql.connect(settings.dbConfig)
+
+        let result = await pool.request()
+            .input(input_year, sql.NVarChar, prm.year.trim())
+            .query(querysql)
+
+        if (result !== undefined) {
+            if (result.rowsAffected > 0) {   
+                res = await result.recordset 
+            }
+        }
+
+    } catch (err) {
+
+    } finally {
+        await sql.close()        
+    }
+    return await res
+}
+
+async function InsertTermClosing(prm) {
+    let res = false
+    try {
+        const querysql = `INSERT INTO ACC_TERM_CLOSING 
+                                        (TERM_ID,
+                                        PERIOD_ID, 
+                                        PB_DATE, 
+                                        PE_DATE, 
+                                        CREATE_DATE, 
+                                        CREATE_BY) 
+                            VALUES      (@input_term_id, 
+                                        @input_period_id,
+                                        @input_pb_date,
+                                        @input_pe_date,
+                                        @input_create_date, 
+                                        @input_create_by)`
+
+        const input_term_id = 'input_term_id'
+        const input_period_id = 'input_period_id'
+        const input_pb_date = 'input_pb_date'
+        const input_pe_date = 'input_pe_date'
+        const input_create_date = 'input_create_date'
+        const input_create_by = 'input_create_by'
+
+        let pool = await sql.connect(settings.dbConfig)
+        let result = await pool.request()      
+            .input(input_term_id, sql.Int, prm.term_id)
+            .input(input_period_id, sql.Int, prm.period_id)
+            .input(input_pb_date, sql.Date, prm.pb_date)
+            .input(input_pe_date, sql.Date, prm.pe_date)
+            .input(input_create_date, sql.NVarChar, prm.create_date)
+            .input(input_create_by, sql.NVarChar, prm.create_by)
+            .query(querysql)
+        if (result !== undefined) {
+            if (result.rowsAffected > 0) res = true
+        }
+    } catch (err) {       
+    } finally {
+        await sql.close()
+    }
+
+    return await res
+}
+
+async function EditTermClosing(prm) {
+    let res
+    try {
+        if (prm.term_id) {           
+            let querysql = `UPDATE ACC_TERM_CLOSING  SET TERM_ID = TERM_ID  `
+
+            if (prm.pb_date != undefined) querysql = [querysql, `PB_DATE  = @input_pb_date `].join(",")
+            if (prm.pe_date != undefined) querysql = [querysql, `PE_DATE  = @input_pe_date `].join(",")          
+            if (prm.update_date != undefined) querysql = [querysql, `UPDATE_DATE = @input_update_date `].join(",")
+            if (prm.update_by != undefined) querysql = [querysql, `UPDATE_BY = @input_update_by `].join(",")
+
+            querysql += ` WHERE TERM_ID  = @input_term_id `
+
+            const input_term_id = 'input_term_id'
+            const input_pb_date = 'input_pb_date'
+            const input_pe_date = 'input_pe_date'               
+            const input_update_date = 'input_update_date'
+            const input_update_by = 'input_update_by'
+            
+            let pool = await sql.connect(settings.dbConfig)
+            let result = await pool.request()
+
+            if (prm.term_id != undefined) await result.input(input_term_id, sql.NVarChar, prm.term_id.toString().trim())
+            if (prm.pb_date != undefined) await result.input(input_pb_date, sql.NVarChar, prm.pb_date.toString().trim())
+            if (prm.pe_date != undefined) await result.input(input_pe_date, sql.NVarChar, prm.pe_date.toString().trim())
+            if (prm.update_date != undefined) await result.input(input_update_date, sql.NVarChar, prm.update_date.toString().trim())
+            if (prm.update_by != undefined) await result.input(input_update_by, sql.NVarChar, prm.update_by.toString().trim())
+
+            result = await result.query(querysql)
+           
+            if (result !== undefined) {
+                if (result.rowsAffected > 0) res = true
+            }
+        }
+    } catch (err) {      
+    } finally {
+        await sql.close()
+    }
+    return await res
+}
+
+
+
 async function GetTransferInventory(prm) {
     let res = {}
     try {
@@ -568,7 +787,7 @@ async function GetTransferInventory(prm) {
                                     I.INV_ITEM_DESC, 
                                     O.DESTINATION, 
                                     I.COUNT_DESC ASC; `
-       
+
         const input_store = 'input_store'
         const input_datefrom = 'input_datefrom'
         const input_dateto = 'input_dateto'
