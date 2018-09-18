@@ -38,6 +38,7 @@ const TransferInventory = require('./controllers/sdc/Inventory/TransferInventory
 const Receipts = require('./controllers/sdc/Inventory/Receipts')
 const TermClosing = require('./controllers/sdc/Inventory/TermClosing')
 const ImportToJDE = require('./controllers/sdc/Inventory/ImportToJDE')
+const UnitCost = require('./controllers/sdc/Inventory/UnitCost')
 const StampInventory = require('./controllers/sdc/Inventory/StampInventory')
 
 //Report
@@ -678,15 +679,105 @@ app.get('/api/importtojde/ddlperiod', (req, res) => {
   ImportToJDE.GetDropDownPeriod(req, res, req.body)
 })
 
+//Get Unitcost /DropDown Inven Category
+app.get('/api/unitcost/ddlinvencategory', (req, res) => {
+  console.log('unitcost/ddlinvencategory')
+  UnitCost.GetDropDownInvenCategory(req, res, req.body);
+})
+
+//Get Unitcost
+app.get('/api/unitcost/:period', (req, res) => {
+  console.log('get_unitcost')  
+  UnitCost.GetDataTable(req, res, req.body)    
+})
+
+//Get Unitcost
+app.get('/api/unitcost/:period/:invencategory', (req, res) => {
+  console.log('get_unitcost')  
+  UnitCost.GetDataTable(req, res, req.body)    
+})
+
+//Get Unitcost
+app.get('/api/unitcost/:period/:invencategory/:stockno', (req, res) => {
+  console.log('get_unitcost')  
+  UnitCost.GetDataTable(req, res, req.body)    
+})
+
+//Edit Unitcost
+app.put('/api/unitcost', verifyToken, (req, res) => {
+  console.log('edit_unitcost')
+  jwt.verify(req.token, settings.secretkey, (err, authData) => {
+    if (err) {
+      const data = {
+        status: status_type.Unauthorized,
+        Code: msg_type.CodeW0002,
+      }
+      authExpired.Expired(req, res, data)
+
+    } else {
+      const user = authData.jwtdata
+      const obj = req.body['obj']
+
+      UnitCost.Edit(req, res, obj, user);
+    }
+  })
+})
+
+//Upload Unitcost
+app.get('/api/upload/unitcost_template', function (req, res) {
+  console.log('downloadtemplate_unitcost')
+  let file = __dirname + '/upload/TemplateUnitCost.xlsx'
+  res.download(file)
+})
+
+//Import UnitCost
+app.put('/api/unitcost/import', verifyToken, (req, res) => {
+  console.log('import_unitcost')
+  jwt.verify(req.token, settings.secretkey, (err, authData) => {
+    if (err) {
+      const data = {
+        status: status_type.Unauthorized,
+        Code: msg_type.CodeW0002,
+      }
+      authExpired.Expired(req, res, data)
+
+    } else {
+      const user = authData.jwtdata
+      const obj = req.body['obj']
+
+      UnitCost.Import(req, res, obj, user);
+    }
+  })
+})
+
+//Gen PH Inventroy To E1 (UnitCost)
+app.post('/api/genunitocst', verifyToken, (req, res) => {
+  console.log('genunitocst')
+  jwt.verify(req.token, settings.secretkey, (err, authData) => {
+    if (err) {
+      const data = {
+        status: status_type.Unauthorized,
+        Code: msg_type.CodeW0002,
+      }
+      authExpired.Expired(req, res, data)
+
+    } else {
+      const user = authData.jwtdata
+      UnitCost.GenInveotory(req, res, req.body, user);
+    }
+  })
+})
+
+
 //Get Receipts
 app.get('/api/receipts/:store/:datefrom/:dateto', (req, res) => {
-  console.log('receipts')  
+  console.log('get_receipts')  
   Receipts.GetDataTable(req, res, req.body)    
 })
 
 //Get Receipts
 app.get('/api/receipts/:store/:datefrom/:dateto/:invoice*', (req, res) => {
-  console.log('receipts') 
+  console.log('get_receipts') 
   Receipts.GetDataTable(req, res, req.body)    
 })
 
@@ -733,7 +824,6 @@ app.put('/api/termclosing', verifyToken, (req, res) => {
     }
   })
 })
-
 
 //Get Ending Inventory Period
 app.get('/api/endinginventory/getperiod/:year/:month', (req, res) => {

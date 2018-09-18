@@ -29,12 +29,17 @@ module.exports.CheckPeriodsTermClosing = CheckPeriodsTermClosing
 module.exports.GetTermClosingForInsert = GetTermClosingForInsert
 module.exports.InsertTermClosing = InsertTermClosing
 module.exports.EditTermClosing = EditTermClosing
+module.exports.GenUnitCost = GenUnitCost
 
 //Transfer Inventory
 module.exports.GetTransferInventory = GetTransferInventory
 
-//Import To JDE
+//UnitCost
 module.exports.GetDropDownPeriod = GetDropDownPeriod
+module.exports.GetUnitCost = GetUnitCost
+module.exports.GetUnitCostDropDownInvenCategory = GetUnitCostDropDownInvenCategory
+module.exports.GetUnitCostByData = GetUnitCostByData
+module.exports.EditUnitCost = EditUnitCost
 
 //Stamp Inventory
 module.exports.SearchTempStampInventory = SearchTempStampInventory
@@ -757,8 +762,6 @@ async function EditTermClosing(prm) {
     return await res
 }
 
-
-
 async function GetTransferInventory(prm) {
     let res = {}
     try {
@@ -817,6 +820,153 @@ async function GetDropDownPeriod() {
         let result = await pool.request().query(querysql)
         res = result
     } catch (err) {
+    } finally {
+        await sql.close()
+    }
+    return await res
+}
+
+async function GetUnitCost(prm) {
+    let res
+    try {
+        const querysql = `SELECT S.STOCK_NUM, 
+                                S.INV_ITEM, 
+                                I.INV_ITEM_DESC, 
+                                U.UNIT_COST, 
+                                U.STOCK_ZONE, 
+                                U.COUNT_PER_UNIT, 
+                                U.PERIOD_ID, 
+                                S.UNITS_DESC AS UOM, 
+                                I.INV_ITEM_CLASS 
+                        FROM   ACC_M_STOCK_NUMS S 
+                                INNER JOIN ACC_UNIT_COST U 
+                                        ON S.INV_ITEM = U.INV_ITEM 
+                                INNER JOIN ACC_INV_ITEMS I 
+                                        ON S.INV_ITEM = I.INV_ITEM 
+                        WHERE  U.STOCK_ZONE = 'S1' 
+                                AND U.PERIOD_ID = @input_period
+                                ${(prm.invencategory != undefined) ? `AND I.INV_ITEM_CLASS = @input_invencategory ` : ''}
+                                ${(prm.stockno != undefined) ? `AND S.STOCK_NUM LIKE @input_stockno+'%' ` : ''}                               
+                        ORDER  BY S.STOCK_NUM`
+
+        const input_period = 'input_period'
+        const input_invencategory = 'input_invencategory'
+        const input_stockno = 'input_stockno'      
+
+        let pool = await sql.connect(settings.dbConfig)
+
+        let result = await pool.request()
+        await result.input(input_period, sql.NVarChar, prm.period)        
+        if (prm.invencategory != undefined) await result.input(input_invencategory, sql.NVarChar, prm.invencategory)
+        if (prm.stockno != undefined) await result.input(input_stockno, sql.NVarChar, prm.stockno)
+        res = await result.query(querysql)
+    } catch (err) {
+    } finally {
+        await sql.close()
+    }
+    return res
+}
+
+async function GetUnitCostDropDownInvenCategory() {
+    let res = {}
+    try {
+        let querysql = `SELECT INV_ITEM_CLASS, INV_ITEM_CL_DESC 
+                    FROM ACC_M_INV_ITEM_CLASSES ORDER BY INV_ITEM_CLASS ASC`
+
+        let pool = await sql.connect(settings.dbConfig)
+        let result = await pool.request().query(querysql)
+        res = result
+    } catch (err) {
+    } finally {
+        await sql.close()
+    }
+    return await res
+}
+
+async function GetUnitCostByData(obj) {
+    let res
+    try {
+        let querysql = `SELECT * FROM ACC_UNIT_COST  WHERE PERIOD_ID = @input_period AND INV_ITEM = @input_inv_item `
+        const input_period = 'input_period'
+        const input_inv_item = 'input_inv_item'
+      
+        let pool = await sql.connect(settings.dbConfig)
+        let result = await pool.request()
+            .input(input_period, sql.NVarChar, obj.period)
+            .input(input_inv_item, sql.NVarChar, obj.inv_item)           
+            .query(querysql)
+        if (result !== undefined) {
+            if (result.rowsAffected > 0) res = result
+        }
+    } catch (err) {
+
+    } finally {
+        await sql.close()
+    }
+
+    return await res
+}
+
+async function EditUnitCost(prm) {
+    let res
+
+    try {
+        if (prm) {
+            let querysql = `UPDATE ACC_UNIT_COST SET  PERIOD_ID=PERIOD_ID `
+            if (prm.unitcost != undefined) querysql = [querysql, `UNIT_COST  = @input_unitcost `].join(",")
+            if (prm.countunit != undefined) querysql = [querysql, `COUNT_PER_UNIT = @input_countunit `].join(",")
+            if (prm.update_date != undefined) querysql = [querysql, `UPDATE_DATE = @input_update_date `].join(",")
+            if (prm.update_by != undefined) querysql = [querysql, `UPDATE_BY = @input_update_by `].join(",")
+            querysql = [querysql, `LASTUPDATEBY = 'A' `].join(",")
+            querysql += `WHERE  PERIOD_ID = @input_period 
+                   AND INV_ITEM = @input_inv_item`
+            
+            const input_period = 'input_period'
+            const input_inv_item = 'input_inv_item'
+            const input_unitcost = 'input_unitcost'
+            const input_countunit = 'input_countunit'          
+            const input_update_date = 'input_update_date'
+            const input_update_by = 'input_update_by'
+
+            let pool = await sql.connect(settings.dbConfig)
+            let result = await pool.request()
+            if (prm.period != undefined) await result.input(input_period, sql.NVarChar, prm.period.trim())
+            if (prm.inv_item != undefined) await result.input(input_inv_item, sql.NVarChar, prm.inv_item.trim())
+            if (prm.unitcost != undefined) await result.input(input_unitcost, sql.NVarChar, prm.unitcost.trim())
+            if (prm.countunit != undefined) await result.input(input_countunit, sql.NVarChar, prm.countunit.trim())           
+            if (prm.update_date != undefined) await result.input(input_update_date, sql.NVarChar, prm.update_date.trim())
+            if (prm.update_by != undefined) await result.input(input_update_by, sql.NVarChar, prm.update_by.trim())
+            result = await result.query(querysql)
+
+            if (result !== undefined) {
+                if (result.rowsAffected > 0) res = true
+            }
+        }
+    } catch (err) {
+
+    } finally {
+        await sql.close()
+    }
+    return await res
+}
+
+async function GenUnitCost(prm) {
+    let res
+
+    try {
+        if (prm) {
+            const p_period_id = 'p_period_id'           
+
+            let pool = await sql.connect(settings.dbConfig)
+            let result = await pool.request()
+                .input(p_period_id, sql.NVarChar, prm.period)               
+                .execute('GEN_GL_TO_E1')
+            if (result !== undefined) {
+                res = result.recordset
+            }
+        }
+    } catch (err) {
+
     } finally {
         await sql.close()
     }

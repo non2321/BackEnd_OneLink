@@ -31,6 +31,7 @@ exports.AuthSuccess = 'Authorization Successfully';
 exports.AuthTokenExpired = 'Authorization Token Expired'
 
 exports.Procedures_GEN_GL_TO_E1 = 'GEN_GL_TO_E1'
+exports.Procedures_GEN_IVENTORY_TO_E1 = 'GEN_IVENTORY_TO_E1'
 
 
 exports.CodeS0001 = 'S0001'
