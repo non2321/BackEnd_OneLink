@@ -773,7 +773,7 @@ async function GetTransferInventory(prm) {
                                     O.NUM_TRANSFERRED, 
                                     O.S_NUM_TRANSFERRED, 
                                     O.COST_PER_COUNT, 
-                                    O.TRANSFER_DATE 
+                                    CONVERT(varchar, O.TRANSFER_DATE, 120) AS TRANSFER_DATE                                   
                             FROM   ACC_TRANSFERS_OUT O 
                                     INNER JOIN PH_STORES S 
                                             ON O.STORE = S.STORE_ID
@@ -790,7 +790,7 @@ async function GetTransferInventory(prm) {
                                     I.INV_ITEM_DESC, 
                                     O.DESTINATION, 
                                     I.COUNT_DESC ASC; `
-
+                                      
         const input_store = 'input_store'
         const input_datefrom = 'input_datefrom'
         const input_dateto = 'input_dateto'
