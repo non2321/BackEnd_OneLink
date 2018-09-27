@@ -960,7 +960,7 @@ async function GenUnitCost(prm) {
             let pool = await sql.connect(settings.dbConfig)
             let result = await pool.request()
                 .input(p_period_id, sql.NVarChar, prm.period)               
-                .execute('GEN_GL_TO_E1')
+                .execute('GEN_IVENTORY_TO_E1')
             if (result !== undefined) {
                 res = result.recordset
             }

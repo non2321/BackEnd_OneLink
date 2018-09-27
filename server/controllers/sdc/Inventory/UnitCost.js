@@ -454,7 +454,7 @@ async function GenInveotory(req, res, reqBody, authData) {
             period: period,           
         }
 
-        let result = await Inventory.GenUnitCost(prm)
+        let result = await Inventory.GenUnitCost(prm)        
         if (result !== undefined) {
             const prmLog = {
                 audit_trail_date: datetime,
@@ -475,19 +475,19 @@ async function GenInveotory(req, res, reqBody, authData) {
          
             for (let item of result) {
                 let GenInventoryitem = ''
-                GenInventoryitem = (item.AccMode.trim() == '') ? [' ', GenInventoryitem].join("|") : [item.AccMode, GenInventoryitem].join("|")
+                GenInventoryitem = (item.AccountMode.trim() == '') ? [' ', GenInventoryitem].join("|") : [item.AccountMode, GenInventoryitem].join("|")
                 GenInventoryitem = (item.Company.trim() == '') ? [' ', GenInventoryitem].join("|") : [item.Company, GenInventoryitem].join("|")
                 GenInventoryitem = (item.CurrencyCode.trim() == '') ? [' ', GenInventoryitem].join("|") : [item.CurrencyCode, GenInventoryitem].join("|")
                 GenInventoryitem = (item.Mode.trim() == '') ? [' ', GenInventoryitem].join("|") : [item.Mode, GenInventoryitem].join("|")
-                GenInventoryitem = (item.ledgerType.trim() == '') ? [' ', GenInventoryitem].join("|") : [item.ledgerType, GenInventoryitem].join("|")
-                GenInventoryitem = (item.Explain.trim() == '') ? [' ', GenInventoryitem].join("|") : [item.Explain, GenInventoryitem].join("|")
-                GenInventoryitem = (item.glDate.trim() == '') ? [' ', GenInventoryitem].join("|") : [item.glDate, GenInventoryitem].join("|")
-                GenInventoryitem = (item.subLedger.trim() == '') ? [' ', GenInventoryitem].join("|") : [item.subLedger, GenInventoryitem].join("|")
-                GenInventoryitem = (item.subLedgerType.trim() == '') ? [' ', GenInventoryitem].join("|") : [item.subLedgerType, GenInventoryitem].join("|")
-                GenInventoryitem = (item.amount.trim() == '') ? [' ', GenInventoryitem].join("|") : [item.amount, GenInventoryitem].join("|")
-                GenInventoryitem = (item.accountCode.trim() == '') ? [' ', GenInventoryitem].join("|") : [item.accountCode, GenInventoryitem].join("|")
-                GenInventoryitem = (item.remark.trim() == '') ? [' ', GenInventoryitem].join("|") : [item.remark, GenInventoryitem].join("|")
-                GenInventoryitem = (item.rowNum.trim() == '') ? [' ', GenInventoryitem].join("|") : [item.rowNum, GenInventoryitem].join("|")
+                GenInventoryitem = (item.LedgerType.trim() == '') ? [' ', GenInventoryitem].join("|") : [item.LedgerType, GenInventoryitem].join("|")
+                GenInventoryitem = (item.Explanation.trim() == '') ? [' ', GenInventoryitem].join("|") : [item.Explanation, GenInventoryitem].join("|")
+                GenInventoryitem = (item.GLDate.trim() == '') ? [' ', GenInventoryitem].join("|") : [item.GLDate, GenInventoryitem].join("|")
+                GenInventoryitem = (item.SubLedger.trim() == '') ? [' ', GenInventoryitem].join("|") : [item.SubLedger, GenInventoryitem].join("|")
+                GenInventoryitem = (item.SubLedgerType.trim() == '') ? [' ', GenInventoryitem].join("|") : [item.SubLedgerType, GenInventoryitem].join("|")
+                GenInventoryitem = (item.Amount.trim() == '') ? [' ', GenInventoryitem].join("|") : [item.Amount, GenInventoryitem].join("|")
+                GenInventoryitem = (item.AccountCode.trim() == '') ? [' ', GenInventoryitem].join("|") : [item.AccountCode, GenInventoryitem].join("|")
+                GenInventoryitem = (item.Remark.trim() == '') ? [' ', GenInventoryitem].join("|") : [item.Remark, GenInventoryitem].join("|")
+                GenInventoryitem = (item.LineNo.trim() == '') ? [' ', GenInventoryitem].join("|") : [item.LineNo, GenInventoryitem].join("|")
                 GenInventoryitem = (item.DocCom.trim() == '') ? [' ', GenInventoryitem].join("|") : [item.DocCom, GenInventoryitem].join("|")
                 GenInventoryitem = (item.DocType.trim() == '') ? [' ', GenInventoryitem].join("|") : [item.DocType, GenInventoryitem].join("|")
                 GenInventoryitem = (item.DocNo.trim() == '') ? [' ', GenInventoryitem].join("|") : [item.DocNo, GenInventoryitem].join("|")
@@ -496,7 +496,7 @@ async function GenInveotory(req, res, reqBody, authData) {
 
             res.setHeader('Content-type', "application/octet-stream");
 
-            res.setHeader('Content-disposition', 'attachment; filename=GLSALES_PH.txt');
+            res.setHeader('Content-disposition', 'attachment; filename=GLINV_PH.txt');
 
             res.send(GenInventory);
 
