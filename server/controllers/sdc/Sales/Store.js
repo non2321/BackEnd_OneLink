@@ -15,6 +15,8 @@ const msg_type = require('../../../models/msg_type')
 const settings = require('../../../../settings')
 
 module.exports.GetAllStore = GetAllStore
+module.exports.GetVendor = GetVendor
+module.exports.GetRegion = GetRegion
 module.exports.GetAllBank = GetAllBank
 module.exports.GetStoreConfig = GetStoreConfig
 module.exports.GetPopupStore = GetPopupStore
@@ -31,6 +33,40 @@ async function GetAllStore(req, res, reqBody) {
         let items = result.recordset
         for (let item in items) {
             data.push({ value: items[item]['STORE_ID'], label: items[item]['STORE_NAME'] })
+        }
+
+        await res.setHeader('Content-Type', 'application/json')
+        await res.send(data)
+    } catch (err) {
+       res.sendStatus(500)
+    }
+}
+
+async function GetVendor(req, res, reqBody) {
+    try {
+        let result = await Store.GetVendor()
+
+        let data = []
+        let items = result.recordset
+        for (let item in items) {
+            data.push({ value: items[item]['VENDOR'], label: items[item]['VENDOR_NAME'] })
+        }
+
+        await res.setHeader('Content-Type', 'application/json')
+        await res.send(data)
+    } catch (err) {
+       res.sendStatus(500)
+    }
+}
+
+async function GetRegion(req, res, reqBody) {
+    try {
+        let result = await Store.GetRegion()
+
+        let data = []
+        let items = result.recordset
+        for (let item in items) {
+            data.push({ value: items[item]['Region_Id'], label: items[item]['District'] })
         }
 
         await res.setHeader('Content-Type', 'application/json')

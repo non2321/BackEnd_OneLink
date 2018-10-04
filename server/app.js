@@ -576,6 +576,18 @@ app.get('/api/report/bankall', (req, res) => {
   Store.GetAllBank(req, res, req.body);
 })
 
+//Get Vendor / ForDropDown
+app.get('/api/report/vendor', (req, res) => {
+  console.log('getvendor')
+  Store.GetVendor(req, res, req.body);
+})
+
+//Get Region / ForDropDown
+app.get('/api/report/region', (req, res) => {
+  console.log('getregion')
+  Store.GetRegion(req, res, req.body);
+})
+
 //Gen Token for Tableau
 app.post('/api/report/gentokentableau', verifyToken, (req, res) => {
   console.log('gentokentableau')

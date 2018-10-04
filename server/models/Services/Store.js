@@ -7,6 +7,8 @@ const utils = require('../../models/Services/utils')
 
 // Store Config
 module.exports.GetAllStore = GetAllStore
+module.exports.GetVendor = GetVendor
+module.exports.GetRegion = GetRegion
 module.exports.GetAllBank = GetAllBank
 module.exports.GetStoreConfig = GetStoreConfig
 module.exports.GetPopupStore = GetPopupStore
@@ -23,6 +25,36 @@ async function GetAllStore() {
         FROM PH_STORES 
         WHERE COMPANY = 'Y' 
         ORDER BY STORE_ID ASC`
+
+        let pool = await sql.connect(settings.dbConfig)
+        let result = await pool.request().query(querysql)
+        res = result
+    } catch (err) {
+    } finally {
+        await sql.close()
+    }
+    return await res
+}
+
+async function GetVendor() {
+    let res = {}
+    try {
+        let querysql = `SELECT * FROM  ACC_M_VENDORS ORDER BY VENDOR ASC`
+
+        let pool = await sql.connect(settings.dbConfig)
+        let result = await pool.request().query(querysql)
+        res = result
+    } catch (err) {
+    } finally {
+        await sql.close()
+    }
+    return await res
+}
+
+async function GetRegion() {
+    let res = {}
+    try {
+        let querysql = `SELECT * FROM REGION_MASTER ORDER BY REGION_ID ASC`
 
         let pool = await sql.connect(settings.dbConfig)
         let result = await pool.request().query(querysql)
