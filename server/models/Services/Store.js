@@ -69,9 +69,8 @@ async function GetRegion() {
 async function GetAllBank() {
     let res = {}
     try {
-        let querysql = `SELECT B.BANK_CODE,B.BANK_CODE + ' ' + B.BANK_NAME as BANK 
-        FROM ACC_M_STORE S INNER JOIN ACC_M_BANK B ON S.BANK_CODE = B.BANK_CODE 
-        ORDER BY B.BANK_CODE ASC`
+        let querysql = `SELECT B.BANK_CODE,b.BANK_CODE + ' ' + B.BANK_NAME as BANK  from ACC_M_BANK B
+		ORDER BY B.BANK_CODE ASC`
 
         let pool = await sql.connect(settings.dbConfig)
         let result = await pool.request().query(querysql)
