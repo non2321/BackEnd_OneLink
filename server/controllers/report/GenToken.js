@@ -151,19 +151,7 @@ async function GenTokenTableauForFullScreen(req, res, reqBody, authData) {
         const response = await fetch('http://192.168.151.113:3000/api/test', { method: 'GET'})
         const tableautoken = await response.text()
        
-        if (tableautoken.length > 5) {           
-            const prmLog = {
-                audit_trail_date: datetime,
-                module: module_name,
-                screen_name: screen_name,
-                action_type: action_type.Select,
-                status: status_type.Success,
-                user_id: authData.id,
-                client_ip: req.ip,
-                msg: msg_type.SelectSuccess,
-                browser: browser
-            }
-           
+        if (tableautoken.length > 5) {
             //Get Message Alert.
             let messageAlert = await message.GetMessageByCode(msg_type.CodeS0001)
 
