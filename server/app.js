@@ -606,6 +606,24 @@ app.post('/api/report/gentokentableau', verifyToken, (req, res) => {
   })
 })
 
+//Gen Token for Tableau For FullScreen
+app.post('/api/report/gentokentableauforfullscreen', verifyToken, (req, res) => {
+  console.log('gentokentableauforfullscreen')
+  jwt.verify(req.token, settings.secretkey, (err, authData) => {
+    if (err) {
+      const data = {
+        status: status_type.Unauthorized,
+        Code: msg_type.CodeW0002,
+      }
+      authExpired.Expired(req, res, data)
+
+    } else {
+      const user = authData.jwtdata
+      GenToken.GenTokenTableauForFullScreen(req, res, req.body, user);
+    }
+  })
+})
+
 
 //Get Account Code For Inventory
 app.get('/api/accountcodeforinventory', (req, res) => {
