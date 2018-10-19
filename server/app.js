@@ -249,6 +249,24 @@ app.get('/api/financialcodeconfig', (req, res) => {
   FinancialConfig.GetFinancialCode(req, res, req.body);
 })
 
+//Add Financial Code Setup
+app.post('/api/financialcodeconfig', verifyToken, (req, res) => {
+  console.log('add_financialcodeconfig')
+  jwt.verify(req.token, settings.secretkey, (err, authData) => {
+    if (err) {
+      const data = {
+        status: status_type.Unauthorized,
+        Code: msg_type.CodeW0002,
+      }
+      authExpired.Expired(req, res, data)
+
+    } else {
+      const user = authData.jwtdata
+      FinancialConfig.AddFinancialCode(req, res, req.body, user);
+    }
+  })
+})
+
 //Edit Financial Code Setup
 app.put('/api/financialcodeconfig', verifyToken, (req, res) => {
   console.log('edit_financialcodeconfig')

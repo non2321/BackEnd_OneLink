@@ -15,6 +15,7 @@ const msg_type = require('../../../models/msg_type')
 const settings = require('../../../../settings')
 
 module.exports.GetFinancialCode = GetFinancialCode
+module.exports.AddFinancialCode = AddFinancialCode
 module.exports.EditFinancialCode = EditFinancialCode
 
 async function GetFinancialCode(req, res, reqBody) {
@@ -26,7 +27,201 @@ async function GetFinancialCode(req, res, reqBody) {
         await res.setHeader('Content-Type', 'application/json');
         await res.send(JSON.stringify(rowdata));
     } catch (err) {
-       res.sendStatus(500)
+        res.sendStatus(500)
+    }
+}
+
+async function AddFinancialCode(req, res, reqBody, authData) {
+    if (reqBody.fin_code == null) throw new Error("Input not valid")
+    if (reqBody.fin_name == null) throw new Error("Input not valid")
+    if (reqBody.active == null) throw new Error("Input not valid")
+    if (reqBody.screen_id == null) throw new Error("Input not valid")
+
+    let fin_code = reqBody.fin_code.trim()
+    let fin_name = reqBody.fin_name.trim()
+    let active = reqBody.active.trim()
+    let screen_id = reqBody.screen_id
+    let screen_name = ''
+    let module_name = ''
+
+    try {
+        // Current DateTime
+        const datetime = new Date().toLocaleString().replace(',', '');
+        //Browser
+        const browser = JSON.stringify(browserdetect(req.headers['user-agent']));
+
+        //Get Screen name && Module name
+        const screen = await menu.GetScreenById(screen_id)
+
+        if (Object.keys(screen).length > 0) {
+            screen_name = screen.SCREEN_NAME
+            module_name = screen.MODULE
+        }
+
+        //Set Check
+        const prmcheck = {
+            fin_code: fin_code
+        }
+        const dupdata = await Financial.FinancialCodeCheckDuplicate(prmcheck)
+
+        //Set object prm
+        const prm = {
+            fin_code: fin_code,
+            fin_name: fin_name,
+            active: active,
+            create_date: datetime,
+            create_by: authData.id
+        }
+        
+        if (dupdata) {
+            const resFin = await Financial.InsertFinancialCode(prm)
+            if (resFin !== undefined) { //Insert Success
+                const prmLog = {
+                    audit_trail_date: datetime,
+                    module: module_name,
+                    screen_name: screen_name,
+                    action_type: action_type.Add,
+                    status: status_type.Success,
+                    user_id: authData.id,
+                    client_ip: req.ip,
+                    msg: msg_type.AddSuccess,
+                    browser: browser
+                }
+                // Add Log.
+                let AuditTrail = await log.InsertLogAuditTrail(prmLog)
+                if (AuditTrail.uid) {
+                    //Add Log Audit         
+                    const prmLogAudit = {
+                        audit_date: datetime,
+                        action_type: action_type.Add,
+                        user_id: authData.id,
+                        screen_name: screen_name,
+                        client_ip: req.ip,
+                        status: status_type.Success,
+                        audit_msg: msg_type.AddSuccess,
+                        audit_trail_id: AuditTrail.uid,
+                        new_value: prm,
+                        original_value: '',
+                    }
+                    await log.InsertLogAudit(prmLogAudit)
+                }
+
+                //Get Message Alert.
+                let messageAlert = await message.GetMessageByCode(msg_type.CodeS0001)
+
+                //Send JWT
+                const jwtdata = {
+                    id: authData.id,
+                    firstname: authData.firstname,
+                    lastname: authData.lastname,
+                    position: authData.position,
+                    email: authData.email,
+                    mobile_no: authData.mobile_no,
+                    phc_user: authData.phc_user,
+                }
+
+                await jwt.sign({ jwtdata }, settings.secretkey, { expiresIn: settings.tokenexpires }, (err, token) => {
+                    res.json({
+                        "status": status_type.Complate,
+                        "message": messageAlert,
+                        "user": {
+                            "id": authData.id,
+                            "firstname": authData.firstname,
+                            "lastname": authData.lastname,
+                            "position": authData.position,
+                            "email": authData.email,
+                            "mobile_no": authData.mobile_no,
+                            "phc_user": authData.phc_user,
+                            token
+                        }
+                    })
+                })
+            } else { //Insert UnSuccess
+                const prmLog = {
+                    audit_trail_date: datetime,
+                    module: module_name,
+                    screen_name: screen_name,
+                    action_type: action_type.Add,
+                    status: status_type.Error,
+                    user_id: authData.id,
+                    client_ip: req.ip,
+                    msg: msg_type.AddUnSuccess,
+                    browser: browser
+                }
+                // Add Log.
+                let AuditTrail = await log.InsertLogAuditTrail(prmLog)
+                if (AuditTrail.uid) {
+                    //Add Log Audit         
+                    const prmLogAudit = {
+                        audit_date: datetime,
+                        action_type: action_type.Add,
+                        user_id: authData.id,
+                        screen_name: screen_name,
+                        client_ip: req.ip,
+                        status: status_type.Error,
+                        audit_msg: msg_type.AddUnSuccess,
+                        audit_trail_id: AuditTrail.uid,
+                        new_value: prm,
+                        original_value: '',
+                    }
+                    await log.InsertLogAudit(prmLogAudit)
+                }
+
+                ////////////////////// Alert Message JSON ////////////////////// 
+
+                const data = {
+                    "status": status_type.UnComplate,
+                    "message": "ไม่สามารถบันทึกข้อมูลลงในระบบได้",
+                }
+                await res.setHeader('Content-Type', 'application/json');
+                await res.send(JSON.stringify(data));
+            }
+        } else { //Duplicate Data
+            const prmLog = {
+                audit_trail_date: datetime,
+                module: module_name,
+                screen_name: screen_name,
+                action_type: action_type.Add,
+                status: status_type.Error,
+                user_id: authData.id,
+                client_ip: req.ip,
+                msg: msg_type.AddUnSuccess,
+                browser: browser
+            }
+            // Add Log.
+            let AuditTrail = await log.InsertLogAuditTrail(prmLog)
+            if (AuditTrail.uid) {
+                //Add Log Audit 
+                const prmLogAudit1 = {
+                    audit_date: datetime,
+                    action_type: action_type.Add,
+                    user_id: authData.id,
+                    screen_name: screen_name,
+                    client_ip: req.ip,
+                    status: status_type.Error,
+                    audit_msg: msg_type.AddDuplicate,
+                    audit_trail_id: AuditTrail.uid,
+                    new_value: prm,
+                    original_value: '',
+                }
+                await log.InsertLogAudit(prmLogAudit1)
+            }
+
+            ////////////////////// Alert Message JSON //////////////////////             
+            const prmMsg = {
+                fin_code: fin_code,
+            }
+            //Get Message Alert.
+            const messageAlert = await message.GetMessageByCode(msg_type.CodeE0001, prmMsg)
+            const data = {
+                "status": status_type.UnComplate,
+                "message": messageAlert,
+            }
+            await res.setHeader('Content-Type', 'application/json');
+            await res.send(JSON.stringify(data));
+        }        
+    } catch (err) {
+        res.sendStatus(500)
     }
 }
 
@@ -39,7 +234,7 @@ async function EditFinancialCode(req, res, obj, authData) {
 
     try {
         // Current DateTime
-        const datetime = new Date().toLocaleString().replace(',','');
+        const datetime = new Date().toLocaleString().replace(',', '');
         //Browser
         const browser = JSON.stringify(browserdetect(req.headers['user-agent']));
 
@@ -69,9 +264,9 @@ async function EditFinancialCode(req, res, obj, authData) {
         let rescheck = true
         let itemsuccess = []
         let itemerror = []
-       
+
         for (let item of obj) {
-            const tempdata = await Financial.GetFinancialCodeById(item.fin_code)           
+            const tempdata = await Financial.GetFinancialCodeById(item.fin_code)
             const prmfin = {
                 fin_code: item.fin_code,
                 fin_desc: item.fin_desc,
@@ -88,7 +283,7 @@ async function EditFinancialCode(req, res, obj, authData) {
                     update_date: datetime,
                     update_by: authData.id,
                     original_value: tempdata.recordset
-                }  
+                }
                 itemsuccess.push(prmitem)
             }
             else if (res == undefined) {
@@ -99,21 +294,21 @@ async function EditFinancialCode(req, res, obj, authData) {
                     update_date: datetime,
                     update_by: authData.id,
                     original_value: tempdata.recordset
-                }               
+                }
                 itemerror.push(prmitem)
                 rescheck = false
             }
         }
-       
+
         //Add Log Audit Success     
-        for (let item of itemsuccess) {            
+        for (let item of itemsuccess) {
             const new_value = {
                 fin_code: item.fin_code,
                 fin_desc: item.fin_desc,
                 fin_flag: item.fin_flag,
                 update_date: item.update_date,
                 update_by: item.update_by,
-            }         
+            }
             if (AuditTrail.uid) {
                 const prmLogAudit = {
                     audit_date: datetime,
@@ -130,10 +325,10 @@ async function EditFinancialCode(req, res, obj, authData) {
                 await log.InsertLogAudit(prmLogAudit)
             }
         }
-        
+
 
         //Add Log Audit Error
-        for (let item of itemerror) {   
+        for (let item of itemerror) {
             const new_value = {
                 fin_code: item.fin_code,
                 fin_desc: item.fin_desc,
@@ -156,9 +351,9 @@ async function EditFinancialCode(req, res, obj, authData) {
                     original_value: item.original_value,
                 }
                 await log.InsertLogAudit(prmLogAudit)
-            }        
+            }
         }
-       
+
 
         //Respone Success
         if (rescheck == true) {
@@ -188,17 +383,17 @@ async function EditFinancialCode(req, res, obj, authData) {
                     "phc_user": authData.phc_user,
                     token
                 })
-            })           
+            })
         } else { //Respone Error
             const data = {
                 "status": status_type.UnComplate,
-                "message": `Financial Code ${itemerror.map((item)=>{return item['fin_code']})} ไม่สามารถบันทึกข้อมูลลงในระบบได้`
+                "message": `Financial Code ${itemerror.map((item) => { return item['fin_code'] })} ไม่สามารถบันทึกข้อมูลลงในระบบได้`
             }
             await res.setHeader('Content-Type', 'application/json');
             await res.send(JSON.stringify(data));
         }
     } catch (err) {
-       res.sendStatus(500)
+        res.sendStatus(500)
     }
 }
 

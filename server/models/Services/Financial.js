@@ -7,6 +7,7 @@ const utils = require('../../models/Services/utils')
 
 module.exports.GetFinancialCode = GetFinancialCode;
 module.exports.GetFinancialCodeById = GetFinancialCodeById;
+module.exports.InsertFinancialCode = InsertFinancialCode;
 module.exports.FinancialCodeCheckDuplicate = FinancialCodeCheckDuplicate;
 module.exports.EditFinancialCode = EditFinancialCode;
 
@@ -48,7 +49,7 @@ async function GetFinancialCode() {
     let res = {}
     try {
         let querysql = ` SELECT * FROM ACC_M_FINANCIAL_CODES 
-        WHERE FINANCIAL_CODE < 100 ORDER BY FINANCIAL_CODE ASC`
+        ORDER BY FINANCIAL_CODE ASC`
 
         let pool = await sql.connect(settings.dbConfig)
         let result = await pool.request().query(querysql)
@@ -84,11 +85,61 @@ async function GetFinancialCodeById(fin_code) {
     return await res
 }
 
+async function InsertFinancialCode(prm) {
+    let res   
+    try {
+        if (prm.fin_code) {
+            const querysql = `INSERT INTO ACC_M_FINANCIAL_CODES
+                            (FINANCIAL_CODE, 
+                            FINANCIAL_DESC, 
+                            POST_TO_GL,
+                            DB_OR_CR,
+                            RECONCILE,
+                            CREATE_DATE,
+                            CREATE_BY,
+                            FIXFLAG,
+                            BLOCK_FLAG) 
+                VALUES      (@input_fin_code, 
+                            @input_fin_name, 
+                            'N', 
+                            'N', 
+                            'N', 
+                            @input_create_date, 
+                            @input_create_by, 
+                            @input_active,
+                            'N') `
+           
+            const input_fin_code = 'input_fin_code'
+            const input_fin_name = 'input_fin_name'
+            const input_active = 'input_active'
+            const input_create_date = 'input_create_date'           
+            const input_create_by = 'input_create_by'
+
+            let pool = await sql.connect(settings.dbConfig)
+            let result = await pool.request()
+                .input(input_fin_code, sql.NVarChar, (prm.fin_code != undefined) ? prm.fin_code : '')
+                .input(input_fin_name, sql.NVarChar, (prm.fin_name != undefined) ? prm.fin_name : '')  
+                .input(input_active, sql.NVarChar, (prm.active != undefined) ? prm.active : '')  
+                .input(input_create_date, sql.NVarChar, (prm.create_date != undefined) ? prm.create_date : '')               
+                .input(input_create_by, sql.NVarChar, (prm.create_by != undefined) ? prm.create_by.trim() : '')
+                .query(querysql)
+            if (result !== undefined) {
+                if (result.rowsAffected > 0) res = true
+            }
+        }
+    } catch (err) {
+
+    } finally {
+        await sql.close()
+    }
+    return await res
+}
+
 async function FinancialCodeCheckDuplicate(prmfin) {
     let res = true
     try {
         let querysql = `SELECT FINANCIAL_CODE FROM   ACC_M_FINANCIAL_CODES WHERE 1=1 `
-        if (prmfin.fin_code != undefined) querysql += `AND FINANCIAL_CODE <> @input_fin_code `
+        if (prmfin.fin_code != undefined) querysql += `AND FINANCIAL_CODE = @input_fin_code `
         if (prmfin.fin_desc != undefined) querysql += `AND FINANCIAL_DESC = @input_fin_desc `
         if (prmfin.fin_gl_code != undefined) querysql += `AND FIN_GL_CODE = @input_fin_gl_code `
         if (prmfin.post_to_gl != undefined) querysql += `AND POST_TO_GL = @input_post_to_gl `
@@ -100,7 +151,7 @@ async function FinancialCodeCheckDuplicate(prmfin) {
         if (prmfin.negative != undefined) querysql += `AND NEGATIVE_FLAG = @input_negative `
         if (prmfin.block_flag != undefined) querysql += `AND BLOCK_FLAG = @input_block_flag `
         if (prmfin.remart_flag != undefined) querysql += `AND REMARK_FLAG = @input_remart_flag `
-
+       
         const input_fin_code = 'input_fin_code'
         const input_fin_desc = 'input_fin_desc'
         const input_fin_gl_code = 'input_fin_gl_code'
@@ -1043,8 +1094,8 @@ async function ExportReportDailyFlashSales(prm) {
             await result.input(p_to_date, sql.NVarChar, prm.dateto)
             await result.input(p_from_store, sql.NVarChar, prm.from_store)
             await result.input(p_to_store, sql.NVarChar, prm.to_store)
-            const results = await result.execute('REPORT_DAILY_FLASH_SALE')           
-            if (results !== undefined) {              
+            const results = await result.execute('REPORT_DAILY_FLASH_SALE')
+            if (results !== undefined) {
                 if (results.recordsets.length > 0) {
                     if (results.recordsets[0].length > 0 || results.recordsets[1].length > 0 || results.recordsets[2].length > 0) {
                         res = results.recordsets
