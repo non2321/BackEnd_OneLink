@@ -38,7 +38,7 @@ async function GetAllStore(req, res, reqBody) {
         await res.setHeader('Content-Type', 'application/json')
         await res.send(data)
     } catch (err) {
-       res.sendStatus(500)
+        res.sendStatus(500)
     }
 }
 
@@ -55,7 +55,7 @@ async function GetVendor(req, res, reqBody) {
         await res.setHeader('Content-Type', 'application/json')
         await res.send(data)
     } catch (err) {
-       res.sendStatus(500)
+        res.sendStatus(500)
     }
 }
 
@@ -72,7 +72,7 @@ async function GetRegion(req, res, reqBody) {
         await res.setHeader('Content-Type', 'application/json')
         await res.send(data)
     } catch (err) {
-       res.sendStatus(500)
+        res.sendStatus(500)
     }
 }
 
@@ -89,7 +89,7 @@ async function GetAllBank(req, res, reqBody) {
         await res.setHeader('Content-Type', 'application/json')
         await res.send(data)
     } catch (err) {
-       res.sendStatus(500)
+        res.sendStatus(500)
     }
 }
 
@@ -102,7 +102,7 @@ async function GetStoreConfig(req, res, reqBody) {
         await res.setHeader('Content-Type', 'application/json');
         await res.send(JSON.stringify(rowdata));
     } catch (err) {
-       res.sendStatus(500)
+        res.sendStatus(500)
     }
 }
 
@@ -115,7 +115,7 @@ async function GetPopupStore(req, res, reqBody) {
         await res.setHeader('Content-Type', 'application/json');
         await res.send(JSON.stringify(rowdata));
     } catch (err) {
-       res.sendStatus(500)
+        res.sendStatus(500)
     }
 }
 
@@ -127,12 +127,12 @@ async function GetDropDownBank(req, res, reqBody) {
         let items = result.recordset
         for (let item in items) {
             data.push({ value: items[item]['BANK_CODE'], label: items[item]['BANK_NAME'] })
-          }
+        }
 
         await res.setHeader('Content-Type', 'application/json')
-        await res.send(data)       
+        await res.send(data)
     } catch (err) {
-       res.sendStatus(500)
+        res.sendStatus(500)
     }
 }
 
@@ -140,7 +140,7 @@ async function AddStoreConfig(req, res, reqBody, authData) {
     if (reqBody.store_code == null) throw new Error("Input not valid")
     if (reqBody.bank_code == null) throw new Error("Input not valid")
     if (reqBody.screen_id == null) throw new Error("Input not valid")
-  
+
     const store_code = reqBody.store_code.trim()
     const bank_code = reqBody.bank_code.trim()
     //Fix CO_CODE = 1
@@ -151,9 +151,7 @@ async function AddStoreConfig(req, res, reqBody, authData) {
 
     try {
         // Current DateTime
-        const datetime = new Date().toLocaleString().replace(',','');
-        console.log(new Date())
-        console.log(datetime)
+        const datetime = new Date().toLocaleString().replace(',', '');
         //Browser
         const browser = JSON.stringify(browserdetect(req.headers['user-agent']));
 
@@ -224,14 +222,16 @@ async function AddStoreConfig(req, res, reqBody, authData) {
                 res.json({
                     "status": status_type.Complate,
                     "message": messageAlert,
-                    "id": authData.id,
-                    "firstname": authData.firstname,
-                    "lastname": authData.lastname,
-                    "position": authData.position,
-                    "email": authData.email,
-                    "mobile_no": authData.mobile_no,
-                    "phc_user": authData.phc_user,
-                    token
+                    "user": {
+                        "id": authData.id,
+                        "firstname": authData.firstname,
+                        "lastname": authData.lastname,
+                        "position": authData.position,
+                        "email": authData.email,
+                        "mobile_no": authData.mobile_no,
+                        "phc_user": authData.phc_user,
+                        token
+                    }
                 })
             })
         } else {  //Insert UnSuccess
@@ -277,7 +277,7 @@ async function AddStoreConfig(req, res, reqBody, authData) {
         }
 
     } catch (err) {
-       res.sendStatus(500)
+        res.sendStatus(500)
     }
 }
 
@@ -296,7 +296,7 @@ async function EditStoreConfig(req, res, reqBody, authData) {
 
     try {
         // Current DateTime
-        const datetime = new Date().toLocaleString().replace(',','');
+        const datetime = new Date().toLocaleString().replace(',', '');
         //Browser
         const browser = JSON.stringify(browserdetect(req.headers['user-agent']));
 
@@ -370,14 +370,16 @@ async function EditStoreConfig(req, res, reqBody, authData) {
                 res.json({
                     "status": status_type.Complate,
                     "message": messageAlert,
-                    "id": authData.id,
-                    "firstname": authData.firstname,
-                    "lastname": authData.lastname,
-                    "position": authData.position,
-                    "email": authData.email,
-                    "mobile_no": authData.mobile_no,
-                    "phc_user": authData.phc_user,
-                    token
+                    "user": {
+                        "id": authData.id,
+                        "firstname": authData.firstname,
+                        "lastname": authData.lastname,
+                        "position": authData.position,
+                        "email": authData.email,
+                        "mobile_no": authData.mobile_no,
+                        "phc_user": authData.phc_user,
+                        token
+                    }
                 })
             })
         }
@@ -423,7 +425,7 @@ async function EditStoreConfig(req, res, reqBody, authData) {
         }
 
     } catch (err) {
-       res.sendStatus(500)
+        res.sendStatus(500)
     }
 }
 
@@ -438,7 +440,7 @@ async function DeleteStoreConfig(req, res, reqBody, authData) {
 
     try {
         // Current DateTime
-        const datetime = new Date().toLocaleString().replace(',','');
+        const datetime = new Date().toLocaleString().replace(',', '');
         //Browser
         const browser = JSON.stringify(browserdetect(req.headers['user-agent']));
 
@@ -450,9 +452,9 @@ async function DeleteStoreConfig(req, res, reqBody, authData) {
             module_name = screen.MODULE
         }
 
-        const tempdata = await Store.GetStoreConfigByStoreCode(store_code)     
+        const tempdata = await Store.GetStoreConfigByStoreCode(store_code)
         const result = await Store.DeleteStoreConfig(store_code)
-       
+
         if (result !== undefined) { //Delete Success 
             const prmLog = {
                 audit_trail_date: datetime,
@@ -464,7 +466,7 @@ async function DeleteStoreConfig(req, res, reqBody, authData) {
                 client_ip: req.ip,
                 msg: msg_type.DeleteSuccess,
                 browser: browser
-            }      
+            }
 
             // Add Log.
             let AuditTrail = await log.InsertLogAuditTrail(prmLog)
@@ -503,14 +505,16 @@ async function DeleteStoreConfig(req, res, reqBody, authData) {
                 res.json({
                     "status": status_type.Complate,
                     "message": messageAlert,
-                    "id": authData.id,
-                    "firstname": authData.firstname,
-                    "lastname": authData.lastname,
-                    "position": authData.position,
-                    "email": authData.email,
-                    "mobile_no": authData.mobile_no,
-                    "phc_user": authData.phc_user,
-                    token
+                    "user": {
+                        "id": authData.id,
+                        "firstname": authData.firstname,
+                        "lastname": authData.lastname,
+                        "position": authData.position,
+                        "email": authData.email,
+                        "mobile_no": authData.mobile_no,
+                        "phc_user": authData.phc_user,
+                        token
+                    }
                 })
             })
         } else {
@@ -528,7 +532,7 @@ async function DeleteStoreConfig(req, res, reqBody, authData) {
 
             // Add Log.
             let AuditTrail = await log.InsertLogAuditTrail(prmLog)
-            if (AuditTrail.uid) {             
+            if (AuditTrail.uid) {
                 //Add Log Audit         
                 const prmLogAudit = {
                     audit_date: datetime,
@@ -541,7 +545,7 @@ async function DeleteStoreConfig(req, res, reqBody, authData) {
                     audit_trail_id: AuditTrail.uid,
                     new_value: '',
                     original_value: tempdata.recordset,
-                }               
+                }
                 await log.InsertLogAudit(prmLogAudit)
             }
 
@@ -554,6 +558,6 @@ async function DeleteStoreConfig(req, res, reqBody, authData) {
             await res.send(JSON.stringify(data));
         }
     } catch (err) {
-       res.sendStatus(500)
+        res.sendStatus(500)
     }
 }

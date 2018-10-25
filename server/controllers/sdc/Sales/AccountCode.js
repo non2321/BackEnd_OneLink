@@ -27,7 +27,7 @@ async function GetAccountCode(req, res, reqBody) {
         await res.setHeader('Content-Type', 'application/json');
         await res.send(JSON.stringify(rowdata));
     } catch (err) {
-       res.sendStatus(500)
+        res.sendStatus(500)
     }
 }
 
@@ -48,7 +48,7 @@ async function AddAccountCode(req, res, reqBody, authData) {
 
     try {
         // Current DateTime
-        const datetime = new Date().toLocaleString().replace(',','');
+        const datetime = new Date().toLocaleString().replace(',', '');
         //Browser
         const browser = JSON.stringify(browserdetect(req.headers['user-agent']));
 
@@ -126,14 +126,16 @@ async function AddAccountCode(req, res, reqBody, authData) {
                     res.json({
                         "status": status_type.Complate,
                         "message": messageAlert,
-                        "id": authData.id,
-                        "firstname": authData.firstname,
-                        "lastname": authData.lastname,
-                        "position": authData.position,
-                        "email": authData.email,
-                        "mobile_no": authData.mobile_no,
-                        "phc_user": authData.phc_user,
-                        token
+                        "user": {
+                            "id": authData.id,
+                            "firstname": authData.firstname,
+                            "lastname": authData.lastname,
+                            "position": authData.position,
+                            "email": authData.email,
+                            "mobile_no": authData.mobile_no,
+                            "phc_user": authData.phc_user,
+                            token
+                        }
                     })
                 })
             } else {  //Insert UnSuccess
@@ -222,7 +224,7 @@ async function AddAccountCode(req, res, reqBody, authData) {
             await res.send(JSON.stringify(data));
         }
     } catch (err) {
-       res.sendStatus(500)
+        res.sendStatus(500)
     }
 }
 
@@ -245,7 +247,7 @@ async function EditAccountCode(req, res, reqBody, authData) {
 
     try {
         // Current DateTime
-        const datetime = new Date().toLocaleString().replace(',','');
+        const datetime = new Date().toLocaleString().replace(',', '');
         //Browser
         const browser = JSON.stringify(browserdetect(req.headers['user-agent']));
 
@@ -328,14 +330,16 @@ async function EditAccountCode(req, res, reqBody, authData) {
                     res.json({
                         "status": status_type.Complate,
                         "message": messageAlert,
-                        "id": authData.id,
-                        "firstname": authData.firstname,
-                        "lastname": authData.lastname,
-                        "position": authData.position,
-                        "email": authData.email,
-                        "mobile_no": authData.mobile_no,
-                        "phc_user": authData.phc_user,
-                        token
+                        "user": {
+                            "id": authData.id,
+                            "firstname": authData.firstname,
+                            "lastname": authData.lastname,
+                            "position": authData.position,
+                            "email": authData.email,
+                            "mobile_no": authData.mobile_no,
+                            "phc_user": authData.phc_user,
+                            token
+                        }
                     })
                 })
             } else {  //Edit UnSuccess
@@ -424,7 +428,7 @@ async function EditAccountCode(req, res, reqBody, authData) {
             await res.send(JSON.stringify(data));
         }
     } catch (err) {
-       res.sendStatus(500)
+        res.sendStatus(500)
     }
 }
 
@@ -441,7 +445,7 @@ async function GetDropDownBuType(req, res, reqBody) {
         await res.setHeader('Content-Type', 'application/json')
         await res.send(data)
     } catch (err) {
-       res.sendStatus(500)
+        res.sendStatus(500)
     }
 }
 
@@ -458,6 +462,6 @@ async function GetDropDownType(req, res, reqBody) {
         await res.setHeader('Content-Type', 'application/json')
         await res.send(data)
     } catch (err) {
-       res.sendStatus(500)
+        res.sendStatus(500)
     }
 }

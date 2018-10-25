@@ -31,9 +31,9 @@ async function GetCompany(req, res, reqBody) {
             "aaData": result.recordset
         }
         await res.setHeader('Content-Type', 'application/json');
-        await res.send(JSON.stringify(rowdata));      
+        await res.send(JSON.stringify(rowdata));
     } catch (err) {
-       res.sendStatus(500)
+        res.sendStatus(500)
     }
 }
 
@@ -50,7 +50,7 @@ async function AddCompany(req, res, reqBody, authData) {
 
     try {
         // Current DateTime
-        const datetime = new Date().toLocaleString().replace(',','');
+        const datetime = new Date().toLocaleString().replace(',', '');
         //Browser
         const browser = JSON.stringify(browserdetect(req.headers['user-agent']));
 
@@ -137,14 +137,16 @@ async function AddCompany(req, res, reqBody, authData) {
                     res.json({
                         "status": status_type.Complate,
                         "message": messageAlert,
-                        "id": authData.id,
-                        "firstname": authData.firstname,
-                        "lastname": authData.lastname,
-                        "position": authData.position,
-                        "email": authData.email,
-                        "mobile_no": authData.mobile_no,
-                        "phc_user": authData.phc_user,
-                        token
+                        "user": {
+                            "id": authData.id,
+                            "firstname": authData.firstname,
+                            "lastname": authData.lastname,
+                            "position": authData.position,
+                            "email": authData.email,
+                            "mobile_no": authData.mobile_no,
+                            "phc_user": authData.phc_user,
+                            token
+                        }
                     })
                 })
             } else {  //Insert UnSuccess
@@ -179,7 +181,7 @@ async function AddCompany(req, res, reqBody, authData) {
                 }
 
                 ////////////////////// Alert Message JSON ////////////////////// 
-                
+
                 const data = {
                     "status": status_type.UnComplate,
                     "message": "ไม่สามารถบันทึกข้อมูลลงในระบบได้",
@@ -233,7 +235,7 @@ async function AddCompany(req, res, reqBody, authData) {
             await res.send(JSON.stringify(data));
         }
     } catch (err) {
-       res.sendStatus(500)
+        res.sendStatus(500)
     }
 }
 
@@ -252,7 +254,7 @@ async function EditCompany(req, res, reqBody, authData) {
 
     try {
         // Current DateTime
-        const datetime = new Date().toLocaleString().replace(',','');
+        const datetime = new Date().toLocaleString().replace(',', '');
         //Browser
         const browser = JSON.stringify(browserdetect(req.headers['user-agent']));
 
@@ -337,14 +339,16 @@ async function EditCompany(req, res, reqBody, authData) {
                     res.json({
                         "status": status_type.Complate,
                         "message": messageAlert,
-                        "id": authData.id,
-                        "firstname": authData.firstname,
-                        "lastname": authData.lastname,
-                        "position": authData.position,
-                        "email": authData.email,
-                        "mobile_no": authData.mobile_no,
-                        "phc_user": authData.phc_user,
-                        token
+                        "user": {
+                            "id": authData.id,
+                            "firstname": authData.firstname,
+                            "lastname": authData.lastname,
+                            "position": authData.position,
+                            "email": authData.email,
+                            "mobile_no": authData.mobile_no,
+                            "phc_user": authData.phc_user,
+                            token
+                        }
                     })
                 })
             } else {  //Edit UnSuccess
@@ -379,7 +383,7 @@ async function EditCompany(req, res, reqBody, authData) {
                 }
 
                 ////////////////////// Alert Message JSON ////////////////////// 
-               
+
                 const data = {
                     "status": status_type.UnComplate,
                     "message": "ไม่สามารถบันทึกข้อมูลลงในระบบได้",
@@ -433,7 +437,7 @@ async function EditCompany(req, res, reqBody, authData) {
             await res.send(JSON.stringify(data));
         }
     } catch (err) {
-       res.sendStatus(500)
+        res.sendStatus(500)
     }
 }
 
@@ -449,7 +453,7 @@ async function DeleteCompany(req, res, reqBody, authData) {
 
     try {
         // Current DateTime
-        const datetime = new Date().toLocaleString().replace(',','');
+        const datetime = new Date().toLocaleString().replace(',', '');
         //Browser
         const browser = JSON.stringify(browserdetect(req.headers['user-agent']));
 
@@ -462,7 +466,7 @@ async function DeleteCompany(req, res, reqBody, authData) {
         }
 
         let tempdata = await lov.GetLovById(company_id)
-      
+
         let result = await lov.DeleteLovById(company_id)
 
         if (result !== undefined) { //Delete Success 
@@ -517,14 +521,16 @@ async function DeleteCompany(req, res, reqBody, authData) {
                 res.json({
                     "status": status_type.Complate,
                     "message": messageAlert,
-                    "id": authData.id,
-                    "firstname": authData.firstname,
-                    "lastname": authData.lastname,
-                    "position": authData.position,
-                    "email": authData.email,
-                    "mobile_no": authData.mobile_no,
-                    "phc_user": authData.phc_user,
-                    token
+                    "user": {
+                        "id": authData.id,
+                        "firstname": authData.firstname,
+                        "lastname": authData.lastname,
+                        "position": authData.position,
+                        "email": authData.email,
+                        "mobile_no": authData.mobile_no,
+                        "phc_user": authData.phc_user,
+                        token
+                    }
                 })
             })
         } else {
@@ -568,7 +574,7 @@ async function DeleteCompany(req, res, reqBody, authData) {
             await res.send(JSON.stringify(data));
         }
     } catch (err) {
-       res.sendStatus(500)
+        res.sendStatus(500)
     }
 }
 
@@ -581,16 +587,16 @@ async function GetCompanyAccount(req, res, reqBody) {
         }
         await res.setHeader('Content-Type', 'application/json');
         await res.send(JSON.stringify(rowdata));
-       
+
     } catch (err) {
-       res.sendStatus(500)
+        res.sendStatus(500)
     }
 }
 
 async function AddCompanyAccount(req, res, reqBody, authData) {
     if (reqBody.company_code == null) throw new Error("Input not valid")
     if (reqBody.company_name == null) throw new Error("Input not valid")
-    if (reqBody.report_name == null) throw new Error("Input not valid")    
+    if (reqBody.report_name == null) throw new Error("Input not valid")
     if (reqBody.screen_id == null) throw new Error("Input not valid")
 
     let company_code = reqBody.company_code.trim()
@@ -602,7 +608,7 @@ async function AddCompanyAccount(req, res, reqBody, authData) {
 
     try {
         // Current DateTime
-        const datetime = new Date().toLocaleString().replace(',','');
+        const datetime = new Date().toLocaleString().replace(',', '');
         //Browser
         const browser = JSON.stringify(browserdetect(req.headers['user-agent']));
 
@@ -690,14 +696,16 @@ async function AddCompanyAccount(req, res, reqBody, authData) {
                     res.json({
                         "status": status_type.Complate,
                         "message": messageAlert,
-                        "id": authData.id,
-                        "firstname": authData.firstname,
-                        "lastname": authData.lastname,
-                        "position": authData.position,
-                        "email": authData.email,
-                        "mobile_no": authData.mobile_no,
-                        "phc_user": authData.phc_user,
-                        token
+                        "user": {
+                            "id": authData.id,
+                            "firstname": authData.firstname,
+                            "lastname": authData.lastname,
+                            "position": authData.position,
+                            "email": authData.email,
+                            "mobile_no": authData.mobile_no,
+                            "phc_user": authData.phc_user,
+                            token
+                        }
                     })
                 })
             } else {  //Insert UnSuccess
@@ -732,7 +740,7 @@ async function AddCompanyAccount(req, res, reqBody, authData) {
                 }
 
                 ////////////////////// Alert Message JSON ////////////////////// 
-                
+
                 const data = {
                     "status": status_type.UnComplate,
                     "message": "ไม่สามารถบันทึกข้อมูลลงในระบบได้",
@@ -786,7 +794,7 @@ async function AddCompanyAccount(req, res, reqBody, authData) {
             await res.send(JSON.stringify(data));
         }
     } catch (err) {
-       res.sendStatus(500)
+        res.sendStatus(500)
     }
 }
 
@@ -794,7 +802,7 @@ async function EditCompanyAccount(req, res, reqBody, authData) {
     if (reqBody.company_id == null) throw new Error("Input not valid")
     if (reqBody.company_code == null) throw new Error("Input not valid")
     if (reqBody.company_name == null) throw new Error("Input not valid")
-    if (reqBody.report_name == null) throw new Error("Input not valid")    
+    if (reqBody.report_name == null) throw new Error("Input not valid")
     if (reqBody.screen_id == null) throw new Error("Input not valid")
 
     let company_id = reqBody.company_id.trim()
@@ -807,7 +815,7 @@ async function EditCompanyAccount(req, res, reqBody, authData) {
 
     try {
         // Current DateTime
-        const datetime = new Date().toLocaleString().replace(',','');
+        const datetime = new Date().toLocaleString().replace(',', '');
         //Browser
         const browser = JSON.stringify(browserdetect(req.headers['user-agent']));
 
@@ -893,14 +901,16 @@ async function EditCompanyAccount(req, res, reqBody, authData) {
                     res.json({
                         "status": status_type.Complate,
                         "message": messageAlert,
-                        "id": authData.id,
-                        "firstname": authData.firstname,
-                        "lastname": authData.lastname,
-                        "position": authData.position,
-                        "email": authData.email,
-                        "mobile_no": authData.mobile_no,
-                        "phc_user": authData.phc_user,
-                        token
+                        "user": {
+                            "id": authData.id,
+                            "firstname": authData.firstname,
+                            "lastname": authData.lastname,
+                            "position": authData.position,
+                            "email": authData.email,
+                            "mobile_no": authData.mobile_no,
+                            "phc_user": authData.phc_user,
+                            token
+                        }
                     })
                 })
             } else {  //Edit UnSuccess
@@ -935,7 +945,7 @@ async function EditCompanyAccount(req, res, reqBody, authData) {
                 }
 
                 ////////////////////// Alert Message JSON ////////////////////// 
-               
+
                 const data = {
                     "status": status_type.UnComplate,
                     "message": "ไม่สามารถบันทึกข้อมูลลงในระบบได้",
@@ -989,7 +999,7 @@ async function EditCompanyAccount(req, res, reqBody, authData) {
             await res.send(JSON.stringify(data));
         }
     } catch (err) {
-       res.sendStatus(500)
+        res.sendStatus(500)
     }
 }
 

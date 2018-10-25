@@ -374,14 +374,16 @@ async function EditFinancialCode(req, res, obj, authData) {
                 res.json({
                     "status": status_type.Complate,
                     "message": messageAlert,
-                    "id": authData.id,
-                    "firstname": authData.firstname,
-                    "lastname": authData.lastname,
-                    "position": authData.position,
-                    "email": authData.email,
-                    "mobile_no": authData.mobile_no,
-                    "phc_user": authData.phc_user,
-                    token
+                    "user": {
+                        "id": authData.id,
+                        "firstname": authData.firstname,
+                        "lastname": authData.lastname,
+                        "position": authData.position,
+                        "email": authData.email,
+                        "mobile_no": authData.mobile_no,
+                        "phc_user": authData.phc_user,
+                        token
+                    }
                 })
             })
         } else { //Respone Error

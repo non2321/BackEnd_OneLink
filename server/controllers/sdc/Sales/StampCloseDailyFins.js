@@ -30,7 +30,7 @@ async function StampCloseDaiyFins(req, res, reqBody, authData) {
 
     try {
         // Current DateTime
-        const datetime = new Date().toLocaleString().replace(',','');
+        const datetime = new Date().toLocaleString().replace(',', '');
         //Browser
         const browser = JSON.stringify(browserdetect(req.headers['user-agent']));
 
@@ -157,14 +157,16 @@ async function StampCloseDaiyFins(req, res, reqBody, authData) {
                         res.json({
                             "status": status_type.Complate,
                             "message": messageAlert,
-                            "id": authData.id,
-                            "firstname": authData.firstname,
-                            "lastname": authData.lastname,
-                            "position": authData.position,
-                            "email": authData.email,
-                            "mobile_no": authData.mobile_no,
-                            "phc_user": authData.phc_user,
-                            token
+                            "user": {
+                                "id": authData.id,
+                                "firstname": authData.firstname,
+                                "lastname": authData.lastname,
+                                "position": authData.position,
+                                "email": authData.email,
+                                "mobile_no": authData.mobile_no,
+                                "phc_user": authData.phc_user,
+                                token
+                            }
                         })
                     })
                 } else {
@@ -244,7 +246,7 @@ async function StampCloseDaiyFins(req, res, reqBody, authData) {
 
             const StampCount = await Financial.CountStampCloseDaiyFins(prmcount)
             if (StampCount.rowsAffected > 0) {
-                
+
                 const result = await Financial.EditStampCloseDaiyFins(prm)
                 if (result !== undefined) { //Edit Success                                       
                     if (AuditTrail.uid) {
@@ -291,14 +293,16 @@ async function StampCloseDaiyFins(req, res, reqBody, authData) {
                         res.json({
                             "status": status_type.Complate,
                             "message": messageAlert,
-                            "id": authData.id,
-                            "firstname": authData.firstname,
-                            "lastname": authData.lastname,
-                            "position": authData.position,
-                            "email": authData.email,
-                            "mobile_no": authData.mobile_no,
-                            "phc_user": authData.phc_user,
-                            token
+                            "user": {
+                                "id": authData.id,
+                                "firstname": authData.firstname,
+                                "lastname": authData.lastname,
+                                "position": authData.position,
+                                "email": authData.email,
+                                "mobile_no": authData.mobile_no,
+                                "phc_user": authData.phc_user,
+                                token
+                            }
                         })
                     })
                 } else {
@@ -350,7 +354,7 @@ async function StampCloseDaiyFins(req, res, reqBody, authData) {
                     await res.setHeader('Content-Type', 'application/json');
                     await res.send(JSON.stringify(data));
                 }
-            } else {               
+            } else {
                 if (AuditTrail.uid) {
                     //Add Log Audit  
                     const tempdata = {
@@ -361,7 +365,7 @@ async function StampCloseDaiyFins(req, res, reqBody, authData) {
                         update_by: authData.id,
                         status: 'I'
                     }
-                   
+
                     const prmLogAudit = {
                         audit_date: datetime,
                         action_type: action_type.Edit,

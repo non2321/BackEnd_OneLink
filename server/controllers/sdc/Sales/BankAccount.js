@@ -28,7 +28,7 @@ async function GetBankAccount(req, res, reqBody) {
         await res.setHeader('Content-Type', 'application/json');
         await res.send(JSON.stringify(rowdata));
     } catch (err) {
-       res.sendStatus(500)
+        res.sendStatus(500)
     }
 }
 
@@ -48,7 +48,7 @@ async function AddBankAccount(req, res, reqBody, authData) {
 
     try {
         // Current DateTime
-        const datetime = new Date().toLocaleString().replace(',','');
+        const datetime = new Date().toLocaleString().replace(',', '');
         //Browser
         const browser = JSON.stringify(browserdetect(req.headers['user-agent']));
 
@@ -58,7 +58,7 @@ async function AddBankAccount(req, res, reqBody, authData) {
         if (Object.keys(screen).length > 0) {
             screen_name = screen.SCREEN_NAME
             module_name = screen.MODULE
-        }      
+        }
 
         let dupdata = await Financial.CheckDuplicateBankAccount(bank_code)
 
@@ -67,7 +67,7 @@ async function AddBankAccount(req, res, reqBody, authData) {
         prm['bank_code'] = bank_code
         prm['bank_name'] = bank_name
         prm['bank_branch'] = bank_branch
-        if (account_code) prm['account_code'] = account_code       
+        if (account_code) prm['account_code'] = account_code
         if (datetime) prm['create_date'] = datetime
         if (authData.id) prm['create_by'] = authData.id
 
@@ -124,14 +124,16 @@ async function AddBankAccount(req, res, reqBody, authData) {
                     res.json({
                         "status": status_type.Complate,
                         "message": messageAlert,
-                        "id": authData.id,
-                        "firstname": authData.firstname,
-                        "lastname": authData.lastname,
-                        "position": authData.position,
-                        "email": authData.email,
-                        "mobile_no": authData.mobile_no,
-                        "phc_user": authData.phc_user,
-                        token
+                        "user": {
+                            "id": authData.id,
+                            "firstname": authData.firstname,
+                            "lastname": authData.lastname,
+                            "position": authData.position,
+                            "email": authData.email,
+                            "mobile_no": authData.mobile_no,
+                            "phc_user": authData.phc_user,
+                            token
+                        }
                     })
                 })
             } else {  //Insert UnSuccess
@@ -166,7 +168,7 @@ async function AddBankAccount(req, res, reqBody, authData) {
                 }
 
                 ////////////////////// Alert Message JSON ////////////////////// 
-                
+
                 const data = {
                     "status": status_type.UnComplate,
                     "message": "ไม่สามารถบันทึกข้อมูลลงในระบบได้",
@@ -220,16 +222,16 @@ async function AddBankAccount(req, res, reqBody, authData) {
             await res.send(JSON.stringify(data));
         }
     } catch (err) {
-       res.sendStatus(500)
+        res.sendStatus(500)
     }
 }
 
-async function EditBankAccount(req, res, reqBody, authData) {   
+async function EditBankAccount(req, res, reqBody, authData) {
     if (reqBody.bank_code == null) throw new Error("Input not valid")
     if (reqBody.bank_name == null) throw new Error("Input not valid")
     if (reqBody.bank_branch == null) throw new Error("Input not valid")
     if (reqBody.screen_id == null) throw new Error("Input not valid")
-   
+
     let bank_code = reqBody.bank_code.trim()
     let bank_name = reqBody.bank_name.trim()
     let bank_branch = reqBody.bank_branch.trim()
@@ -240,7 +242,7 @@ async function EditBankAccount(req, res, reqBody, authData) {
 
     try {
         // Current DateTime
-        const datetime = new Date().toLocaleString().replace(',','');
+        const datetime = new Date().toLocaleString().replace(',', '');
         //Browser
         const browser = JSON.stringify(browserdetect(req.headers['user-agent']));
 
@@ -251,7 +253,7 @@ async function EditBankAccount(req, res, reqBody, authData) {
             screen_name = screen.SCREEN_NAME
             module_name = screen.MODULE
         }
-        
+
         //Set object prm
         const prm = {}
         prm['bank_code'] = bank_code
@@ -259,11 +261,11 @@ async function EditBankAccount(req, res, reqBody, authData) {
         prm['bank_branch'] = bank_branch
         prm['account_code'] = account_code
         if (datetime) prm['update_date'] = datetime
-        if (authData.id) prm['update_by'] = authData.id  
+        if (authData.id) prm['update_by'] = authData.id
 
-        let tempdata = await Financial.GetBankAccountById(bank_code)      
+        let tempdata = await Financial.GetBankAccountById(bank_code)
         let reslov = await Financial.EditBankAccount(prm)
-       
+
         if (reslov !== undefined) { //Edit Success            
             const prmLog = {
                 audit_trail_date: datetime,
@@ -313,14 +315,16 @@ async function EditBankAccount(req, res, reqBody, authData) {
                 res.json({
                     "status": status_type.Complate,
                     "message": messageAlert,
-                    "id": authData.id,
-                    "firstname": authData.firstname,
-                    "lastname": authData.lastname,
-                    "position": authData.position,
-                    "email": authData.email,
-                    "mobile_no": authData.mobile_no,
-                    "phc_user": authData.phc_user,
-                    token
+                    "user": {
+                        "id": authData.id,
+                        "firstname": authData.firstname,
+                        "lastname": authData.lastname,
+                        "position": authData.position,
+                        "email": authData.email,
+                        "mobile_no": authData.mobile_no,
+                        "phc_user": authData.phc_user,
+                        token
+                    }
                 })
             })
         } else {  //Edit UnSuccess
@@ -364,7 +368,7 @@ async function EditBankAccount(req, res, reqBody, authData) {
             await res.send(JSON.stringify(data));
         }
     } catch (err) {
-       res.sendStatus(500)
+        res.sendStatus(500)
     }
 }
 
@@ -380,7 +384,7 @@ async function DeleteBankAccount(req, res, reqBody, authData) {
 
     try {
         // Current DateTime
-        const datetime = new Date().toLocaleString().replace(',','');
+        const datetime = new Date().toLocaleString().replace(',', '');
         //Browser
         const browser = JSON.stringify(browserdetect(req.headers['user-agent']));
 
@@ -393,7 +397,7 @@ async function DeleteBankAccount(req, res, reqBody, authData) {
         }
 
         let tempdata = await Financial.GetBankAccountById(bank_code)
-      
+
         let result = await Financial.DeleteBankAccountById(bank_code)
 
         if (result !== undefined) { //Delete Success 
@@ -446,14 +450,16 @@ async function DeleteBankAccount(req, res, reqBody, authData) {
                 res.json({
                     "status": status_type.Complate,
                     "message": messageAlert,
-                    "id": authData.id,
-                    "firstname": authData.firstname,
-                    "lastname": authData.lastname,
-                    "position": authData.position,
-                    "email": authData.email,
-                    "mobile_no": authData.mobile_no,
-                    "phc_user": authData.phc_user,
-                    token
+                    "user": {
+                        "id": authData.id,
+                        "firstname": authData.firstname,
+                        "lastname": authData.lastname,
+                        "position": authData.position,
+                        "email": authData.email,
+                        "mobile_no": authData.mobile_no,
+                        "phc_user": authData.phc_user,
+                        token
+                    }
                 })
             })
         } else {
@@ -496,6 +502,6 @@ async function DeleteBankAccount(req, res, reqBody, authData) {
             await res.send(JSON.stringify(data));
         }
     } catch (err) {
-       res.sendStatus(500)
+        res.sendStatus(500)
     }
 }
