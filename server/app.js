@@ -3,8 +3,8 @@ const webpack = require('webpack');
 const webpackDevMiddleware = require('webpack-dev-middleware');
 const bodyParser = require('body-parser');    //used to extract the body from the incoming requests
 const jwt = require('jsonwebtoken');
-const ActiveDirectory = require('activedirectory');
 const requestIp = require('request-ip');
+const cron = require('node-cron');
 
 
 const app = express();
@@ -18,8 +18,6 @@ const authLogout = require('./controllers/auth/Logout');
 const authExpired = require('./controllers/auth/Expired');
 const authMenu = require('./controllers/auth/Menu');
 
-//Message
-const message = require('./models/Services/Messsage');
 
 //SDC
 //--Sales
@@ -49,6 +47,9 @@ const GenToken = require('./controllers/report/GenToken')
 const status_type = require("./models/status_type");
 const msg_type = require("./models/msg_type")
 const settings = require("../settings");
+
+//Task Scheduler
+const taskDailyFins = require('./controllers/scheduler/DailyFins');
 
 
 // It extracts the data out of the request headers like the form data, etc,.
@@ -735,20 +736,20 @@ app.get('/api/unitcost/ddlinvencategory', (req, res) => {
 
 //Get Unitcost
 app.get('/api/unitcost/:period', (req, res) => {
-  console.log('get_unitcost')  
-  UnitCost.GetDataTable(req, res, req.body)    
+  console.log('get_unitcost')
+  UnitCost.GetDataTable(req, res, req.body)
 })
 
 //Get Unitcost
 app.get('/api/unitcost/:period/:invencategory', (req, res) => {
-  console.log('get_unitcost')  
-  UnitCost.GetDataTable(req, res, req.body)    
+  console.log('get_unitcost')
+  UnitCost.GetDataTable(req, res, req.body)
 })
 
 //Get Unitcost
 app.get('/api/unitcost/:period/:invencategory/:stockno', (req, res) => {
-  console.log('get_unitcost')  
-  UnitCost.GetDataTable(req, res, req.body)    
+  console.log('get_unitcost')
+  UnitCost.GetDataTable(req, res, req.body)
 })
 
 //Edit Unitcost
@@ -819,20 +820,20 @@ app.post('/api/genunitocst', verifyToken, (req, res) => {
 
 //Get Receipts
 app.get('/api/receipts/:store/:datefrom/:dateto', (req, res) => {
-  console.log('get_receipts')  
-  Receipts.GetDataTable(req, res, req.body)    
+  console.log('get_receipts')
+  Receipts.GetDataTable(req, res, req.body)
 })
 
 //Get Receipts
 app.get('/api/receipts/:store/:datefrom/:dateto/:invoice*', (req, res) => {
-  console.log('get_receipts') 
-  Receipts.GetDataTable(req, res, req.body)    
+  console.log('get_receipts')
+  Receipts.GetDataTable(req, res, req.body)
 })
 
 //Get Term Closing
 app.get('/api/termclosing', (req, res) => {
   console.log('termclosing')
-  TermClosing.GetDataTable(req, res, req.body)    
+  TermClosing.GetDataTable(req, res, req.body)
 })
 
 //Add Term Closing
@@ -875,20 +876,20 @@ app.put('/api/termclosing', verifyToken, (req, res) => {
 
 //Get Ending Inventory Period
 app.get('/api/endinginventory/getperiod/:year/:month', (req, res) => {
-  console.log('endinginventory/getperiod')  
-  EndingInventory.GetPeriod(req, res, req.body)    
+  console.log('endinginventory/getperiod')
+  EndingInventory.GetPeriod(req, res, req.body)
 })
 
 //Get Ending Inventory
 app.get('/api/endinginventory/:stamp/:store/:diff/:period', (req, res) => {
-  console.log('get_endinginventory')  
-  EndingInventory.GetDataTable(req, res, req.body)    
+  console.log('get_endinginventory')
+  EndingInventory.GetDataTable(req, res, req.body)
 })
 
 //Get Transfer Inventory
 app.get('/api/transferinventory/:stamp/:store/:datefrom/:dateto', (req, res) => {
-  console.log('get_endinginventory') 
-  TransferInventory.GetDataTable(req, res, req.body)  
+  console.log('get_endinginventory')
+  TransferInventory.GetDataTable(req, res, req.body)
 })
 
 
@@ -925,3 +926,23 @@ function verifyToken(req, res, next) {
 
   }
 }
+
+//Task Scheduler
+
+// cron.schedule('0 0 4 * * *', async function(){
+  cron.schedule('*/5 * * * * *', async function(){
+  // console.log('running schedule')
+  // await taskDailyFins.runTaskDailyFins()  
+});
+
+
+
+
+  
+  
+
+  
+
+
+
+  

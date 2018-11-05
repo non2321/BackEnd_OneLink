@@ -748,13 +748,7 @@ async function GetValidationfinancialcodeBankInAdjustment() {
     let res = {}
     try {
         let querysql = `SELECT F.FINANCIAL_CODE 
-                        FROM   ACC_M_FINANCIAL_CODES F
-                            JOIN (SELECT DISTINCT LOV1  
-                                    FROM   LOV_DATA  
-                                    WHERE  LOV_GROUP = 'SDC'  
-                                            AND LOV_TYPE = 'SALES'  
-                                            AND LOV_CODE = 'EDIT_DAILY_FINS') L  
-                                ON F.FINANCIAL_CODE = L.LOV1  
+                        FROM   ACC_M_FINANCIAL_CODES F 
                         WHERE  F.FIXFLAG = 1`
 
         let pool = await sql.connect(settings.dbConfig)
@@ -776,20 +770,13 @@ async function GetBankInAdjustment(store, dateofstore) {
                                 D.DAILY_FIN, 
                                 D.S_DAILY_FIN, 
                                 CASE 
-                                WHEN L.LOV1 IS NULL THEN 'N' 
+                                WHEN F.FIXFLAG = 0 THEN 'N' 
                                 ELSE 'Y' 
                                 END CAN_EDIT 
                         FROM   ACC_DAILY_FINS D 
                                 INNER JOIN ACC_M_FINANCIAL_CODES F 
-                                        ON D.FINANCIAL_CODE = F.FINANCIAL_CODE 
-                                LEFT JOIN (SELECT DISTINCT LOV1 
-                                        FROM   LOV_DATA 
-                                        WHERE  LOV_GROUP = 'SDC' 
-                                                AND LOV_TYPE = 'SALES' 
-                                                AND LOV_CODE = 'EDIT_DAILY_FINS') L 
-                                    ON D.FINANCIAL_CODE = L.LOV1 
-                        WHERE  F.FIXFLAG = 1 
-                                AND D.FINANCIAL_DATE = @input_dateofstore
+                                        ON D.FINANCIAL_CODE = F.FINANCIAL_CODE                                 
+                        WHERE   D.FINANCIAL_DATE = @input_dateofstore
                                 AND D.STORE = @input_store
                         ORDER  BY D.STORE, 
                                 D.FINANCIAL_DATE, 
