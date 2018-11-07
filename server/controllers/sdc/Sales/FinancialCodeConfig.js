@@ -35,11 +35,13 @@ async function AddFinancialCode(req, res, reqBody, authData) {
     if (reqBody.fin_code == null) throw new Error("Input not valid")
     if (reqBody.fin_name == null) throw new Error("Input not valid")
     if (reqBody.active == null) throw new Error("Input not valid")
+    if (reqBody.show == null) throw new Error("Input not valid")
     if (reqBody.screen_id == null) throw new Error("Input not valid")
 
     let fin_code = reqBody.fin_code.trim()
     let fin_name = reqBody.fin_name.trim()
     let active = reqBody.active.trim()
+    let show = reqBody.active.trim()
     let screen_id = reqBody.screen_id
     let screen_name = ''
     let module_name = ''
@@ -69,6 +71,7 @@ async function AddFinancialCode(req, res, reqBody, authData) {
             fin_code: fin_code,
             fin_name: fin_name,
             active: active,
+            show: show,
             create_date: datetime,
             create_by: authData.id
         }
@@ -271,6 +274,7 @@ async function EditFinancialCode(req, res, obj, authData) {
                 fin_code: item.fin_code,
                 fin_desc: item.fin_desc,
                 fin_flag: item.fin_flag,
+                fin_show: item.fin_show,
                 update_date: datetime,
                 update_by: authData.id
             }

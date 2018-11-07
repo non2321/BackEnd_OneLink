@@ -98,6 +98,7 @@ async function InsertFinancialCode(prm) {
                             CREATE_DATE,
                             CREATE_BY,
                             FIXFLAG,
+                            S_DAILY_FINS_FLAG,
                             BLOCK_FLAG) 
                 VALUES      (@input_fin_code, 
                             @input_fin_name, 
@@ -107,11 +108,13 @@ async function InsertFinancialCode(prm) {
                             @input_create_date, 
                             @input_create_by, 
                             @input_active,
+                            @input_show,
                             'N') `
            
             const input_fin_code = 'input_fin_code'
             const input_fin_name = 'input_fin_name'
             const input_active = 'input_active'
+            const input_show = 'input_show'
             const input_create_date = 'input_create_date'           
             const input_create_by = 'input_create_by'
 
@@ -120,6 +123,7 @@ async function InsertFinancialCode(prm) {
                 .input(input_fin_code, sql.NVarChar, (prm.fin_code != undefined) ? prm.fin_code : '')
                 .input(input_fin_name, sql.NVarChar, (prm.fin_name != undefined) ? prm.fin_name : '')  
                 .input(input_active, sql.NVarChar, (prm.active != undefined) ? prm.active : '')  
+                .input(input_show, sql.NVarChar, (prm.show != undefined) ? prm.show : '')  
                 .input(input_create_date, sql.NVarChar, (prm.create_date != undefined) ? prm.create_date : '')               
                 .input(input_create_by, sql.NVarChar, (prm.create_by != undefined) ? prm.create_by.trim() : '')
                 .query(querysql)
@@ -211,6 +215,8 @@ async function EditFinancialCode(prmfin) {
             if (prmfin.reconcile != undefined) querysql = [querysql, `RECONCILE = @input_reconcile `].join(",")
             if (prmfin.cost_center != undefined) querysql = [querysql, `COST_CENTER = @input_cost_center `].join(",")
             if (prmfin.fin_flag != undefined) querysql = [querysql, `FIXFLAG = @input_fixflag `].join(",")
+            if (prmfin.fin_show != undefined) querysql = [querysql, `S_DAILY_FINS_FLAG = @input_s_daily_fins_flag `].join(",")
+            
             if (prmfin.priority != undefined) querysql = [querysql, `PRIORITY = @input_priority `].join(",")
             if (prmfin.negative != undefined) querysql = [querysql, `NEGATIVE_FLAG = @input_negative `].join(",")
             if (prmfin.block_flag != undefined) querysql = [querysql, `BLOCK_FLAG = @input_block_flag `].join(",")
@@ -227,6 +233,7 @@ async function EditFinancialCode(prmfin) {
             const input_reconcile = 'input_reconcile'
             const input_cost_center = 'input_cost_center'
             const input_fixflag = 'input_fixflag'
+            const input_s_daily_fins_flag = 'input_s_daily_fins_flag'
             const input_priority = 'input_priority'
             const input_negative = 'input_negative'
             const input_block_flag = 'input_block_flag'
@@ -245,6 +252,7 @@ async function EditFinancialCode(prmfin) {
             if (prmfin.reconcile != undefined) await result.input(input_reconcile, sql.NVarChar, prmfin.reconcile.trim())
             if (prmfin.cost_center != undefined) await result.input(input_cost_center, sql.NVarChar, prmfin.cost_center.trim())
             if (prmfin.fin_flag != undefined) await result.input(input_fixflag, sql.NVarChar, prmfin.fin_flag.trim())
+            if (prmfin.fin_show != undefined) await result.input(input_s_daily_fins_flag, sql.NVarChar, prmfin.fin_show.trim())
             if (prmfin.priority != undefined) await result.input(input_priority, sql.NVarChar, prmfin.priority.trim())
             if (prmfin.negative != undefined) await result.input(input_negative, sql.NVarChar, prmfin.negative.trim())
             if (prmfin.block_flag != undefined) await result.input(input_block_flag, sql.NVarChar, prmfin.block_flag.trim())
@@ -776,7 +784,8 @@ async function GetBankInAdjustment(store, dateofstore) {
                         FROM   ACC_DAILY_FINS D 
                                 INNER JOIN ACC_M_FINANCIAL_CODES F 
                                         ON D.FINANCIAL_CODE = F.FINANCIAL_CODE                                 
-                        WHERE   D.FINANCIAL_DATE = @input_dateofstore
+                        WHERE   F.S_DAILY_FINS_FLAG = 1
+                                AND D.FINANCIAL_DATE = @input_dateofstore
                                 AND D.STORE = @input_store
                         ORDER  BY D.STORE, 
                                 D.FINANCIAL_DATE, 
