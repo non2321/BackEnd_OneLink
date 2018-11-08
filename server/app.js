@@ -874,8 +874,8 @@ app.put('/api/termclosing', verifyToken, (req, res) => {
 })
 
 //Get Ending Inventory Period
-app.get('/api/endinginventory/GetPeriodEndingInventory/:year/:month', (req, res) => {
-  console.log('endinginventory/GetPeriodEndingInventory')
+app.get('/api/endinginventory/getperiod/:year/:month', (req, res) => {
+  console.log('endinginventory/getperiod')
   GetPeriodEndingInventory(req, res, req.body)
 })
 
