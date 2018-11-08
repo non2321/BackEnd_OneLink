@@ -1,26 +1,26 @@
-const sql = require('mssql') // MS Sql Server client
-const jwt = require('jsonwebtoken')
-const browserdetect = require('browser-detect')
-const menu = require('../../../models/Services/Menu')
+import { sign } from 'jsonwebtoken';
+import browserdetect from 'browser-detect';
+import { ServiceGetScreenById } from '../../../models/Services/Menu';
 
-const log = require('../../../models/Services/Log')
-const Financial = require('../../../models/Services/Financial')
-const message = require('../../../models/Services/Messsage')
+import { ServiceInsertLogAuditTrail, ServiceInsertLogAudit } from '../../../models/Services/Log';
+import { ServiceGetBankInAdjustment, ServiceGetPopupStoreBankInAdjustment, ServiceGetValidationstoreBankInAdjustment, ServiceGetValidationfinancialcodeBankInAdjustment, ServiceGetDailyFinsByData, ServiceEditBankInAdjustment, ServiceGenGLBankInAdjustment } from '../../../models/Services/Financial';
+import { ServiceGetMessageByCode } from '../../../models/Services/Messsage';
 
-const action_type = require('../../../models/action_type')
-const status_type = require('../../../models/status_type')
-const msg_type = require('../../../models/msg_type')
+import { ActionEdit, ActionEditUpload, ActionCallProcedures } from '../../../models/action_type';
+import { StatusSuccess, StatusError, StatusComplate, StatusUnComplate } from '../../../models/status_type';
+import { MSGEditSuccess, MSGEditUnSuccess, CodeS0002, MSGEditUploadSuccess, MSGEditUploadUnSuccess, MSGProcedures_GEN_GL_TO_E1 } from '../../../models/msg_type';
 
-const settings = require('../../../../settings')
+import { secretkey, tokenexpires } from '../../../../settings';
 
-
-module.exports.GetBankInAdjustment = GetBankInAdjustment
-module.exports.GetPopupStore = GetPopupStore
-module.exports.GetValidationstore = GetValidationstore
-module.exports.GetValidationfinancialcode = GetValidationfinancialcode
-module.exports.EditBankInAdjustment = EditBankInAdjustment
-module.exports.ImportBankInAdjustment = ImportBankInAdjustment
-module.exports.GenGLBankInAdjustment = GenGLBankInAdjustment
+export {
+    GetBankInAdjustment,
+    GetPopupStore,
+    GetValidationstore,
+    GetValidationfinancialcode,
+    EditBankInAdjustment,
+    ImportBankInAdjustment,
+    GenGLBankInAdjustment
+}
 
 async function GetBankInAdjustment(req, res, reqBody) {
     try {
@@ -30,7 +30,7 @@ async function GetBankInAdjustment(req, res, reqBody) {
         let store = req.params.store
         let dateofstore = req.params.dateofstore
 
-        let result = await Financial.GetBankInAdjustment(store, dateofstore)
+        let result = await ServiceGetBankInAdjustment(store, dateofstore)
         const rowdata = {
             "aaData": result.recordset
         }
@@ -43,7 +43,7 @@ async function GetBankInAdjustment(req, res, reqBody) {
 
 async function GetPopupStore(req, res, reqBody) {
     try {
-        let result = await Financial.GetPopupStoreBankInAdjustment()
+        let result = await ServiceGetPopupStoreBankInAdjustment()
         const rowdata = {
             "aaData": result.recordset
         }
@@ -56,7 +56,7 @@ async function GetPopupStore(req, res, reqBody) {
 
 async function GetValidationstore(req, res, reqBody) {
     try {
-        let result = await Financial.GetValidationstoreBankInAdjustment()
+        let result = await ServiceGetValidationstoreBankInAdjustment()
         await res.setHeader('Content-Type', 'application/json');
         await res.send(JSON.stringify(result.recordset));
     } catch (err) {
@@ -67,7 +67,7 @@ async function GetValidationstore(req, res, reqBody) {
 //validationfinancialcode
 async function GetValidationfinancialcode(req, res, reqBody) {
     try {
-        let result = await Financial.GetValidationfinancialcodeBankInAdjustment()
+        let result = await ServiceGetValidationfinancialcodeBankInAdjustment()
         await res.setHeader('Content-Type', 'application/json');
         await res.send(JSON.stringify(result.recordset));
     } catch (err) {
@@ -83,12 +83,12 @@ async function EditBankInAdjustment(req, res, obj, authData) {
 
     try {
         // Current DateTime
-        const datetime = new Date().toLocaleString().replace(',','');
+        const datetime = new Date().toLocaleString().replace(',', '');
         //Browser
         const browser = JSON.stringify(browserdetect(req.headers['user-agent']));
 
         //Get Screen name && Module name
-        const screen = await menu.GetScreenById(screen_id)
+        const screen = await ServiceGetScreenById(screen_id)
 
         if (Object.keys(screen).length > 0) {
             screen_name = screen.SCREEN_NAME
@@ -99,22 +99,22 @@ async function EditBankInAdjustment(req, res, obj, authData) {
             audit_trail_date: datetime,
             module: module_name,
             screen_name: screen_name,
-            action_type: action_type.Edit,
-            status: status_type.Success,
+            action_type: ActionEdit,
+            status: StatusSuccess,
             user_id: authData.id,
             client_ip: req.ip,
-            msg: msg_type.EditSuccess,
+            msg: MSGEditSuccess,
             browser: browser
         }
         // Add Log.
-        let AuditTrail = await log.InsertLogAuditTrail(prmLog)
+        let AuditTrail = await ServiceInsertLogAuditTrail(prmLog)
 
         let rescheck = true
-        let itemsuccess = []
+        let itemStatusSuccess = []
         let itemerror = []
 
         for (let item of obj) {
-            const tempdata = await Financial.GetDailyFinsByData(item)
+            const tempdata = await ServiceGetDailyFinsByData(item)
             const prm = {
                 store_id: item.store_id,
                 fin_code: item.fin_code,
@@ -124,7 +124,7 @@ async function EditBankInAdjustment(req, res, obj, authData) {
                 update_date: datetime,
                 update_by: authData.id
             }
-            const res = await Financial.EditBankInAdjustment(prm)
+            const res = await ServiceEditBankInAdjustment(prm)
 
             if (res != undefined) {
                 const prmitem = {
@@ -137,7 +137,7 @@ async function EditBankInAdjustment(req, res, obj, authData) {
                     update_by: authData.id,
                     original_value: tempdata.recordset
                 }
-                itemsuccess.push(prmitem)
+                itemStatusSuccess.push(prmitem)
             }
             else if (res == undefined) {
                 const prmitem = {
@@ -155,8 +155,8 @@ async function EditBankInAdjustment(req, res, obj, authData) {
             }
         }
 
-        //Add Log Audit Success     
-        for (let item of itemsuccess) {
+        //Add Log Audit StatusSuccess     
+        for (let item of itemStatusSuccess) {
             const new_value = {
                 store_id: item.store_id,
                 fin_code: item.fin_code,
@@ -169,17 +169,17 @@ async function EditBankInAdjustment(req, res, obj, authData) {
             if (AuditTrail.uid) {
                 const prmLogAudit = {
                     audit_date: datetime,
-                    action_type: action_type.Edit,
+                    action_type: ActionEdit,
                     user_id: authData.id,
                     screen_name: screen_name,
                     client_ip: req.ip,
-                    status: status_type.Success,
-                    audit_msg: msg_type.EditSuccess,
+                    status: StatusSuccess,
+                    audit_msg: MSGEditSuccess,
                     audit_trail_id: AuditTrail.uid,
                     new_value: new_value,
                     original_value: item.original_value,
                 }
-                await log.InsertLogAudit(prmLogAudit)
+                await ServiceInsertLogAudit(prmLogAudit)
             }
         }
 
@@ -198,25 +198,25 @@ async function EditBankInAdjustment(req, res, obj, authData) {
             if (AuditTrail.uid) {
                 const prmLogAudit = {
                     audit_date: datetime,
-                    action_type: action_type.Edit,
+                    action_type: ActionEdit,
                     user_id: authData.id,
                     screen_name: screen_name,
                     client_ip: req.ip,
-                    status: status_type.Error,
-                    audit_msg: msg_type.EditUnSuccess,
+                    status: StatusError,
+                    audit_msg: MSGEditUnSuccess,
                     audit_trail_id: AuditTrail.uid,
                     new_value: new_value,
                     original_value: item.original_value,
                 }
-                await log.InsertLogAudit(prmLogAudit)
+                await ServiceInsertLogAudit(prmLogAudit)
             }
         }
 
 
-        //Respone Success
+        //Respone StatusSuccess
         if (rescheck == true) {
             //Get Message Alert.
-            let messageAlert = await message.GetMessageByCode(msg_type.CodeS0002)
+            let messageAlert = await ServiceGetMessageByCode(CodeS0002)
 
             //Send JWT
             const jwtdata = {
@@ -228,9 +228,9 @@ async function EditBankInAdjustment(req, res, obj, authData) {
                 mobile_no: authData.mobile_no,
                 phc_user: authData.phc_user,
             }
-            await jwt.sign({ jwtdata }, settings.secretkey, { expiresIn: settings.tokenexpires }, (err, token) => {
+            await sign({ jwtdata }, secretkey, { expiresIn: tokenexpires }, (err, token) => {
                 res.json({
-                    "status": status_type.Complate,
+                    "status": StatusComplate,
                     "message": messageAlert,
                     "user": {
                         "id": authData.id,
@@ -246,7 +246,7 @@ async function EditBankInAdjustment(req, res, obj, authData) {
             })
         } else { //Respone Error
             const data = {
-                "status": status_type.UnComplate,
+                "status": StatusUnComplate,
                 "message": `Financial Code ${itemerror.map((item) => { return item['fin_code'] })} ไม่สามารถบันทึกข้อมูลลงในระบบได้`
             }
             await res.setHeader('Content-Type', 'application/json');
@@ -266,12 +266,12 @@ async function ImportBankInAdjustment(req, res, obj, authData) {
 
     try {
         // Current DateTime
-        const datetime = new Date().toLocaleString().replace(',','');
+        const datetime = new Date().toLocaleString().replace(',', '');
         //Browser
         const browser = JSON.stringify(browserdetect(req.headers['user-agent']));
 
         //Get Screen name && Module name
-        const screen = await menu.GetScreenById(screen_id)
+        const screen = await ServiceGetScreenById(screen_id)
 
         if (Object.keys(screen).length > 0) {
             screen_name = screen.SCREEN_NAME
@@ -282,19 +282,19 @@ async function ImportBankInAdjustment(req, res, obj, authData) {
             audit_trail_date: datetime,
             module: module_name,
             screen_name: screen_name,
-            action_type: action_type.EditUpload,
-            status: status_type.Success,
+            action_type: ActionEditUpload,
+            status: StatusSuccess,
             user_id: authData.id,
             client_ip: req.ip,
-            msg: msg_type.EditUploadSuccess,
+            msg: MSGEditUploadSuccess,
             browser: browser
         }
 
         // Add Log.
-        let AuditTrail = await log.InsertLogAuditTrail(prmLog)
+        let AuditTrail = await ServiceInsertLogAuditTrail(prmLog)
 
         let rescheck = true
-        let itemsuccess = []
+        let itemStatusSuccess = []
         let itemerror = []
 
         for (let item of obj) {
@@ -309,9 +309,9 @@ async function ImportBankInAdjustment(req, res, obj, authData) {
                 update_date: datetime,
                 update_by: authData.id
             }
-            const tempdata = await Financial.GetDailyFinsByData(prm)
+            const tempdata = await ServiceGetDailyFinsByData(prm)
 
-            const res = await Financial.EditBankInAdjustment(prm)
+            const res = await ServiceEditBankInAdjustment(prm)
 
             if (res != undefined) {
                 const prmitem = {
@@ -324,7 +324,7 @@ async function ImportBankInAdjustment(req, res, obj, authData) {
                     update_by: authData.id,
                     original_value: tempdata.recordset
                 }
-                itemsuccess.push(prmitem)
+                itemStatusSuccess.push(prmitem)
             }
             else if (res == undefined) {
                 const prmitem = {
@@ -341,8 +341,8 @@ async function ImportBankInAdjustment(req, res, obj, authData) {
                 rescheck = false
             }
         }
-        //Add Log Audit Success     
-        for (let item of itemsuccess) {
+        //Add Log Audit StatusSuccess     
+        for (let item of itemStatusSuccess) {
             const new_value = {
                 store_id: item.store_id,
                 fin_code: item.fin_code,
@@ -355,17 +355,17 @@ async function ImportBankInAdjustment(req, res, obj, authData) {
             if (AuditTrail.uid) {
                 const prmLogAudit = {
                     audit_date: datetime,
-                    action_type: action_type.Edit,
+                    action_type: ActionEdit,
                     user_id: authData.id,
                     screen_name: screen_name,
                     client_ip: req.ip,
-                    status: status_type.Success,
-                    audit_msg: msg_type.EditUploadSuccess,
+                    status: StatusSuccess,
+                    audit_msg: MSGEditUploadSuccess,
                     audit_trail_id: AuditTrail.uid,
                     new_value: new_value,
                     original_value: item.original_value,
                 }
-                await log.InsertLogAudit(prmLogAudit)
+                await ServiceInsertLogAudit(prmLogAudit)
             }
         }
 
@@ -384,25 +384,25 @@ async function ImportBankInAdjustment(req, res, obj, authData) {
             if (AuditTrail.uid) {
                 const prmLogAudit = {
                     audit_date: datetime,
-                    action_type: action_type.Edit,
+                    action_type: ActionEdit,
                     user_id: authData.id,
                     screen_name: screen_name,
                     client_ip: req.ip,
-                    status: status_type.Error,
-                    audit_msg: msg_type.EditUploadUnSuccess,
+                    status: StatusError,
+                    audit_msg: MSGEditUploadUnSuccess,
                     audit_trail_id: AuditTrail.uid,
                     new_value: new_value,
                     original_value: item.original_value,
                 }
-                await log.InsertLogAudit(prmLogAudit)
+                await ServiceInsertLogAudit(prmLogAudit)
             }
         }
 
 
-        //Respone Success
+        //Respone StatusSuccess
         if (rescheck == true) {
             //Get Message Alert.
-            let messageAlert = await message.GetMessageByCode(msg_type.CodeS0002)
+            let messageAlert = await ServiceGetMessageByCode(CodeS0002)
 
             //Send JWT
             const jwtdata = {
@@ -414,9 +414,9 @@ async function ImportBankInAdjustment(req, res, obj, authData) {
                 mobile_no: authData.mobile_no,
                 phc_user: authData.phc_user,
             }
-            await jwt.sign({ jwtdata }, settings.secretkey, { expiresIn: settings.tokenexpires }, (err, token) => {
+            await sign({ jwtdata }, secretkey, { expiresIn: tokenexpires }, (err, token) => {
                 res.json({
-                    "status": status_type.Complate,
+                    "status": StatusComplate,
                     "message": messageAlert,
                     "user": {
                         "id": authData.id,
@@ -432,7 +432,7 @@ async function ImportBankInAdjustment(req, res, obj, authData) {
             })
         } else { //Respone Error
             const data = {
-                "status": status_type.UnComplate,
+                "status": StatusUnComplate,
                 "message": `Financial Code ${itemerror.map((item) => { return item['fin_code'] })} ไม่สามารถบันทึกข้อมูลลงในระบบได้`
             }
             await res.setHeader('Content-Type', 'application/json');
@@ -460,19 +460,19 @@ async function GenGLBankInAdjustment(req, res, reqBody, authData) {
     const glto_store = reqBody.glto_store.trim()
     const screen_id = reqBody.screen_id.trim()
 
-    
+
     let screen_name = ''
     let module_name = ''
 
 
     try {
         // Current DateTime
-        const datetime = new Date().toLocaleString().replace(',','');
+        const datetime = new Date().toLocaleString().replace(',', '');
         //Browser
         const browser = JSON.stringify(browserdetect(req.headers['user-agent']));
 
         //Get Screen name && Module name
-        const screen = await menu.GetScreenById(screen_id)
+        const screen = await ServiceGetScreenById(screen_id)
 
         if (Object.keys(screen).length > 0) {
             screen_name = screen.SCREEN_NAME
@@ -487,25 +487,25 @@ async function GenGLBankInAdjustment(req, res, reqBody, authData) {
             glto_store: glto_store
         }
 
-        let result = await Financial.GenGLBankInAdjustment(prm)
+        let result = await ServiceGenGLBankInAdjustment(prm)
         if (result !== undefined) {
             const prmLog = {
                 audit_trail_date: datetime,
                 module: module_name,
                 screen_name: screen_name,
-                action_type: action_type.CallProcedures,
-                status: status_type.Success,
+                action_type: ActionCallProcedures,
+                status: StatusSuccess,
                 user_id: authData.id,
                 client_ip: req.ip,
-                msg: msg_type.Procedures_GEN_GL_TO_E1,
+                msg: MSGProcedures_GEN_GL_TO_E1,
                 browser: browser
             }
 
             // Add Log.
-            let AuditTrail = await log.InsertLogAuditTrail(prmLog)
+            let AuditTrail = await ServiceInsertLogAuditTrail(prmLog)
 
             let GLSales = ''
-         
+
             for (let item of result) {
                 let GLSalesitem = ''
                 GLSalesitem = (item.AccMode.trim() == '') ? [' ', GLSalesitem].join("|") : [item.AccMode, GLSalesitem].join("|")
@@ -538,16 +538,16 @@ async function GenGLBankInAdjustment(req, res, reqBody, authData) {
                 audit_trail_date: datetime,
                 module: module_name,
                 screen_name: screen_name,
-                action_type: action_type.CallProcedures,
-                status: status_type.Error,
+                action_type: ActionCallProcedures,
+                status: StatusError,
                 user_id: authData.id,
                 client_ip: req.ip,
-                msg: msg_type.Procedures_GEN_GL_TO_E1,
+                msg: MSGProcedures_GEN_GL_TO_E1,
                 browser: browser
             }
 
             // Add Log.
-            let AuditTrail = await log.InsertLogAuditTrail(prmLog)
+            let AuditTrail = await ServiceInsertLogAuditTrail(prmLog)
 
             let GLSales = ''
 
@@ -557,7 +557,7 @@ async function GenGLBankInAdjustment(req, res, reqBody, authData) {
 
             res.send(GLSales);
         }
-        
+
     } catch (err) {
         res.sendStatus(500)
     }

@@ -1,1 +1,1 @@
-exports.OneLink = 'ONELINK';
+export const ModuleOneLink = 'ONELINK';

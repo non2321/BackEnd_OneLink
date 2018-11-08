@@ -1,10 +1,8 @@
-exports.Success = 'S';
+export const StatusSuccess = 'S';
 
-exports.Error = 'E';
+export const StatusError = 'E';
 
-
-
-exports.Complate = 'Y';
-exports.UnComplate = 'N';
-exports.Warning = 'W';
-exports.Unauthorized = 'NA';
+export const StatusComplate = 'Y';
+export const StatusUnComplate = 'N';
+export const StatusWarning = 'W';
+export const StatusUnauthorized = 'NA';

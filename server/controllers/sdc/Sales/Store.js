@@ -1,33 +1,33 @@
-const sql = require('mssql') // MS Sql Server client
-const jwt = require('jsonwebtoken')
-const browserdetect = require('browser-detect');
-const setting = require('../../../../settings')
-const menu = require('../../../models/Services/Menu')
+import { sign } from 'jsonwebtoken';
+import browserdetect from 'browser-detect';
+import { ServiceGetScreenById } from '../../../models/Services/Menu';
 
-const log = require('../../../models/Services/Log')
-const Store = require('../../../models/Services/Store')
-const message = require('../../../models/Services/Messsage')
+import { ServiceInsertLogAuditTrail, ServiceInsertLogAudit } from '../../../models/Services/Log';
+import { ServiceGetAllStore, ServiceGetVendor, ServiceGetRegion, ServiceGetAllBank, ServiceGetStoreConfig, ServiceGetPopupStore, ServiceGetDropDownBank, ServiceInsertStoreConfig, ServiceGetStoreConfigByStoreCode, ServiceEditStoreConfig, ServiceDeleteStoreConfig } from '../../../models/Services/Store';
+import { ServiceGetMessageByCode } from '../../../models/Services/Messsage';
 
-const action_type = require('../../../models/action_type')
-const status_type = require('../../../models/status_type')
-const msg_type = require('../../../models/msg_type')
+import { ActionAdd, ActionEdit, ActionDelete } from '../../../models/action_type';
+import { StatusSuccess, StatusComplate, StatusError, StatusUnComplate } from '../../../models/status_type';
+import { MSGAddSuccess, CodeS0001, MSGAddUnSuccess, MSGEditSuccess, CodeS0002, MSGEditUnSuccess, MSGDeleteSuccess, CodeS0003, MSGDeleteUnSuccess } from '../../../models/msg_type';
 
-const settings = require('../../../../settings')
+import { secretkey, tokenexpires } from '../../../../settings';
 
-module.exports.GetAllStore = GetAllStore
-module.exports.GetVendor = GetVendor
-module.exports.GetRegion = GetRegion
-module.exports.GetAllBank = GetAllBank
-module.exports.GetStoreConfig = GetStoreConfig
-module.exports.GetPopupStore = GetPopupStore
-module.exports.GetDropDownBank = GetDropDownBank
-module.exports.AddStoreConfig = AddStoreConfig
-module.exports.EditStoreConfig = EditStoreConfig
-module.exports.DeleteStoreConfig = DeleteStoreConfig
+export {
+    GetAllStore,
+    GetVendor,
+    GetRegion,
+    GetAllBank,
+    GetStoreConfig,
+    GetPopupStore,
+    GetDropDownBank,
+    AddStoreConfig,
+    EditStoreConfig,
+    DeleteStoreConfig
+}
 
 async function GetAllStore(req, res, reqBody) {
     try {
-        let result = await Store.GetAllStore()
+        let result = await ServiceGetAllStore()
 
         let data = []
         let items = result.recordset
@@ -44,7 +44,7 @@ async function GetAllStore(req, res, reqBody) {
 
 async function GetVendor(req, res, reqBody) {
     try {
-        let result = await Store.GetVendor()
+        let result = await ServiceGetVendor()
 
         let data = []
         let items = result.recordset
@@ -61,7 +61,7 @@ async function GetVendor(req, res, reqBody) {
 
 async function GetRegion(req, res, reqBody) {
     try {
-        let result = await Store.GetRegion()
+        let result = await ServiceGetRegion()
 
         let data = []
         let items = result.recordset
@@ -78,7 +78,7 @@ async function GetRegion(req, res, reqBody) {
 
 async function GetAllBank(req, res, reqBody) {
     try {
-        let result = await Store.GetAllBank()
+        let result = await ServiceGetAllBank()
 
         let data = []
         let items = result.recordset
@@ -95,7 +95,7 @@ async function GetAllBank(req, res, reqBody) {
 
 async function GetStoreConfig(req, res, reqBody) {
     try {
-        let result = await Store.GetStoreConfig()
+        let result = await ServiceGetStoreConfig()
         const rowdata = {
             "aaData": result.recordset
         }
@@ -108,7 +108,7 @@ async function GetStoreConfig(req, res, reqBody) {
 
 async function GetPopupStore(req, res, reqBody) {
     try {
-        let result = await Store.GetPopupStore()
+        let result = await ServiceGetPopupStore()
         const rowdata = {
             "aaData": result.recordset
         }
@@ -121,7 +121,7 @@ async function GetPopupStore(req, res, reqBody) {
 
 async function GetDropDownBank(req, res, reqBody) {
     try {
-        let result = await Store.GetDropDownBank()
+        let result = await ServiceGetDropDownBank()
 
         let data = []
         let items = result.recordset
@@ -156,7 +156,7 @@ async function AddStoreConfig(req, res, reqBody, authData) {
         const browser = JSON.stringify(browserdetect(req.headers['user-agent']));
 
         //Get Screen name && Module name
-        const screen = await menu.GetScreenById(screen_id)
+        const screen = await ServiceGetScreenById(screen_id)
 
         if (Object.keys(screen).length > 0) {
             screen_name = screen.SCREEN_NAME
@@ -171,41 +171,41 @@ async function AddStoreConfig(req, res, reqBody, authData) {
         if (datetime) prm['create_date'] = datetime
         if (authData.id) prm['create_by'] = authData.id
 
-        const result = await Store.InsertStoreConfig(prm)
+        const result = await ServiceInsertStoreConfig(prm)
 
-        if (result !== undefined) { //Insert Success            
+        if (result !== undefined) { //Insert StatusSuccess            
             const prmLog = {
                 audit_trail_date: datetime,
                 module: module_name,
                 screen_name: screen_name,
-                action_type: action_type.Add,
-                status: status_type.Success,
+                action_type: ActionAdd,
+                status: StatusSuccess,
                 user_id: authData.id,
                 client_ip: req.ip,
-                msg: msg_type.AddSuccess,
+                msg: MSGAddSuccess,
                 browser: browser
             }
-            // Add Log.
-            let AuditTrail = await log.InsertLogAuditTrail(prmLog)
+            // ActionAdd Log.
+            let AuditTrail = await ServiceInsertLogAuditTrail(prmLog)
             if (AuditTrail.uid) {
-                //Add Log Audit         
+                //ActionAdd Log Audit         
                 const prmLogAudit = {
                     audit_date: datetime,
-                    action_type: action_type.Add,
+                    action_type: ActionAdd,
                     user_id: authData.id,
                     screen_name: screen_name,
                     client_ip: req.ip,
-                    status: status_type.Success,
-                    audit_msg: msg_type.AddSuccess,
+                    status: StatusSuccess,
+                    audit_msg: MSGAddSuccess,
                     audit_trail_id: AuditTrail.uid,
                     new_value: prm,
                     original_value: '',
                 }
-                await log.InsertLogAudit(prmLogAudit)
+                await ServiceInsertLogAudit(prmLogAudit)
             }
 
             //Get Message Alert.
-            let messageAlert = await message.GetMessageByCode(msg_type.CodeS0001)
+            let messageAlert = await ServiceGetMessageByCode(CodeS0001)
 
             //Send JWT
             const jwtdata = {
@@ -218,9 +218,9 @@ async function AddStoreConfig(req, res, reqBody, authData) {
                 phc_user: authData.phc_user,
             }
 
-            await jwt.sign({ jwtdata }, settings.secretkey, { expiresIn: settings.tokenexpires }, (err, token) => {
+            await sign({ jwtdata }, secretkey, { expiresIn: tokenexpires }, (err, token) => {
                 res.json({
-                    "status": status_type.Complate,
+                    "status": StatusComplate,
                     "message": messageAlert,
                     "user": {
                         "id": authData.id,
@@ -234,41 +234,41 @@ async function AddStoreConfig(req, res, reqBody, authData) {
                     }
                 })
             })
-        } else {  //Insert UnSuccess
+        } else {  //Insert UnStatusSuccess
             const prmLog = {
                 audit_trail_date: datetime,
                 module: module_name,
                 screen_name: screen_name,
-                action_type: action_type.Add,
-                status: status_type.Error,
+                action_type: ActionAdd,
+                status: StatusError,
                 user_id: authData.id,
                 client_ip: req.ip,
-                msg: msg_type.AddUnSuccess,
+                msg: MSGAddUnSuccess,
                 browser: browser
             }
-            // Add Log.
-            let AuditTrail = await log.InsertLogAuditTrail(prmLog)
+            // ActionAdd Log.
+            let AuditTrail = await ServiceInsertLogAuditTrail(prmLog)
             if (AuditTrail.uid) {
-                //Add Log Audit         
+                //ActionAdd Log Audit         
                 const prmLogAudit = {
                     audit_date: datetime,
-                    action_type: action_type.Add,
+                    action_type: ActionAdd,
                     user_id: authData.id,
                     screen_name: screen_name,
                     client_ip: req.ip,
-                    status: status_type.Error,
-                    audit_msg: msg_type.AddUnSuccess,
+                    status: StatusError,
+                    audit_msg: MSGAddUnSuccess,
                     audit_trail_id: AuditTrail.uid,
                     new_value: prm,
                     original_value: '',
                 }
-                await log.InsertLogAudit(prmLogAudit)
+                await ServiceInsertLogAudit(prmLogAudit)
             }
 
             ////////////////////// Alert Message JSON ////////////////////// 
 
             const data = {
-                "status": status_type.UnComplate,
+                "status": StatusUnComplate,
                 "message": "ไม่สามารถบันทึกข้อมูลลงในระบบได้",
             }
             await res.setHeader('Content-Type', 'application/json');
@@ -301,14 +301,14 @@ async function EditStoreConfig(req, res, reqBody, authData) {
         const browser = JSON.stringify(browserdetect(req.headers['user-agent']));
 
         //Get Screen name && Module name
-        const screen = await menu.GetScreenById(screen_id)
+        const screen = await ServiceGetScreenById(screen_id)
 
         if (Object.keys(screen).length > 0) {
             screen_name = screen.SCREEN_NAME
             module_name = screen.MODULE
         }
 
-        const tempdata = await Store.GetStoreConfigByStoreCode(store_code)
+        const tempdata = await ServiceGetStoreConfigByStoreCode(store_code)
 
         //Set object prm
         const prm = {}
@@ -318,42 +318,42 @@ async function EditStoreConfig(req, res, reqBody, authData) {
         if (datetime) prm['update_date'] = datetime
         if (authData.id) prm['update_by'] = authData.id
 
-        let result = await Store.EditStoreConfig(prm)
+        let result = await ServiceEditStoreConfig(prm)
 
-        if (result !== undefined) { //Edit Success            
+        if (result !== undefined) { //ActionEdit StatusSuccess            
             const prmLog = {
                 audit_trail_date: datetime,
                 module: module_name,
                 screen_name: screen_name,
-                action_type: action_type.Edit,
-                status: status_type.Success,
+                action_type: ActionEdit,
+                status: StatusSuccess,
                 user_id: authData.id,
                 client_ip: req.ip,
-                msg: msg_type.EditSuccess,
+                msg: MSGEditSuccess,
                 browser: browser
             }
 
-            //Add Log.
-            let AuditTrail = await log.InsertLogAuditTrail(prmLog)
+            //ActionAdd Log.
+            let AuditTrail = await ServiceInsertLogAuditTrail(prmLog)
             if (AuditTrail.uid) {
-                //Add Log Audit         
+                //ActionAdd Log Audit         
                 const prmLogAudit = {
                     audit_date: datetime,
-                    action_type: action_type.Edit,
+                    action_type: ActionEdit,
                     user_id: authData.id,
                     screen_name: screen_name,
                     client_ip: req.ip,
-                    status: status_type.Success,
-                    audit_msg: msg_type.EditSuccess,
+                    status: StatusSuccess,
+                    audit_msg: MSGEditSuccess,
                     audit_trail_id: AuditTrail.uid,
                     new_value: prm,
                     original_value: tempdata.recordset,
                 }
-                await log.InsertLogAudit(prmLogAudit)
+                await ServiceInsertLogAudit(prmLogAudit)
             }
 
             //Get Message Alert.
-            let messageAlert = await message.GetMessageByCode(msg_type.CodeS0002)
+            let messageAlert = await ServiceGetMessageByCode(CodeS0002)
 
             //Send JWT
             const jwtdata = {
@@ -366,9 +366,9 @@ async function EditStoreConfig(req, res, reqBody, authData) {
                 phc_user: authData.phc_user,
             }
 
-            await jwt.sign({ jwtdata }, settings.secretkey, { expiresIn: settings.tokenexpires }, (err, token) => {
+            await sign({ jwtdata }, secretkey, { expiresIn: tokenexpires }, (err, token) => {
                 res.json({
-                    "status": status_type.Complate,
+                    "status": StatusComplate,
                     "message": messageAlert,
                     "user": {
                         "id": authData.id,
@@ -383,41 +383,41 @@ async function EditStoreConfig(req, res, reqBody, authData) {
                 })
             })
         }
-        else {  //Edit UnSuccess
+        else {  //ActionEdit UnStatusSuccess
             const prmLog = {
                 audit_trail_date: datetime,
                 module: module_name,
                 screen_name: screen_name,
-                action_type: action_type.Edit,
-                status: status_type.Error,
+                action_type: ActionEdit,
+                status: StatusError,
                 user_id: authData.id,
                 client_ip: req.ip,
-                msg: msg_type.EditUnSuccess,
+                msg: MSGEditUnSuccess,
                 browser: browser
             }
-            // Add Log.
-            let AuditTrail = await log.InsertLogAuditTrail(prmLog)
+            // ActionAdd Log.
+            let AuditTrail = await ServiceInsertLogAuditTrail(prmLog)
             if (AuditTrail.uid) {
-                //Add Log Audit         
+                //ActionAdd Log Audit         
                 const prmLogAudit = {
                     audit_date: datetime,
-                    action_type: action_type.Edit,
+                    action_type: ActionEdit,
                     user_id: authData.id,
                     screen_name: screen_name,
                     client_ip: req.ip,
-                    status: status_type.Error,
-                    audit_msg: msg_type.EditUnSuccess,
+                    status: StatusError,
+                    audit_msg: MSGEditUnSuccess,
                     audit_trail_id: AuditTrail.uid,
                     new_value: prm,
                     original_value: tempdata.recordset,
                 }
-                await log.InsertLogAudit(prmLogAudit)
+                await ServiceInsertLogAudit(prmLogAudit)
             }
 
             ////////////////////// Alert Message JSON ////////////////////// 
 
             const data = {
-                "status": status_type.UnComplate,
+                "status": StatusUnComplate,
                 "message": "ไม่สามารถบันทึกข้อมูลลงในระบบได้",
             }
             await res.setHeader('Content-Type', 'application/json');
@@ -445,50 +445,50 @@ async function DeleteStoreConfig(req, res, reqBody, authData) {
         const browser = JSON.stringify(browserdetect(req.headers['user-agent']));
 
         //Get Screen name && Module name
-        const screen = await menu.GetScreenById(screen_id)
+        const screen = await ServiceGetScreenById(screen_id)
 
         if (Object.keys(screen).length > 0) {
             screen_name = screen.SCREEN_NAME
             module_name = screen.MODULE
         }
 
-        const tempdata = await Store.GetStoreConfigByStoreCode(store_code)
-        const result = await Store.DeleteStoreConfig(store_code)
+        const tempdata = await ServiceGetStoreConfigByStoreCode(store_code)
+        const result = await ServiceDeleteStoreConfig(store_code)
 
-        if (result !== undefined) { //Delete Success 
+        if (result !== undefined) { //ActionDelete StatusSuccess 
             const prmLog = {
                 audit_trail_date: datetime,
                 module: module_name,
                 screen_name: screen_name,
-                action_type: action_type.Delete,
-                status: status_type.Success,
+                action_type: ActionDelete,
+                status: StatusSuccess,
                 user_id: authData.id,
                 client_ip: req.ip,
-                msg: msg_type.DeleteSuccess,
+                msg: MSGDeleteSuccess,
                 browser: browser
             }
 
-            // Add Log.
-            let AuditTrail = await log.InsertLogAuditTrail(prmLog)
+            // ActionAdd Log.
+            let AuditTrail = await ServiceInsertLogAuditTrail(prmLog)
             if (AuditTrail.uid) {
-                //Add Log Audit         
+                //ActionAdd Log Audit         
                 const prmLogAudit = {
                     audit_date: datetime,
-                    action_type: action_type.Delete,
+                    action_type: ActionDelete,
                     user_id: authData.id,
                     screen_name: screen_name,
                     client_ip: req.ip,
-                    status: status_type.Success,
-                    audit_msg: msg_type.DeleteSuccess,
+                    status: StatusSuccess,
+                    audit_msg: MSGDeleteSuccess,
                     audit_trail_id: AuditTrail.uid,
                     new_value: '',
                     original_value: tempdata.recordset,
                 }
-                await log.InsertLogAudit(prmLogAudit)
+                await ServiceInsertLogAudit(prmLogAudit)
             }
 
             //Get Message Alert.
-            let messageAlert = await message.GetMessageByCode(msg_type.CodeS0003)
+            let messageAlert = await ServiceGetMessageByCode(CodeS0003)
 
             //Send JWT
             const jwtdata = {
@@ -501,9 +501,9 @@ async function DeleteStoreConfig(req, res, reqBody, authData) {
                 phc_user: authData.phc_user,
             }
 
-            await jwt.sign({ jwtdata }, settings.secretkey, { expiresIn: settings.tokenexpires }, (err, token) => {
+            await sign({ jwtdata }, secretkey, { expiresIn: tokenexpires }, (err, token) => {
                 res.json({
-                    "status": status_type.Complate,
+                    "status": StatusComplate,
                     "message": messageAlert,
                     "user": {
                         "id": authData.id,
@@ -522,36 +522,36 @@ async function DeleteStoreConfig(req, res, reqBody, authData) {
                 audit_trail_date: datetime,
                 module: module_name,
                 screen_name: screen_name,
-                action_type: action_type.Delete,
-                status: status_type.Error,
+                action_type: ActionDelete,
+                status: StatusError,
                 user_id: authData.id,
                 client_ip: req.ip,
-                msg: msg_type.DeleteUnSuccess,
+                msg: MSGDeleteUnSuccess,
                 browser: browser
             }
 
-            // Add Log.
-            let AuditTrail = await log.InsertLogAuditTrail(prmLog)
+            // ActionAdd Log.
+            let AuditTrail = await ServiceInsertLogAuditTrail(prmLog)
             if (AuditTrail.uid) {
-                //Add Log Audit         
+                //ActionAdd Log Audit         
                 const prmLogAudit = {
                     audit_date: datetime,
-                    action_type: action_type.Delete,
+                    action_type: ActionDelete,
                     user_id: authData.id,
                     screen_name: screen_name,
                     client_ip: req.ip,
-                    status: status_type.Error,
-                    audit_msg: msg_type.DeleteUnSuccess,
+                    status: StatusError,
+                    audit_msg: MSGDeleteUnSuccess,
                     audit_trail_id: AuditTrail.uid,
                     new_value: '',
                     original_value: tempdata.recordset,
                 }
-                await log.InsertLogAudit(prmLogAudit)
+                await ServiceInsertLogAudit(prmLogAudit)
             }
 
             ////////////////////// Alert Message JSON //////////////////////            
             const data = {
-                "status": status_type.UnComplate,
+                "status": StatusUnComplate,
                 "message": "ไม่สามารถลบข้อมูลลงในระบบได้",
             }
             await res.setHeader('Content-Type', 'application/json');

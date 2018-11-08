@@ -1,26 +1,26 @@
-const sql = require('mssql') // MS Sql Server client
-const jwt = require('jsonwebtoken')
-const browserdetect = require('browser-detect');
-const setting = require('../../../../settings')
-const menu = require('../../../models/Services/Menu')
+import { sign } from 'jsonwebtoken';
+import browserdetect from 'browser-detect';
+import { ServiceGetScreenById } from '../../../models/Services/Menu';
 
-const log = require('../../../models/Services/Log')
-const Financial = require('../../../models/Services/Financial')
-const message = require('../../../models/Services/Messsage')
+import { ServiceInsertLogAuditTrail, ServiceInsertLogAudit } from '../../../models/Services/Log';
+import { ServiceGetFinancialCode, ServiceFinancialCodeCheckDuplicate, ServiceInsertFinancialCode, ServiceGetFinancialCodeById, ServiceEditFinancialCode } from '../../../models/Services/Financial';
+import { ServiceGetMessageByCode } from '../../../models/Services/Messsage';
 
-const action_type = require('../../../models/action_type')
-const status_type = require('../../../models/status_type')
-const msg_type = require('../../../models/msg_type')
+import { ActionAdd, ActionEdit } from '../../../models/action_type';
+import { StatusSuccess, StatusComplate, StatusError, StatusUnComplate } from '../../../models/status_type';
+import { MSGAddSuccess, CodeS0001, MSGAddUnSuccess, MSGAddDuplicate, CodeE0001, MSGEditSuccess, MSGEditUnSuccess, CodeS0002 } from '../../../models/msg_type';
 
-const settings = require('../../../../settings')
+import { secretkey, tokenexpires } from '../../../../settings';
 
-module.exports.GetFinancialCode = GetFinancialCode
-module.exports.AddFinancialCode = AddFinancialCode
-module.exports.EditFinancialCode = EditFinancialCode
+export {
+    GetFinancialCode,
+    AddFinancialCode,
+    EditFinancialCode
+}
 
 async function GetFinancialCode(req, res, reqBody) {
     try {
-        let result = await Financial.GetFinancialCode()
+        let result = await ServiceGetFinancialCode()
         const rowdata = {
             "aaData": result.recordset
         }
@@ -53,7 +53,7 @@ async function AddFinancialCode(req, res, reqBody, authData) {
         const browser = JSON.stringify(browserdetect(req.headers['user-agent']));
 
         //Get Screen name && Module name
-        const screen = await menu.GetScreenById(screen_id)
+        const screen = await ServiceGetScreenById(screen_id)
 
         if (Object.keys(screen).length > 0) {
             screen_name = screen.SCREEN_NAME
@@ -64,7 +64,7 @@ async function AddFinancialCode(req, res, reqBody, authData) {
         const prmcheck = {
             fin_code: fin_code
         }
-        const dupdata = await Financial.FinancialCodeCheckDuplicate(prmcheck)
+        const dupdata = await ServiceFinancialCodeCheckDuplicate(prmcheck)
 
         //Set object prm
         const prm = {
@@ -75,42 +75,42 @@ async function AddFinancialCode(req, res, reqBody, authData) {
             create_date: datetime,
             create_by: authData.id
         }
-        
+
         if (dupdata) {
-            const resFin = await Financial.InsertFinancialCode(prm)
-            if (resFin !== undefined) { //Insert Success
+            const resFin = await ServiceInsertFinancialCode(prm)
+            if (resFin !== undefined) { //Insert StatusSuccess
                 const prmLog = {
                     audit_trail_date: datetime,
                     module: module_name,
                     screen_name: screen_name,
-                    action_type: action_type.Add,
-                    status: status_type.Success,
+                    action_type: ActionAdd,
+                    status: StatusSuccess,
                     user_id: authData.id,
                     client_ip: req.ip,
-                    msg: msg_type.AddSuccess,
+                    msg: MSGAddSuccess,
                     browser: browser
                 }
-                // Add Log.
-                let AuditTrail = await log.InsertLogAuditTrail(prmLog)
+                // ActionAdd Log.
+                let AuditTrail = await ServiceInsertLogAuditTrail(prmLog)
                 if (AuditTrail.uid) {
-                    //Add Log Audit         
+                    //ActionAdd Log Audit         
                     const prmLogAudit = {
                         audit_date: datetime,
-                        action_type: action_type.Add,
+                        action_type: ActionAdd,
                         user_id: authData.id,
                         screen_name: screen_name,
                         client_ip: req.ip,
-                        status: status_type.Success,
-                        audit_msg: msg_type.AddSuccess,
+                        status: StatusSuccess,
+                        audit_msg: MSGAddSuccess,
                         audit_trail_id: AuditTrail.uid,
                         new_value: prm,
                         original_value: '',
                     }
-                    await log.InsertLogAudit(prmLogAudit)
+                    await ServiceInsertLogAudit(prmLogAudit)
                 }
 
                 //Get Message Alert.
-                let messageAlert = await message.GetMessageByCode(msg_type.CodeS0001)
+                let messageAlert = await ServiceGetMessageByCode(CodeS0001)
 
                 //Send JWT
                 const jwtdata = {
@@ -123,9 +123,9 @@ async function AddFinancialCode(req, res, reqBody, authData) {
                     phc_user: authData.phc_user,
                 }
 
-                await jwt.sign({ jwtdata }, settings.secretkey, { expiresIn: settings.tokenexpires }, (err, token) => {
+                await sign({ jwtdata }, secretkey, { expiresIn: tokenexpires }, (err, token) => {
                     res.json({
-                        "status": status_type.Complate,
+                        "status": StatusComplate,
                         "message": messageAlert,
                         "user": {
                             "id": authData.id,
@@ -139,41 +139,41 @@ async function AddFinancialCode(req, res, reqBody, authData) {
                         }
                     })
                 })
-            } else { //Insert UnSuccess
+            } else { //Insert UnStatusSuccess
                 const prmLog = {
                     audit_trail_date: datetime,
                     module: module_name,
                     screen_name: screen_name,
-                    action_type: action_type.Add,
-                    status: status_type.Error,
+                    action_type: ActionAdd,
+                    status: StatusError,
                     user_id: authData.id,
                     client_ip: req.ip,
-                    msg: msg_type.AddUnSuccess,
+                    msg: MSGAddUnSuccess,
                     browser: browser
                 }
-                // Add Log.
-                let AuditTrail = await log.InsertLogAuditTrail(prmLog)
+                // ActionAdd Log.
+                let AuditTrail = await ServiceInsertLogAuditTrail(prmLog)
                 if (AuditTrail.uid) {
-                    //Add Log Audit         
+                    //ActionAdd Log Audit         
                     const prmLogAudit = {
                         audit_date: datetime,
-                        action_type: action_type.Add,
+                        action_type: ActionAdd,
                         user_id: authData.id,
                         screen_name: screen_name,
                         client_ip: req.ip,
-                        status: status_type.Error,
-                        audit_msg: msg_type.AddUnSuccess,
+                        status: StatusError,
+                        audit_msg: MSGAddUnSuccess,
                         audit_trail_id: AuditTrail.uid,
                         new_value: prm,
                         original_value: '',
                     }
-                    await log.InsertLogAudit(prmLogAudit)
+                    await ServiceInsertLogAudit(prmLogAudit)
                 }
 
                 ////////////////////// Alert Message JSON ////////////////////// 
 
                 const data = {
-                    "status": status_type.UnComplate,
+                    "status": StatusUnComplate,
                     "message": "ไม่สามารถบันทึกข้อมูลลงในระบบได้",
                 }
                 await res.setHeader('Content-Type', 'application/json');
@@ -184,30 +184,30 @@ async function AddFinancialCode(req, res, reqBody, authData) {
                 audit_trail_date: datetime,
                 module: module_name,
                 screen_name: screen_name,
-                action_type: action_type.Add,
-                status: status_type.Error,
+                action_type: ActionAdd,
+                status: StatusError,
                 user_id: authData.id,
                 client_ip: req.ip,
-                msg: msg_type.AddUnSuccess,
+                msg: MSGAddUnSuccess,
                 browser: browser
             }
-            // Add Log.
-            let AuditTrail = await log.InsertLogAuditTrail(prmLog)
+            // ActionAdd Log.
+            let AuditTrail = await ServiceInsertLogAuditTrail(prmLog)
             if (AuditTrail.uid) {
-                //Add Log Audit 
+                //ActionAdd Log Audit 
                 const prmLogAudit1 = {
                     audit_date: datetime,
-                    action_type: action_type.Add,
+                    action_type: ActionAdd,
                     user_id: authData.id,
                     screen_name: screen_name,
                     client_ip: req.ip,
-                    status: status_type.Error,
-                    audit_msg: msg_type.AddDuplicate,
+                    status: StatusError,
+                    audit_msg: MSGAddDuplicate,
                     audit_trail_id: AuditTrail.uid,
                     new_value: prm,
                     original_value: '',
                 }
-                await log.InsertLogAudit(prmLogAudit1)
+                await ServiceInsertLogAudit(prmLogAudit1)
             }
 
             ////////////////////// Alert Message JSON //////////////////////             
@@ -215,14 +215,14 @@ async function AddFinancialCode(req, res, reqBody, authData) {
                 fin_code: fin_code,
             }
             //Get Message Alert.
-            const messageAlert = await message.GetMessageByCode(msg_type.CodeE0001, prmMsg)
+            const messageAlert = await ServiceGetMessageByCode(CodeE0001, prmMsg)
             const data = {
-                "status": status_type.UnComplate,
+                "status": StatusUnComplate,
                 "message": messageAlert,
             }
             await res.setHeader('Content-Type', 'application/json');
             await res.send(JSON.stringify(data));
-        }        
+        }
     } catch (err) {
         res.sendStatus(500)
     }
@@ -242,7 +242,7 @@ async function EditFinancialCode(req, res, obj, authData) {
         const browser = JSON.stringify(browserdetect(req.headers['user-agent']));
 
         //Get Screen name && Module name
-        const screen = await menu.GetScreenById(screen_id)
+        const screen = await ServiceGetScreenById(screen_id)
 
         if (Object.keys(screen).length > 0) {
             screen_name = screen.SCREEN_NAME
@@ -254,22 +254,22 @@ async function EditFinancialCode(req, res, obj, authData) {
             audit_trail_date: datetime,
             module: module_name,
             screen_name: screen_name,
-            action_type: action_type.Edit,
-            status: status_type.Success,
+            action_type: ActionEdit,
+            status: StatusSuccess,
             user_id: authData.id,
             client_ip: req.ip,
-            msg: msg_type.EditSuccess,
+            msg: MSGEditSuccess,
             browser: browser
         }
-        // Add Log.
-        let AuditTrail = await log.InsertLogAuditTrail(prmLog)
+        // ActionAdd Log.
+        let AuditTrail = await ServiceInsertLogAuditTrail(prmLog)
 
         let rescheck = true
-        let itemsuccess = []
+        let itemStatusSuccess = []
         let itemerror = []
 
         for (let item of obj) {
-            const tempdata = await Financial.GetFinancialCodeById(item.fin_code)
+            const tempdata = await ServiceGetFinancialCodeById(item.fin_code)
             const prmfin = {
                 fin_code: item.fin_code,
                 fin_desc: item.fin_desc,
@@ -278,7 +278,7 @@ async function EditFinancialCode(req, res, obj, authData) {
                 update_date: datetime,
                 update_by: authData.id
             }
-            const res = await Financial.EditFinancialCode(prmfin)
+            const res = await ServiceEditFinancialCode(prmfin)
             if (res != undefined) {
                 const prmitem = {
                     fin_code: item.fin_code,
@@ -288,7 +288,7 @@ async function EditFinancialCode(req, res, obj, authData) {
                     update_by: authData.id,
                     original_value: tempdata.recordset
                 }
-                itemsuccess.push(prmitem)
+                itemStatusSuccess.push(prmitem)
             }
             else if (res == undefined) {
                 const prmitem = {
@@ -304,8 +304,8 @@ async function EditFinancialCode(req, res, obj, authData) {
             }
         }
 
-        //Add Log Audit Success     
-        for (let item of itemsuccess) {
+        //ActionAdd Log Audit StatusSuccess     
+        for (let item of itemStatusSuccess) {
             const new_value = {
                 fin_code: item.fin_code,
                 fin_desc: item.fin_desc,
@@ -316,22 +316,22 @@ async function EditFinancialCode(req, res, obj, authData) {
             if (AuditTrail.uid) {
                 const prmLogAudit = {
                     audit_date: datetime,
-                    action_type: action_type.Edit,
+                    action_type: ActionEdit,
                     user_id: authData.id,
                     screen_name: screen_name,
                     client_ip: req.ip,
-                    status: status_type.Success,
-                    audit_msg: msg_type.EditSuccess,
+                    status: StatusSuccess,
+                    audit_msg: MSGEditSuccess,
                     audit_trail_id: AuditTrail.uid,
                     new_value: new_value,
                     original_value: item.original_value,
                 }
-                await log.InsertLogAudit(prmLogAudit)
+                await ServiceInsertLogAudit(prmLogAudit)
             }
         }
 
 
-        //Add Log Audit Error
+        //ActionAdd Log Audit Error
         for (let item of itemerror) {
             const new_value = {
                 fin_code: item.fin_code,
@@ -344,25 +344,25 @@ async function EditFinancialCode(req, res, obj, authData) {
             if (AuditTrail.uid) {
                 const prmLogAudit = {
                     audit_date: datetime,
-                    action_type: action_type.Edit,
+                    action_type: ActionEdit,
                     user_id: authData.id,
                     screen_name: screen_name,
                     client_ip: req.ip,
-                    status: status_type.Error,
-                    audit_msg: msg_type.EditUnSuccess,
+                    status: StatusError,
+                    audit_msg: MSGEditUnSuccess,
                     audit_trail_id: AuditTrail.uid,
                     new_value: new_value,
                     original_value: item.original_value,
                 }
-                await log.InsertLogAudit(prmLogAudit)
+                await ServiceInsertLogAudit(prmLogAudit)
             }
         }
 
 
-        //Respone Success
+        //Respone StatusSuccess
         if (rescheck == true) {
             //Get Message Alert.
-            let messageAlert = await message.GetMessageByCode(msg_type.CodeS0002)
+            let messageAlert = await ServiceGetMessageByCode(CodeS0002)
 
             //Send JWT
             const jwtdata = {
@@ -374,9 +374,9 @@ async function EditFinancialCode(req, res, obj, authData) {
                 mobile_no: authData.mobile_no,
                 phc_user: authData.phc_user,
             }
-            await jwt.sign({ jwtdata }, settings.secretkey, { expiresIn: settings.tokenexpires }, (err, token) => {
+            await sign({ jwtdata }, secretkey, { expiresIn: tokenexpires }, (err, token) => {
                 res.json({
-                    "status": status_type.Complate,
+                    "status": StatusComplate,
                     "message": messageAlert,
                     "user": {
                         "id": authData.id,
@@ -392,7 +392,7 @@ async function EditFinancialCode(req, res, obj, authData) {
             })
         } else { //Respone Error
             const data = {
-                "status": status_type.UnComplate,
+                "status": StatusUnComplate,
                 "message": `Financial Code ${itemerror.map((item) => { return item['fin_code'] })} ไม่สามารถบันทึกข้อมูลลงในระบบได้`
             }
             await res.setHeader('Content-Type', 'application/json');

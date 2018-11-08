@@ -1,21 +1,20 @@
-const ActiveDirectory = require('activedirectory')
-const sql = require('mssql') // MS Sql Server client
+import ActiveDirectory from 'activedirectory';
+
+import { sign } from 'jsonwebtoken';
+import browserdetect from 'browser-detect';
+
+import { domain, adConfig, secretkey, tokenexpires } from '../../../settings';
+import { ServiceGetUsersByUsername, ServiceInsertUsers } from '../../models/Services/Users';
+import { ServiceInsertLogAuditTrail } from '../../models/Services/Log';
+import { ServiceGetMessageByCode } from '../../models/Services/Messsage';
+import { ServiceGetScreenById } from '../../models/Services/Menu';
+
+import { ActionLogin } from '../../models/action_type';
+import { StatusUnComplate, StatusSuccess, StatusComplate, StatusError } from '../../models/status_type';
+import { MSGLoginSuccess, MSGLoginUnSuccess, CodeE0009 } from '../../models/msg_type';
 
 
-const jwt = require('jsonwebtoken')
-const browserdetect = require('browser-detect');
-
-const settings = require('../../../settings')
-const users = require('../../models/Services/Users')
-const log = require('../../models/Services/Log')
-const message = require('../../models/Services/Messsage')
-const menu = require('../../models/Services/Menu')
-
-const action_type = require('../../models/action_type')
-const status_type = require('../../models/status_type')
-const msg_type = require('../../models/msg_type')
-
-module.exports.Login = Login; 
+export { Login }; 
 
 async function Login(req, res, reqBody) {
     try {
@@ -30,7 +29,7 @@ async function Login(req, res, reqBody) {
         let module_name = ''
 
 
-        const screen = await menu.GetScreenById(screen_id)
+        const screen = await ServiceGetScreenById(screen_id)
         if (Object.keys(screen).length > 0) {
             screen_name = screen.SCREEN_NAME
             module_name = screen.MODULE
@@ -47,16 +46,16 @@ async function Login(req, res, reqBody) {
         //Browser
         const browser = JSON.stringify(browserdetect(req.headers['user-agent']));
         //Replace Format AD User
-        username = username.replace("@" + settings.domain + ".com", "").replace(settings.domain + ".com\\", "").replace(settings.domain + "\\", "")
+        username = username.replace("@" + domain + ".com", "").replace(domain + ".com\\", "").replace(domain + "\\", "")
         //Set sAMAccountName       
         sAMAccountName = username;
         //Full name user AD
-        username = username + "@" + settings.domain + ".com"
-        const ad = new ActiveDirectory(settings.adConfig)
+        username = username + "@" + domain + ".com"
+        const ad = new ActiveDirectory(adConfig)
         await ad.authenticate(username, password, async (err, auth) => {
             if (err) {                
                 const data = {
-                    "status": status_type.UnComplate,
+                    "status": StatusUnComplate,
                     "message": "User หรือ Password ไม่ถูกต้อง",
                 }
                 await res.setHeader('Content-Type', 'application/json');
@@ -64,7 +63,7 @@ async function Login(req, res, reqBody) {
             }
             if (auth) {
                 //Get Data User                
-                let result = await users.GetUsersByUsername(username)               
+                let result = await ServiceGetUsersByUsername(username)               
 
                 if (result.rowsAffected > 0) {
                     const user = {
@@ -87,11 +86,11 @@ async function Login(req, res, reqBody) {
                             audit_trail_date: datetime,
                             module: module_name,
                             screen_name: screen_name,
-                            action_type: action_type.Login,
-                            status: status_type.Success,
+                            action_type: ActionLogin,
+                            status: StatusSuccess,
                             user_id: user.id,
                             client_ip: req.ip,
-                            msg: msg_type.LoginSuccess,
+                            msg: MSGLoginSuccess,
                             browser: browser
                         }
                         const jwtdata = {
@@ -106,13 +105,13 @@ async function Login(req, res, reqBody) {
 
 
                         // Add Log.
-                        await log.InsertLogAuditTrail(prmLog)
+                        await ServiceInsertLogAuditTrail(prmLog)
 
                         //Send JSON Web Token.
-                        await jwt.sign({ jwtdata }, settings.secretkey, { expiresIn: settings.tokenexpires }, (err, token) => {
+                        await sign({ jwtdata }, secretkey, { expiresIn: tokenexpires }, (err, token) => {
                             res.json({
-                                "status": status_type.Complate,
-                                "message": msg_type.LoginSuccess,
+                                "status": StatusComplate,
+                                "message": MSGLoginSuccess,
                                 "id": user.id,
                                 "firstname": user.firstname,
                                 "lastname": user.lastname,
@@ -131,23 +130,23 @@ async function Login(req, res, reqBody) {
                             audit_trail_date: datetime,
                             module: module_name,
                             screen_name: screen_name,
-                            action_type: action_type.Login,
-                            status: status_type.Error,
+                            action_type: ActionLogin,
+                            status: StatusError,
                             user_id: user.id,
                             client_ip: req.ip,
-                            msg: msg_type.LoginUnSuccess,
+                            msg: MSGLoginUnSuccess,
                             browser: browser
                         }
                         //Add Log.
-                        await log.InsertLogAuditTrail(prmLog)
+                        await ServiceInsertLogAuditTrail(prmLog)
 
                         const prmMsg = {
                             name: result.recordset[0].FIRST_NAME,
                             lastname: result.recordset[0].LAST_NAME
                         }
-                        const messageError = await message.GetMessageByCode(msg_type.CodeE0009, prmMsg)
+                        const messageError = await ServiceGetMessageByCode(CodeE0009, prmMsg)
                         const data = {
-                            "status": status_type.UnComplate,
+                            "status": StatusUnComplate,
                             "message": messageError,
                         }
                         await res.setHeader('Content-Type', 'application/json');
@@ -159,7 +158,7 @@ async function Login(req, res, reqBody) {
                     await ad.findUser(sAMAccountName, async function (err, user) {
                         if (err) { // error
                             const data = {
-                                "status": status_type.UnComplate,
+                                "status": StatusUnComplate,
                                 "message": "User หรือ Password ไม่ถูกต้อง",
                             }
                             await res.setHeader('Content-Type', 'application/json');
@@ -185,26 +184,26 @@ async function Login(req, res, reqBody) {
                                 audit_trail_date: datetime,
                                 module: module_name,
                                 screen_name: screen_name,
-                                action_type: action_type.Login,
-                                status: status_type.Error,
+                                action_type: ActionLogin,
+                                status: StatusError,
                                 user_id: (user.id == null) ? user.mail : user.id,
                                 client_ip: req.ip,
-                                msg: msg_type.LoginUnSuccess,
+                                msg: MSGLoginUnSuccess,
                                 browser: browser
                             }
 
                             // Add user.                            
-                            await users.InsertUsers(prmUser);
+                            await ServiceInsertUsers(prmUser);
                             // Add Log.
-                            await log.InsertLogAuditTrail(prmLog)
+                            await ServiceInsertLogAuditTrail(prmLog)
 
                             const prmMsg = {
                                 name: user.givenName,
                                 lastname: user.sn
                             }
-                            const messageError = await message.GetMessageByCode(msg_type.CodeE0009, prmMsg)
+                            const messageError = await ServiceGetMessageByCode(CodeE0009, prmMsg)
                             const data = {
-                                "status": status_type.UnComplate,
+                                "status": StatusUnComplate,
                                 "message": messageError,
                             }
                             await res.setHeader('Content-Type', 'application/json');

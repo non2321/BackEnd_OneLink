@@ -1,14 +1,15 @@
-const sql = require('mssql') // MS Sql Server client
-const settings = require('../../../settings')
+import { connect, NVarChar, close } from 'mssql'; // MS Sql Server client
+import { dbConfig } from '../../../settings';
 
-const module_type = require('../module_type')
+import { ModuleOneLink } from '../module_type';
 
+export {
+    ServiceGetMenuByUserID,
+    ServiceGetScreenById,
+    ServiceGetModifyData
+}
 
-module.exports.GetMenuByUserID = GetMenuByUserID;  
-module.exports.GetScreenById = GetScreenById; 
-module.exports.GetModifyData = GetModifyData; 
-
-async function GetMenuByUserID(userid) {
+async function ServiceGetMenuByUserID(userid) {
     let result
     try {
         const querysql = `SELECT C.SCREEN_ID ,
@@ -31,20 +32,20 @@ async function GetMenuByUserID(userid) {
         // input parameter       
         const input_USER_ID = 'input_USER_ID'
         //    
-        let pool = await sql.connect(settings.dbConfig)
+        let pool = await connect(dbConfig)
 
         result = await pool.request()
             // set parameter
-            .input(input_USER_ID, sql.NVarChar, userid.trim())
+            .input(input_USER_ID, NVarChar, userid.trim())
             .query(querysql)
-        await sql.close()
-       
-    } catch (err) {        
+        await close()
+
+    } catch (err) {
     }
     return await result
 }
 
-async function  GetScreenById(screen_id) {
+async function ServiceGetScreenById(screen_id) {
     let res = {}
     try {
         const querysql = `SELECT SCREEN_NAME
@@ -53,30 +54,30 @@ async function  GetScreenById(screen_id) {
         // input parameter           
         const input_SCREEN_ID = 'input_SCREEN_ID'
         //    
-        let pool = await sql.connect(settings.dbConfig)
+        let pool = await connect(dbConfig)
 
         let result = await pool.request()
             // set parameter
-            .input(input_SCREEN_ID, sql.NVarChar, screen_id.trim())
+            .input(input_SCREEN_ID, NVarChar, screen_id.trim())
             .query(querysql)
-        
+
         if (result.rowsAffected > 0) {
             res = result.recordset[0]
         } else {
-            res = { SCREEN_NAME: `${screen_id}`, MODULE: `${module_type.OneLink}` }
+            res = { SCREEN_NAME: `${screen_id}`, MODULE: `${ModuleOneLink}` }
         }
     } catch (err) {
         //400 Bad Request
         res.sendStatus(500)
     } finally {
-        await sql.close()
+        await close()
     }
 
     return await res
 }
 
-async function  GetModifyData(prm) {
-    let res 
+async function ServiceGetModifyData(prm) {
+    let res
     try {
         const querysql = `SELECT  C.SCREEN_NAME,S.V_ADD,S.V_EDIT,S.V_DELETE
                             FROM   USERS U 
@@ -91,23 +92,23 @@ async function  GetModifyData(prm) {
         // input parameter           
         const input_USER_ID = 'input_USER_ID'
         const input_SCREEN_ID = 'input_SCREEN_ID'
-       
-        let pool = await sql.connect(settings.dbConfig)
+
+        let pool = await connect(dbConfig)
 
         let result = await pool.request()
             // set parameter
-            .input(input_USER_ID, sql.NVarChar, prm.user_id.trim())
-            .input(input_SCREEN_ID, sql.NVarChar, prm.screen_id.trim())
+            .input(input_USER_ID, NVarChar, prm.user_id.trim())
+            .input(input_SCREEN_ID, NVarChar, prm.screen_id.trim())
             .query(querysql)
-        
+
         if (result.rowsAffected > 0) {
             res = result.recordset[0]
-        } 
+        }
     } catch (err) {
         //400 Bad Request
         res.sendStatus(500)
     } finally {
-        await sql.close()
+        await close()
     }
 
     return await res

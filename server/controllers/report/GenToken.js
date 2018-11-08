@@ -1,24 +1,26 @@
-const jwt = require('jsonwebtoken')
-const browserdetect = require('browser-detect')
+import { sign } from 'jsonwebtoken';
+import browserdetect from 'browser-detect';
 
 //fetch
-const fetch = require('node-fetch')
-const FormData = require('form-data')
+import fetch from 'node-fetch';
 
-const menu = require('../../models/Services/Menu')
+import { ServiceGetScreenById } from '../../models/Services/Menu';
 
-const log = require('../../models/Services/Log')
-const Financial = require('../../models/Services/Financial')
-const message = require('../../models/Services/Messsage')
+import { ServiceInsertLogAuditTrail } from '../../models/Services/Log';
+import { ServiceGetMessageByCode } from '../../models/Services/Messsage';
 
-const action_type = require('../../models/action_type')
-const status_type = require('../../models/status_type')
-const msg_type = require('../../models/msg_type')
+import { Select } from '../../models/action_type';
+import { StatusSuccess, StatusComplate, StatusError } from '../../models/status_type';
+import { MSGSelectSuccess, CodeS0001, MSGSelectUnSuccess } from '../../models/msg_type';
 
-const settings = require('../../../settings')
+import { secretkey, tokenexpires } from '../../../settings';
 
-module.exports.GenTokenTableau = GenTokenTableau
-module.exports.GenTokenTableauForFullScreen = GenTokenTableauForFullScreen
+
+export {
+    GenTokenTableau,
+    GenTokenTableauForFullScreen
+};
+
 
 async function GenTokenTableau(req, res, reqBody, authData) {
     const screen_id = reqBody.screen_id
@@ -26,12 +28,12 @@ async function GenTokenTableau(req, res, reqBody, authData) {
     let module_name = ''
     try {
         // Current DateTime
-        const datetime = new Date().toLocaleString().replace(',','')
+        const datetime = new Date().toLocaleString().replace(',', '')
         //Browser
         const browser = JSON.stringify(browserdetect(req.headers['user-agent']))
 
         //Get Screen name && Module name
-        const screen = await menu.GetScreenById(screen_id)
+        const screen = await ServiceGetScreenById(screen_id)
 
         if (Object.keys(screen).length > 0) {
             screen_name = screen.SCREEN_NAME
@@ -42,29 +44,29 @@ async function GenTokenTableau(req, res, reqBody, authData) {
         // form.append('username', settings.tableautoken.username)       
         // const response = await fetch(settings.tableautoken.path, { method: 'POST', body: form })
         // const tableautoken = await response.text()
-           
-       
+
+
         //Mock api gen token tableau 192.168.151.113:3000
-        const response = await fetch('http://192.168.151.113:3000/api/test', { method: 'GET'})
+        const response = await fetch('http://192.168.151.113:3000/api/test', { method: 'GET' })
         const tableautoken = await response.text()
-       
-        if (tableautoken.length > 5) {           
+
+        if (tableautoken.length > 5) {
             const prmLog = {
                 audit_trail_date: datetime,
                 module: module_name,
                 screen_name: screen_name,
-                action_type: action_type.Select,
-                status: status_type.Success,
+                action_type: Select,
+                status: StatusSuccess,
                 user_id: authData.id,
                 client_ip: req.ip,
-                msg: msg_type.SelectSuccess,
+                msg: MSGSelectSuccess,
                 browser: browser
             }
             // Add Log.
-            let AuditTrail = await log.InsertLogAuditTrail(prmLog)
+            let AuditTrail = await ServiceInsertLogAuditTrail(prmLog)
 
             //Get Message Alert.
-            let messageAlert = await message.GetMessageByCode(msg_type.CodeS0001)
+            let messageAlert = await ServiceGetMessageByCode(CodeS0001)
 
             //Send JWT
             const jwtdata = {
@@ -77,9 +79,9 @@ async function GenTokenTableau(req, res, reqBody, authData) {
                 phc_user: authData.phc_user,
             }
 
-            await jwt.sign({ jwtdata }, settings.secretkey, { expiresIn: settings.tokenexpires }, (err, token) => {
+            await sign({ jwtdata }, secretkey, { expiresIn: tokenexpires }, (err, token) => {
                 res.json({
-                    "status": status_type.Complate,
+                    "status": StatusComplate,
                     "message": messageAlert,
                     "data": tableautoken,
                     "user": {
@@ -99,20 +101,20 @@ async function GenTokenTableau(req, res, reqBody, authData) {
                 audit_trail_date: datetime,
                 module: module_name,
                 screen_name: screen_name,
-                action_type: action_type.Select,
-                status: status_type.Error,
+                action_type: Select,
+                status: StatusError,
                 user_id: authData.id,
                 client_ip: req.ip,
-                msg: msg_type.SelectUnSuccess,
+                msg: MSGSelectUnSuccess,
                 browser: browser
             }
             // Add Log.
-            let AuditTrail = await log.InsertLogAuditTrail(prmLog)
+            let AuditTrail = await ServiceInsertLogAuditTrail(prmLog)
 
             //Get Message Alert.
             let messageAlert = `Can not generate token from server.`
             const data = {
-                "status": status_type.Error,
+                "status": StatusError,
                 "message": messageAlert,
             }
             await res.setHeader('Content-Type', 'application/json');
@@ -129,12 +131,12 @@ async function GenTokenTableauForFullScreen(req, res, reqBody, authData) {
     let module_name = ''
     try {
         // Current DateTime
-        const datetime = new Date().toLocaleString().replace(',','')
+        const datetime = new Date().toLocaleString().replace(',', '')
         //Browser
         const browser = JSON.stringify(browserdetect(req.headers['user-agent']))
 
         //Get Screen name && Module name
-        const screen = await menu.GetScreenById(screen_id)
+        const screen = await ServiceGetScreenById(screen_id)
 
         if (Object.keys(screen).length > 0) {
             screen_name = screen.SCREEN_NAME
@@ -145,15 +147,15 @@ async function GenTokenTableauForFullScreen(req, res, reqBody, authData) {
         // form.append('username', settings.tableautoken.username)       
         // const response = await fetch(settings.tableautoken.path, { method: 'POST', body: form })
         // const tableautoken = await response.text()
-           
-       
+
+
         //Mock api gen token tableau 192.168.151.113:3000
-        const response = await fetch('http://192.168.151.113:3000/api/test', { method: 'GET'})
+        const response = await fetch('http://192.168.151.113:3000/api/test', { method: 'GET' })
         const tableautoken = await response.text()
-       
+
         if (tableautoken.length > 5) {
             //Get Message Alert.
-            let messageAlert = await message.GetMessageByCode(msg_type.CodeS0001)
+            let messageAlert = await ServiceGetMessageByCode(CodeS0001)
 
             //Send JWT
             const jwtdata = {
@@ -166,9 +168,9 @@ async function GenTokenTableauForFullScreen(req, res, reqBody, authData) {
                 phc_user: authData.phc_user,
             }
 
-            await jwt.sign({ jwtdata }, settings.secretkey, { expiresIn: settings.tokenexpires }, (err, token) => {
+            await sign({ jwtdata }, secretkey, { expiresIn: tokenexpires }, (err, token) => {
                 res.json({
-                    "status": status_type.Complate,
+                    "status": StatusComplate,
                     "message": messageAlert,
                     "data": tableautoken,
                     "user": {
@@ -188,18 +190,18 @@ async function GenTokenTableauForFullScreen(req, res, reqBody, authData) {
                 audit_trail_date: datetime,
                 module: module_name,
                 screen_name: screen_name,
-                action_type: action_type.Select,
-                status: status_type.Error,
+                action_type: Select,
+                status: StatusError,
                 user_id: authData.id,
                 client_ip: req.ip,
-                msg: msg_type.SelectUnSuccess,
+                msg: MSGSelectUnSuccess,
                 browser: browser
-            }            
+            }
 
             //Get Message Alert.
             let messageAlert = `Can not generate token from server.`
             const data = {
-                "status": status_type.Error,
+                "status": StatusError,
                 "message": messageAlert,
             }
             await res.setHeader('Content-Type', 'application/json');

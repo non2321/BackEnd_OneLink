@@ -1,19 +1,19 @@
-exports.LoadPage = 'LOADPAGE';
+export const ActionLoadPage = 'LOADPAGE';
 
-exports.Select = 'SELECT';
+export const ActionSelect = 'SELECT';
 
-exports.Add = 'ADD';
+export const ActionAdd = 'ADD';
 
-exports.Edit = 'EDIT';
+export const ActionEdit = 'EDIT';
 
-exports.Delete = 'DELETE';
+export const ActionDelete = 'DELETE';
 
-exports.EditUpload = 'EDITUPLOAD';
+export const ActionEditUpload = 'EDITUPLOAD';
 
-exports.CallProcedures  = 'CALLPROCEDURES';
+export const ActionCallProcedures  = 'CALLPROCEDURES';
 
-exports.Login = 'LOGIN';
+export const ActionLogin = 'LOGIN';
 
-exports.Logout = 'LOGOUT';
+export const ActionLogout = 'LOGOUT';
 
-exports.Expired = 'EXPIRED';
+export const ActionExpired = 'EXPIRED';

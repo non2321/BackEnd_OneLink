@@ -1,8 +1,8 @@
-const Inventory = require('../../../models/Services/Inventory')
+import { ServiceGetReceipts } from '../../../models/Services/Inventory';
 
-module.exports.GetDataTable = GetDataTable
+export { GetDataTableReceipts };
 
-async function GetDataTable(req, res, reqBody) {
+async function GetDataTableReceipts(req, res, reqBody) {
     try {
         if (req.params.store == null) throw new Error("Input not valid")
         if (req.params.datefrom == null) throw new Error("Input not valid")
@@ -15,7 +15,7 @@ async function GetDataTable(req, res, reqBody) {
             invoice: (req.params.invoice) ? req.params.invoice.toString().trim() : undefined
         }
        
-        const result = await Inventory.GetReceipts(prm)
+        const result = await ServiceGetReceipts(prm)
       
         const rowdata = {
             "aaData": result.recordset

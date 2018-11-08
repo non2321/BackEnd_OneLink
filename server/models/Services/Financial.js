@@ -1,77 +1,75 @@
-const sql = require('mssql') // MS Sql Server client
-const uuid = require('uuid/v1');
+import { connect, close, NVarChar, Int } from 'mssql'; // MS Sql Server client
 
-const settings = require('../../../settings')
-const digit = require('../digit_number')
-const utils = require('../../models/Services/utils')
+import { dbConfig } from '../../../settings';
+import { GetCountACC_M_ACCOUNT_SALE } from '../../models/Services/utils';
 
-module.exports.GetFinancialCode = GetFinancialCode;
-module.exports.GetFinancialCodeById = GetFinancialCodeById;
-module.exports.InsertFinancialCode = InsertFinancialCode;
-module.exports.FinancialCodeCheckDuplicate = FinancialCodeCheckDuplicate;
-module.exports.EditFinancialCode = EditFinancialCode;
+export {
+    ServiceGetFinancialCode,
+    ServiceGetFinancialCodeById,
+    ServiceInsertFinancialCode,
+    ServiceFinancialCodeCheckDuplicate,
+    ServiceEditFinancialCode,
 
-module.exports.GetBankAccount = GetBankAccount;
-module.exports.GetBankAccountById = GetBankAccountById;
-module.exports.InsertBankAccount = InsertBankAccount;
-module.exports.EditBankAccount = EditBankAccount;
-module.exports.DeleteBankAccountById = DeleteBankAccountById;
-module.exports.CheckDuplicateBankAccount = CheckDuplicateBankAccount;
+    ServiceGetBankAccount,
+    ServiceGetBankAccountById,
+    ServiceInsertBankAccount,
+    ServiceEditBankAccount,
+    ServiceDeleteBankAccountById,
+    ServiceCheckDuplicateBankAccount,
 
-module.exports.GetAccountCodeForSale = GetAccountCodeForSale;
-module.exports.GetAccountCodeForSaleById = GetAccountCodeForSaleById;
-module.exports.InsertAccountCodeForSale = InsertAccountCodeForSale;
-module.exports.EditAccountCodeForSale = EditAccountCodeForSale;
-module.exports.GetDropDownBuType = GetDropDownBuType;
-module.exports.GetDropDownType = GetDropDownType;
-module.exports.CheckDuplicateAccountCodeForSale = CheckDuplicateAccountCodeForSale;
-module.exports.CheckEditDuplicateAccountCodeForSale = CheckEditDuplicateAccountCodeForSale;
+    ServiceGetAccountCodeForSale,
+    ServiceGetAccountCodeForSaleById,
+    ServiceInsertAccountCodeForSale,
+    ServiceEditAccountCodeForSale,
+    ServiceGetDropDownBuType,
+    ServiceGetDropDownType,
+    ServiceCheckDuplicateAccountCodeForSale,
+    ServiceCheckEditDuplicateAccountCodeForSale,
 
-module.exports.GetBankInAdjustment = GetBankInAdjustment
-module.exports.GetPopupStoreBankInAdjustment = GetPopupStoreBankInAdjustment
-module.exports.GetValidationstoreBankInAdjustment = GetValidationstoreBankInAdjustment
-module.exports.GetValidationfinancialcodeBankInAdjustment = GetValidationfinancialcodeBankInAdjustment
-module.exports.GetDailyFinsByData = GetDailyFinsByData
-module.exports.EditBankInAdjustment = EditBankInAdjustment
-module.exports.GenGLBankInAdjustment = GenGLBankInAdjustment
+    ServiceGetBankInAdjustment,
+    ServiceGetPopupStoreBankInAdjustment,
+    ServiceGetValidationstoreBankInAdjustment,
+    ServiceGetValidationfinancialcodeBankInAdjustment,
+    ServiceGetDailyFinsByData,
+    ServiceEditBankInAdjustment,
+    ServiceGenGLBankInAdjustment,
 
-module.exports.SearchTempStampCloseDaiyFins = SearchTempStampCloseDaiyFins
-module.exports.SearchTempReCloseDaiyFins = SearchTempReCloseDaiyFins
-module.exports.CountStampCloseDaiyFins = CountStampCloseDaiyFins
-module.exports.AddStampCloseDaiyFins = AddStampCloseDaiyFins
-module.exports.EditStampCloseDaiyFins = EditStampCloseDaiyFins
+    ServiceSearchTempStampCloseDaiyFins,
+    ServiceSearchTempReCloseDaiyFins,
+    ServiceCountStampCloseDaiyFins,
+    ServiceAddStampCloseDaiyFins,
+    ServiceEditStampCloseDaiyFins,
 
+    ServiceExportReportDailyFlashSales
+ }
 
-//Report
-module.exports.ExportReportDailyFlashSales = ExportReportDailyFlashSales
-
-async function GetFinancialCode() {
+async function ServiceGetFinancialCode() {
     let res = {}
     try {
         let querysql = ` SELECT * FROM ACC_M_FINANCIAL_CODES 
         ORDER BY FINANCIAL_CODE ASC`
 
-        let pool = await sql.connect(settings.dbConfig)
+        let pool = await connect(dbConfig)
         let result = await pool.request().query(querysql)
         res = result
 
     } catch (err) {
 
     } finally {
-        await sql.close()
+        await close()
     }
 
     return await res
 
 }
 
-async function GetFinancialCodeById(fin_code) {
+async function ServiceGetFinancialCodeById(fin_code) {
     let res = {}
     try {
         let querysql = `SELECT * FROM ACC_M_FINANCIAL_CODES WHERE FINANCIAL_CODE = @input_fin_code `
         const input_fin_code = 'input_fin_code'
-        let pool = await sql.connect(settings.dbConfig)
-        let result = await pool.request().input(input_fin_code, sql.NVarChar, fin_code).query(querysql)
+        let pool = await connect(dbConfig)
+        let result = await pool.request().input(input_fin_code, NVarChar, fin_code).query(querysql)
         if (result !== undefined) {
             if (result.rowsAffected > 0) res = result
         }
@@ -79,13 +77,13 @@ async function GetFinancialCodeById(fin_code) {
     } catch (err) {
 
     } finally {
-        await sql.close()
+        await close()
     }
 
     return await res
 }
 
-async function InsertFinancialCode(prm) {
+async function ServiceInsertFinancialCode(prm) {
     let res   
     try {
         if (prm.fin_code) {
@@ -118,14 +116,14 @@ async function InsertFinancialCode(prm) {
             const input_create_date = 'input_create_date'           
             const input_create_by = 'input_create_by'
 
-            let pool = await sql.connect(settings.dbConfig)
+            let pool = await connect(dbConfig)
             let result = await pool.request()
-                .input(input_fin_code, sql.NVarChar, (prm.fin_code != undefined) ? prm.fin_code : '')
-                .input(input_fin_name, sql.NVarChar, (prm.fin_name != undefined) ? prm.fin_name : '')  
-                .input(input_active, sql.NVarChar, (prm.active != undefined) ? prm.active : '')  
-                .input(input_show, sql.NVarChar, (prm.show != undefined) ? prm.show : '')  
-                .input(input_create_date, sql.NVarChar, (prm.create_date != undefined) ? prm.create_date : '')               
-                .input(input_create_by, sql.NVarChar, (prm.create_by != undefined) ? prm.create_by.trim() : '')
+                .input(input_fin_code, NVarChar, (prm.fin_code != undefined) ? prm.fin_code : '')
+                .input(input_fin_name, NVarChar, (prm.fin_name != undefined) ? prm.fin_name : '')  
+                .input(input_active, NVarChar, (prm.active != undefined) ? prm.active : '')  
+                .input(input_show, NVarChar, (prm.show != undefined) ? prm.show : '')  
+                .input(input_create_date, NVarChar, (prm.create_date != undefined) ? prm.create_date : '')               
+                .input(input_create_by, NVarChar, (prm.create_by != undefined) ? prm.create_by.trim() : '')
                 .query(querysql)
             if (result !== undefined) {
                 if (result.rowsAffected > 0) res = true
@@ -134,12 +132,12 @@ async function InsertFinancialCode(prm) {
     } catch (err) {
 
     } finally {
-        await sql.close()
+        await close()
     }
     return await res
 }
 
-async function FinancialCodeCheckDuplicate(prmfin) {
+async function ServiceFinancialCodeCheckDuplicate(prmfin) {
     let res = true
     try {
         let querysql = `SELECT FINANCIAL_CODE FROM   ACC_M_FINANCIAL_CODES WHERE 1=1 `
@@ -169,22 +167,22 @@ async function FinancialCodeCheckDuplicate(prmfin) {
         const input_remart_flag = 'input_remart_flag'
 
 
-        let pool = await sql.connect(settings.dbConfig)
+        let pool = await connect(dbConfig)
 
         let result = await pool.request()
 
-        if (prmfin.fin_code != undefined) await result.input(input_fin_code, sql.NVarChar, prmfin.fin_code.trim())
-        if (prmfin.fin_desc != undefined) await result.input(input_fin_desc, sql.NVarChar, prmfin.fin_desc.trim())
-        if (prmfin.fin_gl_code != undefined) await result.input(input_fin_gl_code, sql.NVarChar, prmfin.fin_gl_code.trim())
-        if (prmfin.post_to_gl != undefined) await result.input(input_db_or_cr, sql.NVarChar, prmfin.post_to_gl.trim())
-        if (prmfin.db_or_cr != undefined) await result.input(input_db_or_cr, sql.NVarChar, prmfin.db_or_cr.trim())
-        if (prmfin.reconcile != undefined) await result.input(input_reconcile, sql.NVarChar, prmfin.reconcile.trim())
-        if (prmfin.cost_center != undefined) await result.input(input_cost_center, sql.NVarChar, prmfin.cost_center.trim())
-        if (prmfin.fixflag != undefined) await result.input(input_fixflag, sql.NVarChar, prmfin.fixflag.trim())
-        if (prmfin.priority != undefined) await result.input(input_priority, sql.NVarChar, prmfin.priority.trim())
-        if (prmfin.negative != undefined) await result.input(input_negative, sql.NVarChar, prmfin.negative.trim())
-        if (prmfin.block_flag != undefined) await result.input(input_block_flag, sql.NVarChar, prmfin.block_flag.trim())
-        if (prmfin.remart_flag != undefined) await result.input(input_remart_flag, sql.NVarChar, prmfin.remart_flag.trim())
+        if (prmfin.fin_code != undefined) await result.input(input_fin_code, NVarChar, prmfin.fin_code.trim())
+        if (prmfin.fin_desc != undefined) await result.input(input_fin_desc, NVarChar, prmfin.fin_desc.trim())
+        if (prmfin.fin_gl_code != undefined) await result.input(input_fin_gl_code, NVarChar, prmfin.fin_gl_code.trim())
+        if (prmfin.post_to_gl != undefined) await result.input(input_db_or_cr, NVarChar, prmfin.post_to_gl.trim())
+        if (prmfin.db_or_cr != undefined) await result.input(input_db_or_cr, NVarChar, prmfin.db_or_cr.trim())
+        if (prmfin.reconcile != undefined) await result.input(input_reconcile, NVarChar, prmfin.reconcile.trim())
+        if (prmfin.cost_center != undefined) await result.input(input_cost_center, NVarChar, prmfin.cost_center.trim())
+        if (prmfin.fixflag != undefined) await result.input(input_fixflag, NVarChar, prmfin.fixflag.trim())
+        if (prmfin.priority != undefined) await result.input(input_priority, NVarChar, prmfin.priority.trim())
+        if (prmfin.negative != undefined) await result.input(input_negative, NVarChar, prmfin.negative.trim())
+        if (prmfin.block_flag != undefined) await result.input(input_block_flag, NVarChar, prmfin.block_flag.trim())
+        if (prmfin.remart_flag != undefined) await result.input(input_remart_flag, NVarChar, prmfin.remart_flag.trim())
 
         result = await result.query(querysql)
 
@@ -195,14 +193,14 @@ async function FinancialCodeCheckDuplicate(prmfin) {
     } catch (err) {
 
     } finally {
-        await sql.close()
+        await close()
     }
 
     return await res
 
 }
 
-async function EditFinancialCode(prmfin) {
+async function ServiceEditFinancialCode(prmfin) {
     let res
     try {
         if (prmfin.fin_code) {
@@ -241,25 +239,25 @@ async function EditFinancialCode(prmfin) {
             const input_update_date = 'input_update_date'
             const input_update_by = 'input_update_by'
 
-            let pool = await sql.connect(settings.dbConfig)
+            let pool = await connect(dbConfig)
             let result = await pool.request()
 
-            if (prmfin.fin_code != undefined) await result.input(input_fin_code, sql.NVarChar, prmfin.fin_code.trim())
-            if (prmfin.fin_desc != undefined) await result.input(input_fin_desc, sql.NVarChar, prmfin.fin_desc.trim())
-            if (prmfin.fin_gl_code != undefined) await result.input(input_fin_gl_code, sql.NVarChar, prmfin.fin_gl_code.trim())
-            if (prmfin.post_to_gl != undefined) await result.input(input_db_or_cr, sql.NVarChar, prmfin.post_to_gl.trim())
-            if (prmfin.db_or_cr != undefined) await result.input(input_db_or_cr, sql.NVarChar, prmfin.db_or_cr.trim())
-            if (prmfin.reconcile != undefined) await result.input(input_reconcile, sql.NVarChar, prmfin.reconcile.trim())
-            if (prmfin.cost_center != undefined) await result.input(input_cost_center, sql.NVarChar, prmfin.cost_center.trim())
-            if (prmfin.fin_flag != undefined) await result.input(input_fixflag, sql.NVarChar, prmfin.fin_flag.trim())
-            if (prmfin.fin_show != undefined) await result.input(input_s_daily_fins_flag, sql.NVarChar, prmfin.fin_show.trim())
-            if (prmfin.priority != undefined) await result.input(input_priority, sql.NVarChar, prmfin.priority.trim())
-            if (prmfin.negative != undefined) await result.input(input_negative, sql.NVarChar, prmfin.negative.trim())
-            if (prmfin.block_flag != undefined) await result.input(input_block_flag, sql.NVarChar, prmfin.block_flag.trim())
-            if (prmfin.remart_flag != undefined) await result.input(input_remart_flag, sql.NVarChar, prmfin.remart_flag.trim())
+            if (prmfin.fin_code != undefined) await result.input(input_fin_code, NVarChar, prmfin.fin_code.trim())
+            if (prmfin.fin_desc != undefined) await result.input(input_fin_desc, NVarChar, prmfin.fin_desc.trim())
+            if (prmfin.fin_gl_code != undefined) await result.input(input_fin_gl_code, NVarChar, prmfin.fin_gl_code.trim())
+            if (prmfin.post_to_gl != undefined) await result.input(input_db_or_cr, NVarChar, prmfin.post_to_gl.trim())
+            if (prmfin.db_or_cr != undefined) await result.input(input_db_or_cr, NVarChar, prmfin.db_or_cr.trim())
+            if (prmfin.reconcile != undefined) await result.input(input_reconcile, NVarChar, prmfin.reconcile.trim())
+            if (prmfin.cost_center != undefined) await result.input(input_cost_center, NVarChar, prmfin.cost_center.trim())
+            if (prmfin.fin_flag != undefined) await result.input(input_fixflag, NVarChar, prmfin.fin_flag.trim())
+            if (prmfin.fin_show != undefined) await result.input(input_s_daily_fins_flag, NVarChar, prmfin.fin_show.trim())
+            if (prmfin.priority != undefined) await result.input(input_priority, NVarChar, prmfin.priority.trim())
+            if (prmfin.negative != undefined) await result.input(input_negative, NVarChar, prmfin.negative.trim())
+            if (prmfin.block_flag != undefined) await result.input(input_block_flag, NVarChar, prmfin.block_flag.trim())
+            if (prmfin.remart_flag != undefined) await result.input(input_remart_flag, NVarChar, prmfin.remart_flag.trim())
 
-            if (prmfin.update_date != undefined) await result.input(input_update_date, sql.NVarChar, prmfin.update_date.trim())
-            if (prmfin.update_by != undefined) await result.input(input_update_by, sql.NVarChar, prmfin.update_by.trim())
+            if (prmfin.update_date != undefined) await result.input(input_update_date, NVarChar, prmfin.update_date.trim())
+            if (prmfin.update_by != undefined) await result.input(input_update_by, NVarChar, prmfin.update_by.trim())
             result = await result.query(querysql)
 
             if (result !== undefined) {
@@ -269,39 +267,39 @@ async function EditFinancialCode(prmfin) {
     } catch (err) {
 
     } finally {
-        await sql.close()
+        await close()
     }
     return await res
 }
 
 ////////////////////////  Bank Account  //////////////////////// 
-async function GetBankAccount() {
+async function ServiceGetBankAccount() {
     let res = {}
     try {
         let querysql = ` SELECT A.BANK_CODE,A.BANK_NAME, A.BANK_BRANCH, A.ACCOUNT_CODE
         FROM ACC_M_BANK A ORDER BY BANK_CODE `
 
-        let pool = await sql.connect(settings.dbConfig)
+        let pool = await connect(dbConfig)
         let result = await pool.request().query(querysql)
         res = result
 
     } catch (err) {
 
     } finally {
-        await sql.close()
+        await close()
     }
 
     return await res
 
 }
 
-async function GetBankAccountById(bank_code) {
+async function ServiceGetBankAccountById(bank_code) {
     let res = {}
     try {
         let querysql = `SELECT * FROM ACC_M_BANK WHERE BANK_CODE = @input_bank_code `
         const input_bank_code = 'input_bank_code'
-        let pool = await sql.connect(settings.dbConfig)
-        let result = await pool.request().input(input_bank_code, sql.NVarChar, bank_code.trim()).query(querysql)
+        let pool = await connect(dbConfig)
+        let result = await pool.request().input(input_bank_code, NVarChar, bank_code.trim()).query(querysql)
         if (result !== undefined) {
             if (result.rowsAffected > 0) res = result
         }
@@ -309,13 +307,13 @@ async function GetBankAccountById(bank_code) {
     } catch (err) {
 
     } finally {
-        await sql.close()
+        await close()
     }
 
     return await res
 }
 
-async function InsertBankAccount(prm) {
+async function ServiceInsertBankAccount(prm) {
     let res
     try {
         if (prm.bank_code) {
@@ -340,14 +338,14 @@ async function InsertBankAccount(prm) {
             const input_account_code = 'input_account_code'
             const input_create_by = 'input_create_by'
 
-            let pool = await sql.connect(settings.dbConfig)
+            let pool = await connect(dbConfig)
             let result = await pool.request()
-                .input(input_bank_code, sql.NVarChar, prm.bank_code.trim())
-                .input(input_bank_name, sql.NVarChar, (prm.bank_name != undefined) ? prm.bank_name.trim() : '')
-                .input(input_bank_branch, sql.NVarChar, (prm.bank_branch != undefined) ? prm.bank_branch.trim() : '')
-                .input(input_create_date, sql.NVarChar, (prm.create_date != undefined) ? prm.create_date : '')
-                .input(input_account_code, sql.NVarChar, (prm.account_code != undefined) ? prm.account_code.trim() : '')
-                .input(input_create_by, sql.NVarChar, (prm.create_by != undefined) ? prm.create_by.trim() : '')
+                .input(input_bank_code, NVarChar, prm.bank_code.trim())
+                .input(input_bank_name, NVarChar, (prm.bank_name != undefined) ? prm.bank_name.trim() : '')
+                .input(input_bank_branch, NVarChar, (prm.bank_branch != undefined) ? prm.bank_branch.trim() : '')
+                .input(input_create_date, NVarChar, (prm.create_date != undefined) ? prm.create_date : '')
+                .input(input_account_code, NVarChar, (prm.account_code != undefined) ? prm.account_code.trim() : '')
+                .input(input_create_by, NVarChar, (prm.create_by != undefined) ? prm.create_by.trim() : '')
                 .query(querysql)
             if (result !== undefined) {
                 if (result.rowsAffected > 0) res = true
@@ -356,14 +354,14 @@ async function InsertBankAccount(prm) {
     } catch (err) {
 
     } finally {
-        await sql.close()
+        await close()
     }
 
     return await res
 
 }
 
-async function EditBankAccount(prm) {
+async function ServiceEditBankAccount(prm) {
     let res
     try {
         if (prm.bank_code) {
@@ -384,15 +382,15 @@ async function EditBankAccount(prm) {
             const input_update_date = 'input_update_date'
             const input_update_by = 'input_update_by'
 
-            let pool = await sql.connect(settings.dbConfig)
+            let pool = await connect(dbConfig)
             let result = await pool.request()
 
-            if (prm.bank_code != undefined) await result.input(input_bank_code, sql.NVarChar, prm.bank_code.trim())
-            if (prm.bank_name != undefined) await result.input(input_bank_name, sql.NVarChar, prm.bank_name.trim())
-            if (prm.bank_branch != undefined) await result.input(input_bank_branch, sql.NVarChar, prm.bank_branch.trim())
-            if (prm.account_code != undefined) await result.input(input_account_code, sql.NVarChar, prm.account_code.trim())
-            if (prm.update_date != undefined) await result.input(input_update_date, sql.NVarChar, prm.update_date.trim())
-            if (prm.update_by != undefined) await result.input(input_update_by, sql.NVarChar, prm.update_by.trim())
+            if (prm.bank_code != undefined) await result.input(input_bank_code, NVarChar, prm.bank_code.trim())
+            if (prm.bank_name != undefined) await result.input(input_bank_name, NVarChar, prm.bank_name.trim())
+            if (prm.bank_branch != undefined) await result.input(input_bank_branch, NVarChar, prm.bank_branch.trim())
+            if (prm.account_code != undefined) await result.input(input_account_code, NVarChar, prm.account_code.trim())
+            if (prm.update_date != undefined) await result.input(input_update_date, NVarChar, prm.update_date.trim())
+            if (prm.update_by != undefined) await result.input(input_update_by, NVarChar, prm.update_by.trim())
             result = await result.query(querysql)
 
             if (result !== undefined) {
@@ -402,12 +400,12 @@ async function EditBankAccount(prm) {
     } catch (err) {
 
     } finally {
-        await sql.close()
+        await close()
     }
     return await res
 }
 
-async function DeleteBankAccountById(bank_code) {
+async function ServiceDeleteBankAccountById(bank_code) {
     let res
     try {
         if (bank_code) {
@@ -416,9 +414,9 @@ async function DeleteBankAccountById(bank_code) {
 
             const input_bank_code = 'input_bank_code'
 
-            let pool = await sql.connect(settings.dbConfig)
+            let pool = await connect(dbConfig)
             let result = await pool.request()
-                .input(input_bank_code, sql.NVarChar, bank_code.trim())
+                .input(input_bank_code, NVarChar, bank_code.trim())
                 .query(querysql)
 
             if (result !== undefined) {
@@ -428,24 +426,24 @@ async function DeleteBankAccountById(bank_code) {
     } catch (err) {
 
     } finally {
-        await sql.close()
+        await close()
     }
 
     return await res
 
 }
 
-async function CheckDuplicateBankAccount(bank_code) {
+async function ServiceCheckDuplicateBankAccount(bank_code) {
     let res = true
     try {
         let querysql = `SELECT * FROM  ACC_M_BANK A WHERE  A.BANK_CODE = @input_bank_code`
 
         const input_bank_code = 'input_bank_code'
 
-        let pool = await sql.connect(settings.dbConfig)
+        let pool = await connect(dbConfig)
 
         let result = await pool.request()
-            .input(input_bank_code, sql.NVarChar, bank_code.trim())
+            .input(input_bank_code, NVarChar, bank_code.trim())
             .query(querysql)
 
         if (result !== undefined) {
@@ -455,7 +453,7 @@ async function CheckDuplicateBankAccount(bank_code) {
     } catch (err) {
 
     } finally {
-        await sql.close()
+        await close()
     }
 
     return await res
@@ -464,32 +462,32 @@ async function CheckDuplicateBankAccount(bank_code) {
 
 
 ////////////////////////  Account Code For Sale  //////////////////////// 
-async function GetAccountCodeForSale() {
+async function ServiceGetAccountCodeForSale() {
     let res = {}
     try {
         let querysql = `SELECT * FROM ACC_M_ACCOUNT_SALE ORDER BY FORMULARID ASC`
 
-        let pool = await sql.connect(settings.dbConfig)
+        let pool = await connect(dbConfig)
         let result = await pool.request().query(querysql)
         res = result
 
     } catch (err) {
 
     } finally {
-        await sql.close()
+        await close()
     }
 
     return await res
 
 }
 
-async function GetAccountCodeForSaleById(formular_id) {
+async function ServiceGetAccountCodeForSaleById(formular_id) {
     let res = {}
     try {
         let querysql = `SELECT * FROM ACC_M_ACCOUNT_SALE WHERE FORMULARID = @input_formular_id `
         const input_formular_id = 'input_formular_id'
-        let pool = await sql.connect(settings.dbConfig)
-        let result = await pool.request().input(input_formular_id, sql.NVarChar, formular_id.trim()).query(querysql)
+        let pool = await connect(dbConfig)
+        let result = await pool.request().input(input_formular_id, NVarChar, formular_id.trim()).query(querysql)
         if (result !== undefined) {
             if (result.rowsAffected > 0) res = result
         }
@@ -497,16 +495,16 @@ async function GetAccountCodeForSaleById(formular_id) {
     } catch (err) {
 
     } finally {
-        await sql.close()
+        await close()
     }
 
     return await res
 }
 
-async function InsertAccountCodeForSale(prm) {
+async function ServiceInsertAccountCodeForSale(prm) {
     let res
     try {
-        let id = await utils.GetCountACC_M_ACCOUNT_SALE()
+        let id = await GetCountACC_M_ACCOUNT_SALE()
 
         if (prm.formular_name && prm.account_code) {
             const querysql = `INSERT INTO ACC_M_ACCOUNT_SALE
@@ -539,17 +537,17 @@ async function InsertAccountCodeForSale(prm) {
             const input_create_date = 'input_create_date'
             const input_create_by = 'input_create_by'
 
-            let pool = await sql.connect(settings.dbConfig)
+            let pool = await connect(dbConfig)
             let result = await pool.request()
-                .input(input_formular_id, sql.Int, id)
-                .input(input_formular_name, sql.NVarChar, (prm.formular_name != undefined) ? prm.formular_name : '')
-                .input(input_account_code, sql.NVarChar, (prm.account_code != undefined) ? prm.account_code : '')
-                .input(input_bu_type, sql.NVarChar, (prm.bu_type != undefined) ? prm.bu_type : '')
-                .input(input_type, sql.NVarChar, (prm.type != undefined) ? prm.type : '')
-                .input(input_subledger_type, sql.NVarChar, (prm.subledger_type != undefined) ? prm.subledger_type : '')
-                .input(input_subledger, sql.NVarChar, (prm.subledger != undefined) ? prm.subledger : '')
-                .input(input_create_date, sql.NVarChar, (prm.create_date != undefined) ? prm.create_date : '')
-                .input(input_create_by, sql.NVarChar, (prm.create_by != undefined) ? prm.create_by : '')
+                .input(input_formular_id, Int, id)
+                .input(input_formular_name, NVarChar, (prm.formular_name != undefined) ? prm.formular_name : '')
+                .input(input_account_code, NVarChar, (prm.account_code != undefined) ? prm.account_code : '')
+                .input(input_bu_type, NVarChar, (prm.bu_type != undefined) ? prm.bu_type : '')
+                .input(input_type, NVarChar, (prm.type != undefined) ? prm.type : '')
+                .input(input_subledger_type, NVarChar, (prm.subledger_type != undefined) ? prm.subledger_type : '')
+                .input(input_subledger, NVarChar, (prm.subledger != undefined) ? prm.subledger : '')
+                .input(input_create_date, NVarChar, (prm.create_date != undefined) ? prm.create_date : '')
+                .input(input_create_by, NVarChar, (prm.create_by != undefined) ? prm.create_by : '')
                 .query(querysql)
             if (result !== undefined) {
                 if (result.rowsAffected > 0) res = true
@@ -558,14 +556,14 @@ async function InsertAccountCodeForSale(prm) {
     } catch (err) {
 
     } finally {
-        await sql.close()
+        await close()
     }
 
     return await res
 
 }
 
-async function EditAccountCodeForSale(prm) {
+async function ServiceEditAccountCodeForSale(prm) {
     let res
     try {
         if (prm.formular_id) {
@@ -592,18 +590,18 @@ async function EditAccountCodeForSale(prm) {
             const input_update_date = 'input_update_date'
             const input_update_by = 'input_update_by'
 
-            let pool = await sql.connect(settings.dbConfig)
+            let pool = await connect(dbConfig)
             let result = await pool.request()
 
-            if (prm.formular_id != undefined) await result.input(input_formular_id, sql.NVarChar, prm.formular_id)
-            if (prm.formular_name != undefined) await result.input(input_formular_name, sql.NVarChar, prm.formular_name)
-            if (prm.account_code != undefined) await result.input(input_account_code, sql.NVarChar, prm.account_code)
-            if (prm.bu_type != undefined) await result.input(input_bu_type, sql.NVarChar, prm.bu_type)
-            if (prm.type != undefined) await result.input(input_type, sql.NVarChar, prm.type)
-            if (prm.subledger_type != undefined) await result.input(input_subledger_type, sql.NVarChar, prm.subledger_type)
-            if (prm.subledger != undefined) await result.input(input_subledger, sql.NVarChar, prm.subledger)
-            if (prm.update_date != undefined) await result.input(input_update_date, sql.NVarChar, prm.update_date)
-            if (prm.update_by != undefined) await result.input(input_update_by, sql.NVarChar, prm.update_by)
+            if (prm.formular_id != undefined) await result.input(input_formular_id, NVarChar, prm.formular_id)
+            if (prm.formular_name != undefined) await result.input(input_formular_name, NVarChar, prm.formular_name)
+            if (prm.account_code != undefined) await result.input(input_account_code, NVarChar, prm.account_code)
+            if (prm.bu_type != undefined) await result.input(input_bu_type, NVarChar, prm.bu_type)
+            if (prm.type != undefined) await result.input(input_type, NVarChar, prm.type)
+            if (prm.subledger_type != undefined) await result.input(input_subledger_type, NVarChar, prm.subledger_type)
+            if (prm.subledger != undefined) await result.input(input_subledger, NVarChar, prm.subledger)
+            if (prm.update_date != undefined) await result.input(input_update_date, NVarChar, prm.update_date)
+            if (prm.update_by != undefined) await result.input(input_update_by, NVarChar, prm.update_by)
             result = await result.query(querysql)
 
             if (result !== undefined) {
@@ -613,12 +611,12 @@ async function EditAccountCodeForSale(prm) {
     } catch (err) {
 
     } finally {
-        await sql.close()
+        await close()
     }
     return await res
 }
 
-async function GetDropDownBuType() {
+async function ServiceGetDropDownBuType() {
     let res = {}
     try {
         let querysql = `SELECT LOV1 FROM LOV_DATA 
@@ -627,17 +625,17 @@ async function GetDropDownBuType() {
         AND LOV_CODE = 'BU_TYPE' 
         ORDER BY LOV1 ASC`
 
-        let pool = await sql.connect(settings.dbConfig)
+        let pool = await connect(dbConfig)
         let result = await pool.request().query(querysql)
         res = result
     } catch (err) {
     } finally {
-        await sql.close()
+        await close()
     }
     return await res
 }
 
-async function GetDropDownType() {
+async function ServiceGetDropDownType() {
     let res = {}
     try {
         let querysql = `SELECT LOV1 FROM LOV_DATA 
@@ -646,27 +644,27 @@ async function GetDropDownType() {
         AND LOV_CODE = 'ACC_TYPE' 
         ORDER BY LOV1 ASC`
 
-        let pool = await sql.connect(settings.dbConfig)
+        let pool = await connect(dbConfig)
         let result = await pool.request().query(querysql)
         res = result
     } catch (err) {
     } finally {
-        await sql.close()
+        await close()
     }
     return await res
 }
 
-async function CheckDuplicateAccountCodeForSale(formular_name) {
+async function ServiceCheckDuplicateAccountCodeForSale(formular_name) {
     let res = true
     try {
         let querysql = `SELECT * FROM  ACC_M_ACCOUNT_SALE WHERE  FORMULARNAME = @input_formular_name`
 
         const input_formular_name = 'input_formular_name'
 
-        let pool = await sql.connect(settings.dbConfig)
+        let pool = await connect(dbConfig)
 
         let result = await pool.request()
-            .input(input_formular_name, sql.NVarChar, formular_name.trim())
+            .input(input_formular_name, NVarChar, formular_name.trim())
             .query(querysql)
 
         if (result !== undefined) {
@@ -676,14 +674,14 @@ async function CheckDuplicateAccountCodeForSale(formular_name) {
     } catch (err) {
 
     } finally {
-        await sql.close()
+        await close()
     }
 
     return await res
 
 }
 
-async function CheckEditDuplicateAccountCodeForSale(prm) {
+async function ServiceCheckEditDuplicateAccountCodeForSale(prm) {
     let res = true
     try {
         let querysql = `SELECT * FROM   ACC_M_ACCOUNT_SALE WHERE 1=1 `
@@ -693,11 +691,11 @@ async function CheckEditDuplicateAccountCodeForSale(prm) {
         const input_formular_id = 'input_formular_id'
         const input_formular_name = 'input_formular_name'
 
-        let pool = await sql.connect(settings.dbConfig)
+        let pool = await connect(dbConfig)
 
         let result = await pool.request()
-        if (prm.formular_id != undefined) await result.input(input_formular_id, sql.NVarChar, prm.formular_id.trim())
-        if (prm.formular_name != undefined) await result.input(input_formular_name, sql.NVarChar, prm.formular_name.trim())
+        if (prm.formular_id != undefined) await result.input(input_formular_id, NVarChar, prm.formular_id.trim())
+        if (prm.formular_name != undefined) await result.input(input_formular_name, NVarChar, prm.formular_name.trim())
         result = await result.query(querysql)
 
         if (result !== undefined) {
@@ -707,7 +705,7 @@ async function CheckEditDuplicateAccountCodeForSale(prm) {
     } catch (err) {
 
     } finally {
-        await sql.close()
+        await close()
     }
 
     return await res
@@ -716,7 +714,7 @@ async function CheckEditDuplicateAccountCodeForSale(prm) {
 
 
 ////////////////////////  BankInAdjustment  //////////////////////// 
-async function GetPopupStoreBankInAdjustment() {
+async function ServiceGetPopupStoreBankInAdjustment() {
     let res = {}
     try {
         let querysql = ` SELECT STORE_ID,STORE_NAME 
@@ -724,17 +722,17 @@ async function GetPopupStoreBankInAdjustment() {
                         WHERE COMPANY = 'Y' 
                         ORDER BY STORE_ID ASC;`
 
-        let pool = await sql.connect(settings.dbConfig)
+        let pool = await connect(dbConfig)
         let result = await pool.request().query(querysql)
         res = result
     } catch (err) {
     } finally {
-        await sql.close()
+        await close()
     }
     return await res
 }
 
-async function GetValidationstoreBankInAdjustment() {
+async function ServiceGetValidationstoreBankInAdjustment() {
     let res = {}
     try {
         let querysql = `SELECT STORE_ID,
@@ -742,33 +740,33 @@ async function GetValidationstoreBankInAdjustment() {
                         FROM   PH_STORES  
                         WHERE  COMPANY = 'Y' `
 
-        let pool = await sql.connect(settings.dbConfig)
+        let pool = await connect(dbConfig)
         let result = await pool.request().query(querysql)
         res = result
     } catch (err) {
     } finally {
-        await sql.close()
+        await close()
     }
     return await res
 }
 
-async function GetValidationfinancialcodeBankInAdjustment() {
+async function ServiceGetValidationfinancialcodeBankInAdjustment() {
     let res = {}
     try {
         let querysql = `SELECT F.FINANCIAL_CODE 
                         FROM   ACC_M_FINANCIAL_CODES F 
                         WHERE  F.FIXFLAG = 1`
 
-        let pool = await sql.connect(settings.dbConfig)
+        let pool = await connect(dbConfig)
         let result = await pool.request().query(querysql)
         res = result
     } catch (err) {
     } finally {
-        await sql.close()
+        await close()
     }
     return await res
 }
-async function GetBankInAdjustment(store, dateofstore) {
+async function ServiceGetBankInAdjustment(store, dateofstore) {
     let result
     try {
         const querysql = `SELECT D.STORE, 
@@ -794,32 +792,32 @@ async function GetBankInAdjustment(store, dateofstore) {
         const input_store = 'input_store'
         const input_dateofstore = 'input_dateofstore'
 
-        let pool = await sql.connect(settings.dbConfig)
+        let pool = await connect(dbConfig)
 
         result = await pool.request()
             // set parameter
-            .input(input_store, sql.NVarChar, store.trim())
-            .input(input_dateofstore, sql.NVarChar, dateofstore.trim())
+            .input(input_store, NVarChar, store.trim())
+            .input(input_dateofstore, NVarChar, dateofstore.trim())
             .query(querysql)
-        await sql.close()
+        await close()
 
     } catch (err) {
     }
     return await result
 }
 
-async function GetDailyFinsByData(obj) {
+async function ServiceGetDailyFinsByData(obj) {
     let res
     try {
         let querysql = `SELECT * FROM ACC_DAILY_FINS  WHERE STORE = @input_store_id AND FINANCIAL_CODE = @input_fin_code AND FINANCIAL_DATE = @input_fin_date `
         const input_store_id = 'input_store_id'
         const input_fin_code = 'input_fin_code'
         const input_fin_date = 'input_fin_date'
-        let pool = await sql.connect(settings.dbConfig)
+        let pool = await connect(dbConfig)
         let result = await pool.request()
-            .input(input_store_id, sql.NVarChar, obj.store_id)
-            .input(input_fin_code, sql.NVarChar, obj.fin_code)
-            .input(input_fin_date, sql.NVarChar, obj.fin_date)
+            .input(input_store_id, NVarChar, obj.store_id)
+            .input(input_fin_code, NVarChar, obj.fin_code)
+            .input(input_fin_date, NVarChar, obj.fin_date)
             .query(querysql)
         if (result !== undefined) {
             if (result.rowsAffected > 0) res = result
@@ -827,13 +825,13 @@ async function GetDailyFinsByData(obj) {
     } catch (err) {
 
     } finally {
-        await sql.close()
+        await close()
     }
 
     return await res
 }
 
-async function EditBankInAdjustment(prm) {
+async function ServiceEditBankInAdjustment(prm) {
     let res
 
     try {
@@ -856,15 +854,15 @@ async function EditBankInAdjustment(prm) {
             const input_update_date = 'input_update_date'
             const input_update_by = 'input_update_by'
 
-            let pool = await sql.connect(settings.dbConfig)
+            let pool = await connect(dbConfig)
             let result = await pool.request()
-            if (prm.store_id != undefined) await result.input(input_store_id, sql.NVarChar, prm.store_id.trim())
-            if (prm.fin_code != undefined) await result.input(input_fin_code, sql.NVarChar, prm.fin_code.trim())
-            if (prm.fin_date != undefined) await result.input(input_fin_date, sql.NVarChar, prm.fin_date.trim())
-            if (prm.daily_fin != undefined) await result.input(input_daily_fin, sql.NVarChar, prm.daily_fin.trim())
-            if (prm.store_daily_fin != undefined) await result.input(input_store_daily_fin, sql.NVarChar, prm.store_daily_fin.trim())
-            if (prm.update_date != undefined) await result.input(input_update_date, sql.NVarChar, prm.update_date.trim())
-            if (prm.update_by != undefined) await result.input(input_update_by, sql.NVarChar, prm.update_by.trim())
+            if (prm.store_id != undefined) await result.input(input_store_id, NVarChar, prm.store_id.trim())
+            if (prm.fin_code != undefined) await result.input(input_fin_code, NVarChar, prm.fin_code.trim())
+            if (prm.fin_date != undefined) await result.input(input_fin_date, NVarChar, prm.fin_date.trim())
+            if (prm.daily_fin != undefined) await result.input(input_daily_fin, NVarChar, prm.daily_fin.trim())
+            if (prm.store_daily_fin != undefined) await result.input(input_store_daily_fin, NVarChar, prm.store_daily_fin.trim())
+            if (prm.update_date != undefined) await result.input(input_update_date, NVarChar, prm.update_date.trim())
+            if (prm.update_by != undefined) await result.input(input_update_by, NVarChar, prm.update_by.trim())
             result = await result.query(querysql)
 
             if (result !== undefined) {
@@ -874,13 +872,13 @@ async function EditBankInAdjustment(prm) {
     } catch (err) {
 
     } finally {
-        await sql.close()
+        await close()
     }
     return await res
 }
 
 //GenGLBankInAdjustment
-async function GenGLBankInAdjustment(prm) {
+async function ServiceGenGLBankInAdjustment(prm) {
     let res
 
     try {
@@ -892,14 +890,14 @@ async function GenGLBankInAdjustment(prm) {
             const p_from_store = 'p_from_store'
             const p_to_store = 'p_to_store'
 
-            let pool = await sql.connect(settings.dbConfig)
+            let pool = await connect(dbConfig)
             let result = await pool.request()
-                .input(p_doc_type, sql.NVarChar, prm.gldoc_type)
-                .input(p_ledger_type, sql.NVarChar, prm.glledger_type)
-                .input(p_from_date, sql.NVarChar, prm.glfrom_date)
-                .input(p_to_date, sql.NVarChar, prm.glto_date)
-                .input(p_from_store, sql.NVarChar, prm.glfrom_store)
-                .input(p_to_store, sql.NVarChar, prm.glto_store)
+                .input(p_doc_type, NVarChar, prm.gldoc_type)
+                .input(p_ledger_type, NVarChar, prm.glledger_type)
+                .input(p_from_date, NVarChar, prm.glfrom_date)
+                .input(p_to_date, NVarChar, prm.glto_date)
+                .input(p_from_store, NVarChar, prm.glfrom_store)
+                .input(p_to_store, NVarChar, prm.glto_store)
                 .execute('GEN_GL_TO_E1')
             if (result !== undefined) {
                 res = result.recordset
@@ -908,13 +906,13 @@ async function GenGLBankInAdjustment(prm) {
     } catch (err) {
 
     } finally {
-        await sql.close()
+        await close()
     }
     return await res
 }
 
 ////////////////////////  StampCloseDaiyFins  //////////////////////// 
-async function SearchTempStampCloseDaiyFins(prm) {
+async function ServiceSearchTempStampCloseDaiyFins(prm) {
     let res = {}
     try {
         let querysql = ` SELECT * FROM ACC_STAMPCLOSEDATA 
@@ -925,21 +923,21 @@ async function SearchTempStampCloseDaiyFins(prm) {
 
         const input_datefrom = 'input_datefrom'
         const input_dateto = 'input_dateto'
-        let pool = await sql.connect(settings.dbConfig)
+        let pool = await connect(dbConfig)
         let result = await pool.request()
-            .input(input_datefrom, sql.NVarChar, prm.datefrom)
-            .input(input_dateto, sql.NVarChar, prm.dateto)
+            .input(input_datefrom, NVarChar, prm.datefrom)
+            .input(input_dateto, NVarChar, prm.dateto)
             .query(querysql)
         res = result
     } catch (err) {
 
     } finally {
-        await sql.close()
+        await close()
     }
     return await res
 }
 
-async function SearchTempReCloseDaiyFins(prm) {
+async function ServiceSearchTempReCloseDaiyFins(prm) {
     let res = {}
     try {
         let querysql = ` SELECT * FROM ACC_STAMPCLOSEDATA 
@@ -950,21 +948,21 @@ async function SearchTempReCloseDaiyFins(prm) {
 
         const input_datefrom = 'input_datefrom'
         const input_dateto = 'input_dateto'
-        let pool = await sql.connect(settings.dbConfig)
+        let pool = await connect(dbConfig)
         let result = await pool.request()
-            .input(input_datefrom, sql.NVarChar, prm.datefrom.trim())
-            .input(input_dateto, sql.NVarChar, prm.dateto.trim())
+            .input(input_datefrom, NVarChar, prm.datefrom.trim())
+            .input(input_dateto, NVarChar, prm.dateto.trim())
             .query(querysql)
         res = result
     } catch (err) {
 
     } finally {
-        await sql.close()
+        await close()
     }
     return await res
 }
 
-async function CountStampCloseDaiyFins(prm) {
+async function ServiceCountStampCloseDaiyFins(prm) {
     let res = {}
     try {
         let querysql = `SELECT * 
@@ -977,21 +975,21 @@ async function CountStampCloseDaiyFins(prm) {
         const input_datefrom = 'input_datefrom'
         const input_dateto = 'input_dateto'
 
-        let pool = await sql.connect(settings.dbConfig)
+        let pool = await connect(dbConfig)
         let result = await pool.request()
-            .input(input_datefrom, sql.NVarChar, prm.datefrom.trim())
-            .input(input_dateto, sql.NVarChar, prm.dateto.trim())
+            .input(input_datefrom, NVarChar, prm.datefrom.trim())
+            .input(input_dateto, NVarChar, prm.dateto.trim())
             .query(querysql)
         res = result
 
     } catch (err) {
     } finally {
-        await sql.close()
+        await close()
     }
     return await res
 }
 
-async function AddStampCloseDaiyFins(prm) {
+async function ServiceAddStampCloseDaiyFins(prm) {
     let res
     try {
         if (prm.owner && prm.datefrom && prm.dateto && prm.create_date && prm.create_by) {
@@ -1017,13 +1015,13 @@ async function AddStampCloseDaiyFins(prm) {
             const input_create_date = 'input_create_date'
             const input_create_by = 'input_create_by'
 
-            let pool = await sql.connect(settings.dbConfig)
+            let pool = await connect(dbConfig)
             let result = await pool.request()
-                .input(input_user_id, sql.NVarChar, prm.owner)
-                .input(input_datefrom, sql.NVarChar, prm.datefrom)
-                .input(input_dateto, sql.NVarChar, prm.dateto)
-                .input(input_create_date, sql.NVarChar, prm.create_date)
-                .input(input_create_by, sql.NVarChar, prm.create_by)
+                .input(input_user_id, NVarChar, prm.owner)
+                .input(input_datefrom, NVarChar, prm.datefrom)
+                .input(input_dateto, NVarChar, prm.dateto)
+                .input(input_create_date, NVarChar, prm.create_date)
+                .input(input_create_by, NVarChar, prm.create_by)
                 .query(querysql)
             if (result !== undefined) {
                 if (result.rowsAffected > 0) res = true
@@ -1031,12 +1029,12 @@ async function AddStampCloseDaiyFins(prm) {
         }
     } catch (err) {
     } finally {
-        await sql.close()
+        await close()
     }
     return await res
 }
 
-async function EditStampCloseDaiyFins(prm) {
+async function ServiceEditStampCloseDaiyFins(prm) {
     let res
     try {
         if (prm.datefrom && prm.dateto && prm.update_date && prm.update_by) {
@@ -1055,12 +1053,12 @@ async function EditStampCloseDaiyFins(prm) {
             const input_update_date = 'input_update_date'
             const input_update_by = 'input_update_by'
 
-            let pool = await sql.connect(settings.dbConfig)
+            let pool = await connect(dbConfig)
             let result = await pool.request()
-                .input(input_datefrom, sql.NVarChar, prm.datefrom)
-                .input(input_dateto, sql.NVarChar, prm.dateto)
-                .input(input_update_date, sql.NVarChar, prm.update_date)
-                .input(input_update_by, sql.NVarChar, prm.update_by)
+                .input(input_datefrom, NVarChar, prm.datefrom)
+                .input(input_dateto, NVarChar, prm.dateto)
+                .input(input_update_date, NVarChar, prm.update_date)
+                .input(input_update_by, NVarChar, prm.update_by)
                 .query(querysql)
             if (result !== undefined) {
                 if (result.rowsAffected > 0) res = true
@@ -1068,12 +1066,12 @@ async function EditStampCloseDaiyFins(prm) {
         }
     } catch (err) {
     } finally {
-        await sql.close()
+        await close()
     }
     return await res
 }
 
-async function ExportReportDailyFlashSales(prm) {
+async function ServiceExportReportDailyFlashSales(prm) {
     let res
 
     try {
@@ -1083,13 +1081,13 @@ async function ExportReportDailyFlashSales(prm) {
             const p_from_store = 'p_from_store'
             const p_to_store = 'p_to_store'
 
-            let pool = await sql.connect(settings.dbConfig)
+            let pool = await connect(dbConfig)
             let result = await pool.request()
             result.multiple = true
-            await result.input(p_from_date, sql.NVarChar, prm.datefrom)
-            await result.input(p_to_date, sql.NVarChar, prm.dateto)
-            await result.input(p_from_store, sql.NVarChar, prm.from_store)
-            await result.input(p_to_store, sql.NVarChar, prm.to_store)
+            await result.input(p_from_date, NVarChar, prm.datefrom)
+            await result.input(p_to_date, NVarChar, prm.dateto)
+            await result.input(p_from_store, NVarChar, prm.from_store)
+            await result.input(p_to_store, NVarChar, prm.to_store)
             const results = await result.execute('REPORT_DAILY_FLASH_SALE')
             if (results !== undefined) {
                 if (results.recordsets.length > 0) {
@@ -1101,7 +1099,7 @@ async function ExportReportDailyFlashSales(prm) {
         }
     } catch (err) {
     } finally {
-        await sql.close()
+        await close()
     }
     return await res
 }

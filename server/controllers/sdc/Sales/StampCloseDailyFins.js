@@ -1,19 +1,18 @@
-const jwt = require('jsonwebtoken')
-const browserdetect = require('browser-detect');
-const menu = require('../../../models/Services/Menu')
+import { sign } from 'jsonwebtoken';
+import browserdetect from 'browser-detect';
+import { ServiceGetScreenById } from '../../../models/Services/Menu';
 
-const log = require('../../../models/Services/Log')
-const Financial = require('../../../models/Services/Financial')
-const message = require('../../../models/Services/Messsage')
+import { ServiceInsertLogAuditTrail, ServiceInsertLogAudit } from '../../../models/Services/Log';
+import { ServiceCountStampCloseDaiyFins, ServiceAddStampCloseDaiyFins, ServiceSearchTempStampCloseDaiyFins, ServiceEditStampCloseDaiyFins } from '../../../models/Services/Financial';
+import { ServiceGetMessageByCode } from '../../../models/Services/Messsage';
 
-const action_type = require('../../../models/action_type')
-const status_type = require('../../../models/status_type')
-const msg_type = require('../../../models/msg_type')
+import { ActionAdd, ActionEdit } from '../../../models/action_type';
+import { StatusSuccess, StatusError, StatusUnComplate, StatusComplate } from '../../../models/status_type';
+import { MSGAddSuccess, MSGAddUnSuccess, CodeE0002, CodeS0004, MSGEditSuccess, CodeS0005, MSGEditUnSuccess, CodeE0003 } from '../../../models/msg_type';
 
-const settings = require('../../../../settings')
+import { secretkey, tokenexpires } from '../../../../settings';
 
-
-module.exports.StampCloseDaiyFins = StampCloseDaiyFins
+export { StampCloseDaiyFins };
 
 async function StampCloseDaiyFins(req, res, reqBody, authData) {
     if (reqBody.stamp == null) throw new Error("Input not valid")
@@ -35,7 +34,7 @@ async function StampCloseDaiyFins(req, res, reqBody, authData) {
         const browser = JSON.stringify(browserdetect(req.headers['user-agent']));
 
         //Get Screen name && Module name
-        const screen = await menu.GetScreenById(screen_id)
+        const screen = await ServiceGetScreenById(screen_id)
 
         if (Object.keys(screen).length > 0) {
             screen_name = screen.SCREEN_NAME
@@ -47,27 +46,27 @@ async function StampCloseDaiyFins(req, res, reqBody, authData) {
         }
 
         if (stamp == 'option1') {
-            const StampCount = await Financial.CountStampCloseDaiyFins(prmcount)
+            const StampCount = await ServiceCountStampCloseDaiyFins(prmcount)
 
             const prmLog = {
                 audit_trail_date: datetime,
                 module: module_name,
                 screen_name: screen_name,
-                action_type: action_type.Add,
-                status: status_type.Success,
+                action_type: ActionAdd,
+                status: StatusSuccess,
                 user_id: authData.id,
                 client_ip: req.ip,
-                msg: msg_type.AddSuccess,
+                msg: MSGAddSuccess,
                 browser: browser
             }
-            // Add Log.                   
+            // ActionAdd Log.                   
 
-            let AuditTrail = await log.InsertLogAuditTrail(prmLog)
+            let AuditTrail = await ServiceInsertLogAuditTrail(prmLog)
 
             if (StampCount.rowsAffected > 0) {
 
                 if (AuditTrail.uid) {
-                    //Add Log Audit
+                    //ActionAdd Log Audit
                     const tempdata = {
                         tabel_name: 'DAILY_FINS',
                         owner: authData.id,
@@ -79,23 +78,23 @@ async function StampCloseDaiyFins(req, res, reqBody, authData) {
                     }
                     const prmLogAudit = {
                         audit_date: datetime,
-                        action_type: action_type.Add,
+                        action_type: ActionAdd,
                         user_id: authData.id,
                         screen_name: screen_name,
                         client_ip: req.ip,
-                        status: status_type.Error,
-                        audit_msg: msg_type.AddUnSuccess,
+                        status: StatusError,
+                        audit_msg: MSGAddUnSuccess,
                         audit_trail_id: AuditTrail.uid,
                         new_value: tempdata,
                         original_value: '',
                     }
-                    await log.InsertLogAudit(prmLogAudit)
+                    await ServiceInsertLogAudit(prmLogAudit)
                 }
 
                 //Get Message Alert.
-                const messageAlert = await message.GetMessageByCode(msg_type.CodeE0002)
+                const messageAlert = await ServiceGetMessageByCode(CodeE0002)
                 const data = {
-                    "status": status_type.UnComplate,
+                    "status": StatusUnComplate,
                     "message": messageAlert,
                 }
                 await res.setHeader('Content-Type', 'application/json');
@@ -110,11 +109,11 @@ async function StampCloseDaiyFins(req, res, reqBody, authData) {
                     create_by: authData.id
                 }
 
-                const result = await Financial.AddStampCloseDaiyFins(prm)
-                if (result !== undefined) { //Insert Success  
+                const result = await ServiceAddStampCloseDaiyFins(prm)
+                if (result !== undefined) { //Insert StatusSuccess  
 
                     if (AuditTrail.uid) {
-                        //Add Log Audit
+                        //ActionAdd Log Audit
                         const tempdata = {
                             tabel_name: 'DAILY_FINS',
                             owner: authData.id,
@@ -126,21 +125,21 @@ async function StampCloseDaiyFins(req, res, reqBody, authData) {
                         }
                         const prmLogAudit = {
                             audit_date: datetime,
-                            action_type: action_type.Add,
+                            action_type: ActionAdd,
                             user_id: authData.id,
                             screen_name: screen_name,
                             client_ip: req.ip,
-                            status: status_type.Success,
-                            audit_msg: msg_type.AddSuccess,
+                            status: StatusSuccess,
+                            audit_msg: MSGAddSuccess,
                             audit_trail_id: AuditTrail.uid,
                             new_value: tempdata,
                             original_value: '',
                         }
-                        await log.InsertLogAudit(prmLogAudit)
+                        await ServiceInsertLogAudit(prmLogAudit)
                     }
 
                     //Get Message Alert.
-                    let messageAlert = await message.GetMessageByCode(msg_type.CodeS0004)
+                    let messageAlert = await ServiceGetMessageByCode(CodeS0004)
 
                     //Send JWT
                     const jwtdata = {
@@ -153,9 +152,9 @@ async function StampCloseDaiyFins(req, res, reqBody, authData) {
                         phc_user: authData.phc_user,
                     }
 
-                    await jwt.sign({ jwtdata }, settings.secretkey, { expiresIn: settings.tokenexpires }, (err, token) => {
+                    await sign({ jwtdata }, secretkey, { expiresIn: tokenexpires }, (err, token) => {
                         res.json({
-                            "status": status_type.Complate,
+                            "status": StatusComplate,
                             "message": messageAlert,
                             "user": {
                                 "id": authData.id,
@@ -174,17 +173,17 @@ async function StampCloseDaiyFins(req, res, reqBody, authData) {
                         audit_trail_date: datetime,
                         module: module_name,
                         screen_name: screen_name,
-                        action_type: action_type.Add,
-                        status: status_type.Error,
+                        action_type: ActionAdd,
+                        status: StatusError,
                         user_id: authData.id,
                         client_ip: req.ip,
-                        msg: msg_type.AddUnSuccess,
+                        msg: MSGAddUnSuccess,
                         browser: browser
                     }
-                    // Add Log.
-                    let AuditTrail = await log.InsertLogAuditTrail(prmLog)
+                    // ActionAdd Log.
+                    let AuditTrail = await ServiceInsertLogAuditTrail(prmLog)
                     if (AuditTrail.uid) {
-                        //Add Log Audit   
+                        //ActionAdd Log Audit   
                         const tempdata = {
                             tabel_name: 'DAILY_FINS',
                             owner: authData.id,
@@ -197,23 +196,23 @@ async function StampCloseDaiyFins(req, res, reqBody, authData) {
 
                         const prmLogAudit = {
                             audit_date: datetime,
-                            action_type: action_type.Add,
+                            action_type: ActionAdd,
                             user_id: authData.id,
                             screen_name: screen_name,
                             client_ip: req.ip,
-                            status: status_type.Error,
-                            audit_msg: msg_type.AddUnSuccess,
+                            status: StatusError,
+                            audit_msg: MSGAddUnSuccess,
                             audit_trail_id: AuditTrail.uid,
                             new_value: tempdata,
                             original_value: '',
                         }
-                        await log.InsertLogAudit(prmLogAudit)
+                        await ServiceInsertLogAudit(prmLogAudit)
                     }
 
                     ////////////////////// Alert Message JSON ////////////////////// 
 
                     const data = {
-                        "status": status_type.UnComplate,
+                        "status": StatusUnComplate,
                         "message": "ไม่สามารถบันทึกข้อมูลลงในระบบได้",
                     }
                     await res.setHeader('Content-Type', 'application/json');
@@ -225,15 +224,15 @@ async function StampCloseDaiyFins(req, res, reqBody, authData) {
                 audit_trail_date: datetime,
                 module: module_name,
                 screen_name: screen_name,
-                action_type: action_type.Edit,
-                status: status_type.Success,
+                action_type: ActionEdit,
+                status: StatusSuccess,
                 user_id: authData.id,
                 client_ip: req.ip,
-                msg: msg_type.EditSuccess,
+                msg: MSGEditSuccess,
                 browser: browser
             }
-            // Add Log.
-            let AuditTrail = await log.InsertLogAuditTrail(prmLog)
+            // ActionAdd Log.
+            let AuditTrail = await ServiceInsertLogAuditTrail(prmLog)
 
             const prm = {
                 owner: authData.id,
@@ -242,15 +241,15 @@ async function StampCloseDaiyFins(req, res, reqBody, authData) {
                 update_date: datetime,
                 update_by: authData.id
             }
-            let temp = await Financial.SearchTempStampCloseDaiyFins(prm)
+            let temp = await ServiceSearchTempStampCloseDaiyFins(prm)
 
-            const StampCount = await Financial.CountStampCloseDaiyFins(prmcount)
+            const StampCount = await ServiceCountStampCloseDaiyFins(prmcount)
             if (StampCount.rowsAffected > 0) {
 
-                const result = await Financial.EditStampCloseDaiyFins(prm)
-                if (result !== undefined) { //Edit Success                                       
+                const result = await ServiceEditStampCloseDaiyFins(prm)
+                if (result !== undefined) { //ActionEdit StatusSuccess                                       
                     if (AuditTrail.uid) {
-                        //Add Log Audit  
+                        //ActionAdd Log Audit  
                         const tempdata = {
                             tabel_name: 'DAILY_FINS',
                             start_date: datefrom,
@@ -262,21 +261,21 @@ async function StampCloseDaiyFins(req, res, reqBody, authData) {
 
                         const prmLogAudit = {
                             audit_date: datetime,
-                            action_type: action_type.Edit,
+                            action_type: ActionEdit,
                             user_id: authData.id,
                             screen_name: screen_name,
                             client_ip: req.ip,
-                            status: status_type.Success,
-                            audit_msg: msg_type.EditSuccess,
+                            status: StatusSuccess,
+                            audit_msg: MSGEditSuccess,
                             audit_trail_id: AuditTrail.uid,
                             new_value: tempdata,
                             original_value: temp.recordset,
                         }
-                        await log.InsertLogAudit(prmLogAudit)
+                        await ServiceInsertLogAudit(prmLogAudit)
                     }
 
                     //Get Message Alert.
-                    let messageAlert = await message.GetMessageByCode(msg_type.CodeS0005)
+                    let messageAlert = await ServiceGetMessageByCode(CodeS0005)
 
                     //Send JWT
                     const jwtdata = {
@@ -289,9 +288,9 @@ async function StampCloseDaiyFins(req, res, reqBody, authData) {
                         phc_user: authData.phc_user,
                     }
 
-                    await jwt.sign({ jwtdata }, settings.secretkey, { expiresIn: settings.tokenexpires }, (err, token) => {
+                    await sign({ jwtdata }, secretkey, { expiresIn: tokenexpires }, (err, token) => {
                         res.json({
-                            "status": status_type.Complate,
+                            "status": StatusComplate,
                             "message": messageAlert,
                             "user": {
                                 "id": authData.id,
@@ -310,17 +309,17 @@ async function StampCloseDaiyFins(req, res, reqBody, authData) {
                         audit_trail_date: datetime,
                         module: module_name,
                         screen_name: screen_name,
-                        action_type: action_type.Edit,
-                        status: status_type.Error,
+                        action_type: ActionEdit,
+                        status: StatusError,
                         user_id: authData.id,
                         client_ip: req.ip,
-                        msg: msg_type.EditUnSuccess,
+                        msg: MSGEditUnSuccess,
                         browser: browser
                     }
-                    // Add Log.
-                    let AuditTrail = await log.InsertLogAuditTrail(prmLog)
+                    // ActionAdd Log.
+                    let AuditTrail = await ServiceInsertLogAuditTrail(prmLog)
                     if (AuditTrail.uid) {
-                        //Add Log Audit   
+                        //ActionAdd Log Audit   
                         const tempdata = {
                             tabel_name: 'DAILY_FINS',
                             start_date: datefrom,
@@ -332,23 +331,23 @@ async function StampCloseDaiyFins(req, res, reqBody, authData) {
 
                         const prmLogAudit = {
                             audit_date: datetime,
-                            action_type: action_type.Edit,
+                            action_type: ActionEdit,
                             user_id: authData.id,
                             screen_name: screen_name,
                             client_ip: req.ip,
-                            status: status_type.Error,
-                            audit_msg: msg_type.EditUnSuccess,
+                            status: StatusError,
+                            audit_msg: MSGEditUnSuccess,
                             audit_trail_id: AuditTrail.uid,
                             new_value: tempdata,
                             original_value: temp.recordset,
                         }
-                        await log.InsertLogAudit(prmLogAudit)
+                        await ServiceInsertLogAudit(prmLogAudit)
                     }
 
                     ////////////////////// Alert Message JSON ////////////////////// 
 
                     const data = {
-                        "status": status_type.UnComplate,
+                        "status": StatusUnComplate,
                         "message": "ไม่สามารถบันทึกข้อมูลลงในระบบได้",
                     }
                     await res.setHeader('Content-Type', 'application/json');
@@ -356,7 +355,7 @@ async function StampCloseDaiyFins(req, res, reqBody, authData) {
                 }
             } else {
                 if (AuditTrail.uid) {
-                    //Add Log Audit  
+                    //ActionAdd Log Audit  
                     const tempdata = {
                         tabel_name: 'DAILY_FINS',
                         start_date: datefrom,
@@ -368,23 +367,23 @@ async function StampCloseDaiyFins(req, res, reqBody, authData) {
 
                     const prmLogAudit = {
                         audit_date: datetime,
-                        action_type: action_type.Edit,
+                        action_type: ActionEdit,
                         user_id: authData.id,
                         screen_name: screen_name,
                         client_ip: req.ip,
-                        status: status_type.Error,
-                        audit_msg: msg_type.EditUnSuccess,
+                        status: StatusError,
+                        audit_msg: MSGEditUnSuccess,
                         audit_trail_id: AuditTrail.uid,
                         new_value: tempdata,
                         original_value: temp.recordset,
                     }
-                    await log.InsertLogAudit(prmLogAudit)
+                    await ServiceInsertLogAudit(prmLogAudit)
                 }
 
                 //Get Message Alert.
-                const messageAlert = await message.GetMessageByCode(msg_type.CodeE0003)
+                const messageAlert = await ServiceGetMessageByCode(CodeE0003)
                 const data = {
-                    "status": status_type.UnComplate,
+                    "status": StatusUnComplate,
                     "message": messageAlert,
                 }
                 await res.setHeader('Content-Type', 'application/json');

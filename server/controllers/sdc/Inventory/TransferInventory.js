@@ -1,9 +1,8 @@
-const Inventory = require('../../../models/Services/Inventory')
+import { ServiceGetTransferInventory } from '../../../models/Services/Inventory';
 
+export { GetDataTableTransferInventory };
 
-module.exports.GetDataTable = GetDataTable
-
-async function GetDataTable(req, res, reqBody) {
+async function GetDataTableTransferInventory(req, res, reqBody) {
     if (req.params.stamp == null) throw new Error("Input not valid")
     if (req.params.store == null) throw new Error("Input not valid")
 
@@ -20,7 +19,7 @@ async function GetDataTable(req, res, reqBody) {
             datefrom: (datefrom == 'undefined') ? undefined : datefrom,
             dateto: (dateto == 'undefined') ? undefined : dateto
         }
-        const result = await Inventory.GetTransferInventory(prm)
+        const result = await ServiceGetTransferInventory(prm)
         const rowdata = {
             "aaData": result.recordset
         }

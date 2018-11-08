@@ -1,32 +1,32 @@
-const sql = require('mssql') // MS Sql Server client
-const jwt = require('jsonwebtoken')
-const browserdetect = require('browser-detect');
-const setting = require('../../../../settings')
-const menu = require('../../../models/Services/Menu')
+import { sign } from 'jsonwebtoken';
+import browserdetect from 'browser-detect';
+import { ServiceGetScreenById } from '../../../models/Services/Menu';
 
-const log = require('../../../models/Services/Log')
-const lov = require('../../../models/Services/Lov')
-const message = require('../../../models/Services/Messsage')
+import { ServiceInsertLogAuditTrail, ServiceInsertLogAudit } from '../../../models/Services/Log';
+import { ServiceGetCompanyConfig, ServiceCheckDuplicate, ServiceInsertLov, ServiceGetLovById, ServiceCheckEditDuplicate, ServiceEditLov, ServiceDeleteLovById, ServiceGetCompanyAccountConfig } from '../../../models/Services/Lov';
+import { ServiceGetMessageByCode } from '../../../models/Services/Messsage';
 
-const action_type = require('../../../models/action_type')
-const status_type = require('../../../models/status_type')
-const msg_type = require('../../../models/msg_type')
-const lov_type = require('../../../models/lov_type')
+import { ActionAdd, ActionEdit, ActionDelete } from '../../../models/action_type';
+import { StatusSuccess, StatusComplate, StatusError, StatusUnComplate } from '../../../models/status_type';
+import { MSGAddSuccess, CodeS0001, MSGAddUnSuccess, MSGAddDuplicate, CodeE0001, MSGEditSuccess, CodeS0002, MSGEditUnSuccess, MSGEditDuplicate, MSGDeleteSuccess, CodeS0003, MSGDeleteUnSuccess } from '../../../models/msg_type';
+import { Lov_Group_SDC, Lov_Type_Sales, Lov_Code_Company, Lov_Desc_Company, Active_Flage_Active, Lov_Code_Company_Acc } from '../../../models/lov_type';
 
-const settings = require('../../../../settings')
+import { secretkey, tokenexpires } from '../../../../settings';
 
-module.exports.GetCompany = GetCompany
-module.exports.AddCompany = AddCompany
-module.exports.EditCompany = EditCompany
-module.exports.DeleteCompany = DeleteCompany
+export { 
+    GetCompany, 
+    AddCompany, 
+    EditCompany, 
+    DeleteCompany,
 
-module.exports.GetCompanyAccount = GetCompanyAccount
-module.exports.AddCompanyAccount = AddCompanyAccount
-module.exports.EditCompanyAccount = EditCompanyAccount
+    GetCompanyAccount,
+    AddCompanyAccount,
+    EditCompanyAccount
+ }
 
 async function GetCompany(req, res, reqBody) {
     try {
-        let result = await lov.GetCompanyConfig()
+        let result = await ServiceGetCompanyConfig()
         const rowdata = {
             "aaData": result.recordset
         }
@@ -55,7 +55,7 @@ async function AddCompany(req, res, reqBody, authData) {
         const browser = JSON.stringify(browserdetect(req.headers['user-agent']));
 
         //Get Screen name && Module name
-        const screen = await menu.GetScreenById(screen_id)
+        const screen = await ServiceGetScreenById(screen_id)
 
         if (Object.keys(screen).length > 0) {
             screen_name = screen.SCREEN_NAME
@@ -64,63 +64,63 @@ async function AddCompany(req, res, reqBody, authData) {
 
         //Set prmlovcheck
         const prmlovcheck = {}
-        prmlovcheck['lov_group'] = lov_type.Lov_Group_SDC
-        prmlovcheck['lov_type'] = lov_type.Lov_Type_Sales
-        prmlovcheck['lov_code'] = lov_type.Lov_Code_Company
+        prmlovcheck['lov_group'] = Lov_Group_SDC
+        prmlovcheck['lov_type'] = Lov_Type_Sales
+        prmlovcheck['lov_code'] = Lov_Code_Company
         if (company_code) prmlovcheck['lov_1'] = company_code
         // if (company_name) prmlovcheck['lov_2'] = company_name
 
-        let dupdata = await lov.CheckDuplicate(prmlovcheck)
+        let dupdata = await ServiceCheckDuplicate(prmlovcheck)
 
         //Set object prmlov
         const prmlov = {}
-        prmlov['lov_group'] = lov_type.Lov_Group_SDC
-        prmlov['lov_type'] = lov_type.Lov_Type_Sales
-        prmlov['lov_code'] = lov_type.Lov_Code_Company
+        prmlov['lov_group'] = Lov_Group_SDC
+        prmlov['lov_type'] = Lov_Type_Sales
+        prmlov['lov_code'] = Lov_Code_Company
         if (company_code) prmlov['lov_1'] = company_code
         if (company_name) prmlov['lov_2'] = company_name
-        prmlov['lov_desc'] = lov_type.Lov_Desc_Company
-        prmlov['active_flage'] = lov_type.Active_Flage_Active
+        prmlov['lov_desc'] = Lov_Desc_Company
+        prmlov['active_flage'] = Active_Flage_Active
         if (datetime) prmlov['create_date'] = datetime
         if (authData.id) prmlov['create_by'] = authData.id
 
         if (dupdata) {
 
-            let reslov = await lov.InsertLov(prmlov)
+            let reslov = await ServiceInsertLov(prmlov)
 
-            if (reslov !== undefined) { //Insert Success            
+            if (reslov !== undefined) { //Insert StatusSuccess            
                 const prmLog = {
                     audit_trail_date: datetime,
                     module: module_name,
                     screen_name: screen_name,
-                    action_type: action_type.Add,
-                    status: status_type.Success,
+                    action_type: ActionAdd,
+                    status: StatusSuccess,
                     user_id: authData.id,
                     client_ip: req.ip,
-                    msg: msg_type.AddSuccess,
+                    msg: MSGAddSuccess,
                     browser: browser
                 }
-                // Add Log.
-                let AuditTrail = await log.InsertLogAuditTrail(prmLog)
+                // ActionAdd Log.
+                let AuditTrail = await ServiceInsertLogAuditTrail(prmLog)
                 if (AuditTrail.uid) {
-                    //Add Log Audit         
+                    //ActionAdd Log Audit         
                     const prmLogAudit = {
                         audit_date: datetime,
-                        action_type: action_type.Add,
+                        action_type: ActionAdd,
                         user_id: authData.id,
                         screen_name: screen_name,
                         client_ip: req.ip,
-                        status: status_type.Success,
-                        audit_msg: msg_type.AddSuccess,
+                        status: StatusSuccess,
+                        audit_msg: MSGAddSuccess,
                         audit_trail_id: AuditTrail.uid,
                         new_value: prmlov,
                         original_value: '',
                     }
-                    await log.InsertLogAudit(prmLogAudit)
+                    await ServiceInsertLogAudit(prmLogAudit)
                 }
 
                 //Get Message Alert.
-                let messageAlert = await message.GetMessageByCode(msg_type.CodeS0001)
+                let messageAlert = await ServiceGetMessageByCode(CodeS0001)
 
                 //Send JWT
                 const jwtdata = {
@@ -133,9 +133,9 @@ async function AddCompany(req, res, reqBody, authData) {
                     phc_user: authData.phc_user,
                 }
 
-                await jwt.sign({ jwtdata }, settings.secretkey, { expiresIn: settings.tokenexpires }, (err, token) => {
+                await sign({ jwtdata }, secretkey, { expiresIn: tokenexpires }, (err, token) => {
                     res.json({
-                        "status": status_type.Complate,
+                        "status": StatusComplate,
                         "message": messageAlert,
                         "user": {
                             "id": authData.id,
@@ -149,41 +149,41 @@ async function AddCompany(req, res, reqBody, authData) {
                         }
                     })
                 })
-            } else {  //Insert UnSuccess
+            } else {  //Insert UnStatusSuccess
                 const prmLog = {
                     audit_trail_date: datetime,
                     module: module_name,
                     screen_name: screen_name,
-                    action_type: action_type.Add,
-                    status: status_type.Error,
+                    action_type: ActionAdd,
+                    status: StatusError,
                     user_id: authData.id,
                     client_ip: req.ip,
-                    msg: msg_type.AddUnSuccess,
+                    msg: MSGAddUnSuccess,
                     browser: browser
                 }
-                // Add Log.
-                let AuditTrail = await log.InsertLogAuditTrail(prmLog)
+                // ActionAdd Log.
+                let AuditTrail = await ServiceInsertLogAuditTrail(prmLog)
                 if (AuditTrail.uid) {
-                    //Add Log Audit         
+                    //ActionAdd Log Audit         
                     const prmLogAudit = {
                         audit_date: datetime,
-                        action_type: action_type.Add,
+                        action_type: ActionAdd,
                         user_id: authData.id,
                         screen_name: screen_name,
                         client_ip: req.ip,
-                        status: status_type.Error,
-                        audit_msg: msg_type.AddUnSuccess,
+                        status: StatusError,
+                        audit_msg: MSGAddUnSuccess,
                         audit_trail_id: AuditTrail.uid,
                         new_value: prmlov,
                         original_value: '',
                     }
-                    await log.InsertLogAudit(prmLogAudit)
+                    await ServiceInsertLogAudit(prmLogAudit)
                 }
 
                 ////////////////////// Alert Message JSON ////////////////////// 
 
                 const data = {
-                    "status": status_type.UnComplate,
+                    "status": StatusUnComplate,
                     "message": "ไม่สามารถบันทึกข้อมูลลงในระบบได้",
                 }
                 await res.setHeader('Content-Type', 'application/json');
@@ -195,30 +195,30 @@ async function AddCompany(req, res, reqBody, authData) {
                 audit_trail_date: datetime,
                 module: module_name,
                 screen_name: screen_name,
-                action_type: action_type.Add,
-                status: status_type.Error,
+                action_type: ActionAdd,
+                status: StatusError,
                 user_id: authData.id,
                 client_ip: req.ip,
-                msg: msg_type.AddUnSuccess,
+                msg: MSGAddUnSuccess,
                 browser: browser
             }
-            // Add Log.
-            let AuditTrail = await log.InsertLogAuditTrail(prmLog)
+            // ActionAdd Log.
+            let AuditTrail = await ServiceInsertLogAuditTrail(prmLog)
             if (AuditTrail.uid) {
-                //Add Log Audit 
+                //ActionAdd Log Audit 
                 const prmLogAudit1 = {
                     audit_date: datetime,
-                    action_type: action_type.Add,
+                    action_type: ActionAdd,
                     user_id: authData.id,
                     screen_name: screen_name,
                     client_ip: req.ip,
-                    status: status_type.Error,
-                    audit_msg: msg_type.AddDuplicate,
+                    status: StatusError,
+                    audit_msg: MSGAddDuplicate,
                     audit_trail_id: AuditTrail.uid,
                     new_value: prmlov,
                     original_value: '',
                 }
-                await log.InsertLogAudit(prmLogAudit1)
+                await ServiceInsertLogAudit(prmLogAudit1)
             }
 
             ////////////////////// Alert Message JSON //////////////////////             
@@ -226,9 +226,9 @@ async function AddCompany(req, res, reqBody, authData) {
                 company_code: company_code,
             }
             //Get Message Alert.
-            const messageAlert = await message.GetMessageByCode(msg_type.CodeE0001, prmMsg)
+            const messageAlert = await ServiceGetMessageByCode(CodeE0001, prmMsg)
             const data = {
-                "status": status_type.UnComplate,
+                "status": StatusUnComplate,
                 "message": messageAlert,
             }
             await res.setHeader('Content-Type', 'application/json');
@@ -259,7 +259,7 @@ async function EditCompany(req, res, reqBody, authData) {
         const browser = JSON.stringify(browserdetect(req.headers['user-agent']));
 
         //Get Screen name && Module name
-        const screen = await menu.GetScreenById(screen_id)
+        const screen = await ServiceGetScreenById(screen_id)
 
         if (Object.keys(screen).length > 0) {
             screen_name = screen.SCREEN_NAME
@@ -269,9 +269,9 @@ async function EditCompany(req, res, reqBody, authData) {
         //Set prmlovcheck
         const prmlovcheck = {}
         if (company_id) prmlovcheck['lov_id'] = company_id
-        prmlovcheck['lov_group'] = lov_type.Lov_Group_SDC
-        prmlovcheck['lov_type'] = lov_type.Lov_Type_Sales
-        prmlovcheck['lov_code'] = lov_type.Lov_Code_Company
+        prmlovcheck['lov_group'] = Lov_Group_SDC
+        prmlovcheck['lov_type'] = Lov_Type_Sales
+        prmlovcheck['lov_code'] = Lov_Code_Company
         if (company_code) prmlovcheck['lov_1'] = company_code
 
 
@@ -283,46 +283,46 @@ async function EditCompany(req, res, reqBody, authData) {
         if (datetime) prmlov['update_date'] = datetime
         if (authData.id) prmlov['update_by'] = authData.id
 
-        let tempdata = await lov.GetLovById(company_id)
+        let tempdata = await ServiceGetLovById(company_id)
 
-        let dupdata = await lov.CheckEditDuplicate(prmlovcheck)
+        let dupdata = await ServiceCheckEditDuplicate(prmlovcheck)
 
         if (dupdata) {
-            let reslov = await lov.EditLov(prmlov)
+            let reslov = await ServiceEditLov(prmlov)
 
-            if (reslov !== undefined) { //Edit Success            
+            if (reslov !== undefined) { //ActionEdit StatusSuccess            
                 const prmLog = {
                     audit_trail_date: datetime,
                     module: module_name,
                     screen_name: screen_name,
-                    action_type: action_type.Edit,
-                    status: status_type.Success,
+                    action_type: ActionEdit,
+                    status: StatusSuccess,
                     user_id: authData.id,
                     client_ip: req.ip,
-                    msg: msg_type.EditSuccess,
+                    msg: MSGEditSuccess,
                     browser: browser
                 }
-                // Add Log.
-                let AuditTrail = await log.InsertLogAuditTrail(prmLog)
+                // ActionAdd Log.
+                let AuditTrail = await ServiceInsertLogAuditTrail(prmLog)
                 if (AuditTrail.uid) {
-                    //Add Log Audit         
+                    //ActionAdd Log Audit         
                     const prmLogAudit = {
                         audit_date: datetime,
-                        action_type: action_type.Edit,
+                        action_type: ActionEdit,
                         user_id: authData.id,
                         screen_name: screen_name,
                         client_ip: req.ip,
-                        status: status_type.Success,
-                        audit_msg: msg_type.EditSuccess,
+                        status: StatusSuccess,
+                        audit_msg: MSGEditSuccess,
                         audit_trail_id: AuditTrail.uid,
                         new_value: prmlov,
                         original_value: tempdata.recordset,
                     }
-                    await log.InsertLogAudit(prmLogAudit)
+                    await ServiceInsertLogAudit(prmLogAudit)
                 }
 
                 //Get Message Alert.
-                let messageAlert = await message.GetMessageByCode(msg_type.CodeS0002)
+                let messageAlert = await ServiceGetMessageByCode(CodeS0002)
 
                 //Send JWT
                 const jwtdata = {
@@ -335,9 +335,9 @@ async function EditCompany(req, res, reqBody, authData) {
                     phc_user: authData.phc_user,
                 }
 
-                await jwt.sign({ jwtdata }, settings.secretkey, { expiresIn: settings.tokenexpires }, (err, token) => {
+                await sign({ jwtdata }, secretkey, { expiresIn: tokenexpires }, (err, token) => {
                     res.json({
-                        "status": status_type.Complate,
+                        "status": StatusComplate,
                         "message": messageAlert,
                         "user": {
                             "id": authData.id,
@@ -351,41 +351,41 @@ async function EditCompany(req, res, reqBody, authData) {
                         }
                     })
                 })
-            } else {  //Edit UnSuccess
+            } else {  //ActionEdit UnStatusSuccess
                 const prmLog = {
                     audit_trail_date: datetime,
                     module: module_name,
                     screen_name: screen_name,
-                    action_type: action_type.Edit,
-                    status: status_type.Error,
+                    action_type: ActionEdit,
+                    status: StatusError,
                     user_id: authData.id,
                     client_ip: req.ip,
-                    msg: msg_type.EditUnSuccess,
+                    msg: MSGEditUnSuccess,
                     browser: browser
                 }
-                // Add Log.
-                let AuditTrail = await log.InsertLogAuditTrail(prmLog)
+                // ActionAdd Log.
+                let AuditTrail = await ServiceInsertLogAuditTrail(prmLog)
                 if (AuditTrail.uid) {
-                    //Add Log Audit         
+                    //ActionAdd Log Audit         
                     const prmLogAudit = {
                         audit_date: datetime,
-                        action_type: action_type.Edit,
+                        action_type: ActionEdit,
                         user_id: authData.id,
                         screen_name: screen_name,
                         client_ip: req.ip,
-                        status: status_type.Error,
-                        audit_msg: msg_type.EditUnSuccess,
+                        status: StatusError,
+                        audit_msg: MSGEditUnSuccess,
                         audit_trail_id: AuditTrail.uid,
                         new_value: prmlov,
                         original_value: tempdata.recordset,
                     }
-                    await log.InsertLogAudit(prmLogAudit)
+                    await ServiceInsertLogAudit(prmLogAudit)
                 }
 
                 ////////////////////// Alert Message JSON ////////////////////// 
 
                 const data = {
-                    "status": status_type.UnComplate,
+                    "status": StatusUnComplate,
                     "message": "ไม่สามารถบันทึกข้อมูลลงในระบบได้",
                 }
                 await res.setHeader('Content-Type', 'application/json');
@@ -397,30 +397,30 @@ async function EditCompany(req, res, reqBody, authData) {
                 audit_trail_date: datetime,
                 module: module_name,
                 screen_name: screen_name,
-                action_type: action_type.Edit,
-                status: status_type.Error,
+                action_type: ActionEdit,
+                status: StatusError,
                 user_id: authData.id,
                 client_ip: req.ip,
-                msg: msg_type.EditUnSuccess,
+                msg: MSGEditUnSuccess,
                 browser: browser
             }
-            // Add Log.
-            let AuditTrail = await log.InsertLogAuditTrail(prmLog)
+            // ActionAdd Log.
+            let AuditTrail = await ServiceInsertLogAuditTrail(prmLog)
             if (AuditTrail.uid) {
-                //Add Log Audit 
+                //ActionAdd Log Audit 
                 const prmLogAudit = {
                     audit_date: datetime,
-                    action_type: action_type.Edit,
+                    action_type: ActionEdit,
                     user_id: authData.id,
                     screen_name: screen_name,
                     client_ip: req.ip,
-                    status: status_type.Error,
-                    audit_msg: msg_type.EditDuplicate,
+                    status: StatusError,
+                    audit_msg: MSGEditDuplicate,
                     audit_trail_id: AuditTrail.uid,
                     new_value: prmlov,
                     original_value: tempdata.recordset,
                 }
-                await log.InsertLogAudit(prmLogAudit)
+                await ServiceInsertLogAudit(prmLogAudit)
             }
 
             ////////////////////// Alert Message JSON //////////////////////             
@@ -428,9 +428,9 @@ async function EditCompany(req, res, reqBody, authData) {
                 company_code: company_code,
             }
             //Get Message Alert.
-            const messageAlert = await message.GetMessageByCode(msg_type.CodeE0001, prmMsg)
+            const messageAlert = await ServiceGetMessageByCode(CodeE0001, prmMsg)
             const data = {
-                "status": status_type.UnComplate,
+                "status": StatusUnComplate,
                 "message": messageAlert,
             }
             await res.setHeader('Content-Type', 'application/json');
@@ -458,53 +458,53 @@ async function DeleteCompany(req, res, reqBody, authData) {
         const browser = JSON.stringify(browserdetect(req.headers['user-agent']));
 
         //Get Screen name && Module name
-        const screen = await menu.GetScreenById(screen_id)
+        const screen = await ServiceGetScreenById(screen_id)
 
         if (Object.keys(screen).length > 0) {
             screen_name = screen.SCREEN_NAME
             module_name = screen.MODULE
         }
 
-        let tempdata = await lov.GetLovById(company_id)
+        let tempdata = await ServiceGetLovById(company_id)
 
-        let result = await lov.DeleteLovById(company_id)
+        let result = await ServiceDeleteLovById(company_id)
 
-        if (result !== undefined) { //Delete Success 
+        if (result !== undefined) { //ActionDelete StatusSuccess 
             const prmLog = {
                 audit_trail_date: datetime,
                 module: module_name,
                 screen_name: screen_name,
-                action_type: action_type.Delete,
-                status: status_type.Success,
+                action_type: ActionDelete,
+                status: StatusSuccess,
                 user_id: authData.id,
                 client_ip: req.ip,
-                msg: msg_type.DeleteSuccess,
+                msg: MSGDeleteSuccess,
                 browser: browser
             }
 
-            // Add Log.
-            let AuditTrail = await log.InsertLogAuditTrail(prmLog)
+            // ActionAdd Log.
+            let AuditTrail = await ServiceInsertLogAuditTrail(prmLog)
 
 
             if (AuditTrail.uid) {
-                //Add Log Audit         
+                //ActionAdd Log Audit         
                 const prmLogAudit = {
                     audit_date: datetime,
-                    action_type: action_type.Delete,
+                    action_type: ActionDelete,
                     user_id: authData.id,
                     screen_name: screen_name,
                     client_ip: req.ip,
-                    status: status_type.Success,
-                    audit_msg: msg_type.DeleteSuccess,
+                    status: StatusSuccess,
+                    audit_msg: MSGDeleteSuccess,
                     audit_trail_id: AuditTrail.uid,
                     new_value: '',
                     original_value: tempdata.recordset,
                 }
-                await log.InsertLogAudit(prmLogAudit)
+                await ServiceInsertLogAudit(prmLogAudit)
             }
 
             //Get Message Alert.
-            let messageAlert = await message.GetMessageByCode(msg_type.CodeS0003)
+            let messageAlert = await ServiceGetMessageByCode(CodeS0003)
 
             //Send JWT
             const jwtdata = {
@@ -517,9 +517,9 @@ async function DeleteCompany(req, res, reqBody, authData) {
                 phc_user: authData.phc_user,
             }
 
-            await jwt.sign({ jwtdata }, settings.secretkey, { expiresIn: settings.tokenexpires }, (err, token) => {
+            await sign({ jwtdata }, secretkey, { expiresIn: tokenexpires }, (err, token) => {
                 res.json({
-                    "status": status_type.Complate,
+                    "status": StatusComplate,
                     "message": messageAlert,
                     "user": {
                         "id": authData.id,
@@ -538,36 +538,36 @@ async function DeleteCompany(req, res, reqBody, authData) {
                 audit_trail_date: datetime,
                 module: module_name,
                 screen_name: screen_name,
-                action_type: action_type.Delete,
-                status: status_type.Error,
+                action_type: ActionDelete,
+                status: StatusError,
                 user_id: authData.id,
                 client_ip: req.ip,
-                msg: msg_type.DeleteUnSuccess,
+                msg: MSGDeleteUnSuccess,
                 browser: browser
             }
-            // Add Log.
-            let AuditTrail = await log.InsertLogAuditTrail(prmLog)
+            // ActionAdd Log.
+            let AuditTrail = await ServiceInsertLogAuditTrail(prmLog)
 
             if (AuditTrail.uid) {
-                //Add Log Audit         
+                //ActionAdd Log Audit         
                 const prmLogAudit = {
                     audit_date: datetime,
-                    action_type: action_type.Delete,
+                    action_type: ActionDelete,
                     user_id: authData.id,
                     screen_name: screen_name,
                     client_ip: req.ip,
-                    status: status_type.Error,
-                    audit_msg: msg_type.DeleteUnSuccess,
+                    status: StatusError,
+                    audit_msg: MSGDeleteUnSuccess,
                     audit_trail_id: AuditTrail.uid,
                     new_value: '',
                     original_value: tempdata.recordset,
                 }
-                await log.InsertLogAudit(prmLogAudit)
+                await ServiceInsertLogAudit(prmLogAudit)
             }
 
             ////////////////////// Alert Message JSON //////////////////////            
             const data = {
-                "status": status_type.UnComplate,
+                "status": StatusUnComplate,
                 "message": "ไม่สามารถลบข้อมูลลงในระบบได้",
             }
             await res.setHeader('Content-Type', 'application/json');
@@ -578,10 +578,9 @@ async function DeleteCompany(req, res, reqBody, authData) {
     }
 }
 
-
 async function GetCompanyAccount(req, res, reqBody) {
     try {
-        let result = await lov.GetCompanyAccountConfig()
+        let result = await ServiceGetCompanyAccountConfig()
         const rowdata = {
             "aaData": result.recordset
         }
@@ -613,7 +612,7 @@ async function AddCompanyAccount(req, res, reqBody, authData) {
         const browser = JSON.stringify(browserdetect(req.headers['user-agent']));
 
         //Get Screen name && Module name
-        const screen = await menu.GetScreenById(screen_id)
+        const screen = await ServiceGetScreenById(screen_id)
 
         if (Object.keys(screen).length > 0) {
             screen_name = screen.SCREEN_NAME
@@ -622,64 +621,64 @@ async function AddCompanyAccount(req, res, reqBody, authData) {
 
         //Set prmlovcheck
         const prmlovcheck = {}
-        prmlovcheck['lov_group'] = lov_type.Lov_Group_SDC
-        prmlovcheck['lov_type'] = lov_type.Lov_Type_Sales
-        prmlovcheck['lov_code'] = lov_type.Lov_Code_Company_Acc
+        prmlovcheck['lov_group'] = Lov_Group_SDC
+        prmlovcheck['lov_type'] = Lov_Type_Sales
+        prmlovcheck['lov_code'] = Lov_Code_Company_Acc
         if (company_code) prmlovcheck['lov_1'] = company_code
         // if (company_name) prmlovcheck['lov_2'] = company_name
 
-        let dupdata = await lov.CheckDuplicate(prmlovcheck)
+        let dupdata = await ServiceCheckDuplicate(prmlovcheck)
 
         //Set object prmlov
         const prmlov = {}
-        prmlov['lov_group'] = lov_type.Lov_Group_SDC
-        prmlov['lov_type'] = lov_type.Lov_Type_Sales
-        prmlov['lov_code'] = lov_type.Lov_Code_Company_Acc
+        prmlov['lov_group'] = Lov_Group_SDC
+        prmlov['lov_type'] = Lov_Type_Sales
+        prmlov['lov_code'] = Lov_Code_Company_Acc
         if (company_code) prmlov['lov_1'] = company_code
         if (company_name) prmlov['lov_2'] = company_name
         if (report_name) prmlov['lov_3'] = report_name
-        prmlov['lov_desc'] = lov_type.Lov_Desc_Company
-        prmlov['active_flage'] = lov_type.Active_Flage_Active
+        prmlov['lov_desc'] = Lov_Desc_Company
+        prmlov['active_flage'] = Active_Flage_Active
         if (datetime) prmlov['create_date'] = datetime
         if (authData.id) prmlov['create_by'] = authData.id
 
         if (dupdata) {
 
-            let reslov = await lov.InsertLov(prmlov)
+            let reslov = await ServiceInsertLov(prmlov)
 
-            if (reslov !== undefined) { //Insert Success            
+            if (reslov !== undefined) { //Insert StatusSuccess            
                 const prmLog = {
                     audit_trail_date: datetime,
                     module: module_name,
                     screen_name: screen_name,
-                    action_type: action_type.Add,
-                    status: status_type.Success,
+                    action_type: ActionAdd,
+                    status: StatusSuccess,
                     user_id: authData.id,
                     client_ip: req.ip,
-                    msg: msg_type.AddSuccess,
+                    msg: MSGAddSuccess,
                     browser: browser
                 }
-                // Add Log.
-                let AuditTrail = await log.InsertLogAuditTrail(prmLog)
+                // ActionAdd Log.
+                let AuditTrail = await ServiceInsertLogAuditTrail(prmLog)
                 if (AuditTrail.uid) {
-                    //Add Log Audit         
+                    //ActionAdd Log Audit         
                     const prmLogAudit = {
                         audit_date: datetime,
-                        action_type: action_type.Add,
+                        action_type: ActionAdd,
                         user_id: authData.id,
                         screen_name: screen_name,
                         client_ip: req.ip,
-                        status: status_type.Success,
-                        audit_msg: msg_type.AddSuccess,
+                        status: StatusSuccess,
+                        audit_msg: MSGAddSuccess,
                         audit_trail_id: AuditTrail.uid,
                         new_value: prmlov,
                         original_value: '',
                     }
-                    await log.InsertLogAudit(prmLogAudit)
+                    await ServiceInsertLogAudit(prmLogAudit)
                 }
 
                 //Get Message Alert.
-                let messageAlert = await message.GetMessageByCode(msg_type.CodeS0001)
+                let messageAlert = await ServiceGetMessageByCode(CodeS0001)
 
                 //Send JWT
                 const jwtdata = {
@@ -692,9 +691,9 @@ async function AddCompanyAccount(req, res, reqBody, authData) {
                     phc_user: authData.phc_user,
                 }
 
-                await jwt.sign({ jwtdata }, settings.secretkey, { expiresIn: settings.tokenexpires }, (err, token) => {
+                await sign({ jwtdata }, secretkey, { expiresIn: tokenexpires }, (err, token) => {
                     res.json({
-                        "status": status_type.Complate,
+                        "status": StatusComplate,
                         "message": messageAlert,
                         "user": {
                             "id": authData.id,
@@ -708,41 +707,41 @@ async function AddCompanyAccount(req, res, reqBody, authData) {
                         }
                     })
                 })
-            } else {  //Insert UnSuccess
+            } else {  //Insert UnStatusSuccess
                 const prmLog = {
                     audit_trail_date: datetime,
                     module: module_name,
                     screen_name: screen_name,
-                    action_type: action_type.Add,
-                    status: status_type.Error,
+                    action_type: ActionAdd,
+                    status: StatusError,
                     user_id: authData.id,
                     client_ip: req.ip,
-                    msg: msg_type.AddUnSuccess,
+                    msg: MSGAddUnSuccess,
                     browser: browser
                 }
-                // Add Log.
-                let AuditTrail = await log.InsertLogAuditTrail(prmLog)
+                // ActionAdd Log.
+                let AuditTrail = await ServiceInsertLogAuditTrail(prmLog)
                 if (AuditTrail.uid) {
-                    //Add Log Audit         
+                    //ActionAdd Log Audit         
                     const prmLogAudit = {
                         audit_date: datetime,
-                        action_type: action_type.Add,
+                        action_type: ActionAdd,
                         user_id: authData.id,
                         screen_name: screen_name,
                         client_ip: req.ip,
-                        status: status_type.Error,
-                        audit_msg: msg_type.AddUnSuccess,
+                        status: StatusError,
+                        audit_msg: MSGAddUnSuccess,
                         audit_trail_id: AuditTrail.uid,
                         new_value: prmlov,
                         original_value: '',
                     }
-                    await log.InsertLogAudit(prmLogAudit)
+                    await ServiceInsertLogAudit(prmLogAudit)
                 }
 
                 ////////////////////// Alert Message JSON ////////////////////// 
 
                 const data = {
-                    "status": status_type.UnComplate,
+                    "status": StatusUnComplate,
                     "message": "ไม่สามารถบันทึกข้อมูลลงในระบบได้",
                 }
                 await res.setHeader('Content-Type', 'application/json');
@@ -754,30 +753,30 @@ async function AddCompanyAccount(req, res, reqBody, authData) {
                 audit_trail_date: datetime,
                 module: module_name,
                 screen_name: screen_name,
-                action_type: action_type.Add,
-                status: status_type.Error,
+                action_type: ActionAdd,
+                status: StatusError,
                 user_id: authData.id,
                 client_ip: req.ip,
-                msg: msg_type.AddUnSuccess,
+                msg: MSGAddUnSuccess,
                 browser: browser
             }
-            // Add Log.
-            let AuditTrail = await log.InsertLogAuditTrail(prmLog)
+            // ActionAdd Log.
+            let AuditTrail = await ServiceInsertLogAuditTrail(prmLog)
             if (AuditTrail.uid) {
-                //Add Log Audit 
+                //ActionAdd Log Audit 
                 const prmLogAudit1 = {
                     audit_date: datetime,
-                    action_type: action_type.Add,
+                    action_type: ActionAdd,
                     user_id: authData.id,
                     screen_name: screen_name,
                     client_ip: req.ip,
-                    status: status_type.Error,
-                    audit_msg: msg_type.AddDuplicate,
+                    status: StatusError,
+                    audit_msg: MSGAddDuplicate,
                     audit_trail_id: AuditTrail.uid,
                     new_value: prmlov,
                     original_value: '',
                 }
-                await log.InsertLogAudit(prmLogAudit1)
+                await ServiceInsertLogAudit(prmLogAudit1)
             }
 
             ////////////////////// Alert Message JSON //////////////////////             
@@ -785,9 +784,9 @@ async function AddCompanyAccount(req, res, reqBody, authData) {
                 company_code: company_code,
             }
             //Get Message Alert.
-            const messageAlert = await message.GetMessageByCode(msg_type.CodeE0001, prmMsg)
+            const messageAlert = await ServiceGetMessageByCode(CodeE0001, prmMsg)
             const data = {
-                "status": status_type.UnComplate,
+                "status": StatusUnComplate,
                 "message": messageAlert,
             }
             await res.setHeader('Content-Type', 'application/json');
@@ -820,7 +819,7 @@ async function EditCompanyAccount(req, res, reqBody, authData) {
         const browser = JSON.stringify(browserdetect(req.headers['user-agent']));
 
         //Get Screen name && Module name
-        const screen = await menu.GetScreenById(screen_id)
+        const screen = await ServiceGetScreenById(screen_id)
 
         if (Object.keys(screen).length > 0) {
             screen_name = screen.SCREEN_NAME
@@ -830,9 +829,9 @@ async function EditCompanyAccount(req, res, reqBody, authData) {
         //Set prmlovcheck
         const prmlovcheck = {}
         if (company_id) prmlovcheck['lov_id'] = company_id
-        prmlovcheck['lov_group'] = lov_type.Lov_Group_SDC
-        prmlovcheck['lov_type'] = lov_type.Lov_Type_Sales
-        prmlovcheck['lov_code'] = lov_type.Lov_Code_Company_Acc
+        prmlovcheck['lov_group'] = Lov_Group_SDC
+        prmlovcheck['lov_type'] = Lov_Type_Sales
+        prmlovcheck['lov_code'] = Lov_Code_Company_Acc
         if (company_code) prmlovcheck['lov_1'] = company_code
 
 
@@ -845,46 +844,46 @@ async function EditCompanyAccount(req, res, reqBody, authData) {
         if (datetime) prmlov['update_date'] = datetime
         if (authData.id) prmlov['update_by'] = authData.id
 
-        let tempdata = await lov.GetLovById(company_id)
+        let tempdata = await ServiceGetLovById(company_id)
 
-        let dupdata = await lov.CheckEditDuplicate(prmlovcheck)
+        let dupdata = await ServiceCheckEditDuplicate(prmlovcheck)
 
         if (dupdata) {
-            let reslov = await lov.EditLov(prmlov)
+            let reslov = await ServiceEditLov(prmlov)
 
-            if (reslov !== undefined) { //Edit Success            
+            if (reslov !== undefined) { //ActionEdit StatusSuccess            
                 const prmLog = {
                     audit_trail_date: datetime,
                     module: module_name,
                     screen_name: screen_name,
-                    action_type: action_type.Edit,
-                    status: status_type.Success,
+                    action_type: ActionEdit,
+                    status: StatusSuccess,
                     user_id: authData.id,
                     client_ip: req.ip,
-                    msg: msg_type.EditSuccess,
+                    msg: MSGEditSuccess,
                     browser: browser
                 }
-                // Add Log.
-                let AuditTrail = await log.InsertLogAuditTrail(prmLog)
+                // ActionAdd Log.
+                let AuditTrail = await ServiceInsertLogAuditTrail(prmLog)
                 if (AuditTrail.uid) {
-                    //Add Log Audit         
+                    //ActionAdd Log Audit         
                     const prmLogAudit = {
                         audit_date: datetime,
-                        action_type: action_type.Edit,
+                        action_type: ActionEdit,
                         user_id: authData.id,
                         screen_name: screen_name,
                         client_ip: req.ip,
-                        status: status_type.Success,
-                        audit_msg: msg_type.EditSuccess,
+                        status: StatusSuccess,
+                        audit_msg: MSGEditSuccess,
                         audit_trail_id: AuditTrail.uid,
                         new_value: prmlov,
                         original_value: tempdata.recordset,
                     }
-                    await log.InsertLogAudit(prmLogAudit)
+                    await ServiceInsertLogAudit(prmLogAudit)
                 }
 
                 //Get Message Alert.
-                let messageAlert = await message.GetMessageByCode(msg_type.CodeS0002)
+                let messageAlert = await ServiceGetMessageByCode(CodeS0002)
 
                 //Send JWT
                 const jwtdata = {
@@ -897,9 +896,9 @@ async function EditCompanyAccount(req, res, reqBody, authData) {
                     phc_user: authData.phc_user,
                 }
 
-                await jwt.sign({ jwtdata }, settings.secretkey, { expiresIn: settings.tokenexpires }, (err, token) => {
+                await sign({ jwtdata }, secretkey, { expiresIn: tokenexpires }, (err, token) => {
                     res.json({
-                        "status": status_type.Complate,
+                        "status": StatusComplate,
                         "message": messageAlert,
                         "user": {
                             "id": authData.id,
@@ -913,41 +912,41 @@ async function EditCompanyAccount(req, res, reqBody, authData) {
                         }
                     })
                 })
-            } else {  //Edit UnSuccess
+            } else {  //ActionEdit UnStatusSuccess
                 const prmLog = {
                     audit_trail_date: datetime,
                     module: module_name,
                     screen_name: screen_name,
-                    action_type: action_type.Edit,
-                    status: status_type.Error,
+                    action_type: ActionEdit,
+                    status: StatusError,
                     user_id: authData.id,
                     client_ip: req.ip,
-                    msg: msg_type.EditUnSuccess,
+                    msg: MSGEditUnSuccess,
                     browser: browser
                 }
-                // Add Log.
-                let AuditTrail = await log.InsertLogAuditTrail(prmLog)
+                // ActionAdd Log.
+                let AuditTrail = await ServiceInsertLogAuditTrail(prmLog)
                 if (AuditTrail.uid) {
-                    //Add Log Audit         
+                    //ActionAdd Log Audit         
                     const prmLogAudit = {
                         audit_date: datetime,
-                        action_type: action_type.Edit,
+                        action_type: ActionEdit,
                         user_id: authData.id,
                         screen_name: screen_name,
                         client_ip: req.ip,
-                        status: status_type.Error,
-                        audit_msg: msg_type.AddUnSuccess,
+                        status: StatusError,
+                        audit_msg: MSGAddUnSuccess,
                         audit_trail_id: AuditTrail.uid,
                         new_value: prmlov,
                         original_value: tempdata.recordset,
                     }
-                    await log.InsertLogAudit(prmLogAudit)
+                    await ServiceInsertLogAudit(prmLogAudit)
                 }
 
                 ////////////////////// Alert Message JSON ////////////////////// 
 
                 const data = {
-                    "status": status_type.UnComplate,
+                    "status": StatusUnComplate,
                     "message": "ไม่สามารถบันทึกข้อมูลลงในระบบได้",
                 }
                 await res.setHeader('Content-Type', 'application/json');
@@ -959,30 +958,30 @@ async function EditCompanyAccount(req, res, reqBody, authData) {
                 audit_trail_date: datetime,
                 module: module_name,
                 screen_name: screen_name,
-                action_type: action_type.Edit,
-                status: status_type.Error,
+                action_type: ActionEdit,
+                status: StatusError,
                 user_id: authData.id,
                 client_ip: req.ip,
-                msg: msg_type.EditUnSuccess,
+                msg: MSGEditUnSuccess,
                 browser: browser
             }
-            // Add Log.
-            let AuditTrail = await log.InsertLogAuditTrail(prmLog)
+            // ActionAdd Log.
+            let AuditTrail = await ServiceInsertLogAuditTrail(prmLog)
             if (AuditTrail.uid) {
-                //Add Log Audit 
+                //ActionAdd Log Audit 
                 const prmLogAudit = {
                     audit_date: datetime,
-                    action_type: action_type.Edit,
+                    action_type: ActionEdit,
                     user_id: authData.id,
                     screen_name: screen_name,
                     client_ip: req.ip,
-                    status: status_type.Error,
-                    audit_msg: msg_type.EditDuplicate,
+                    status: StatusError,
+                    audit_msg: MSGEditDuplicate,
                     audit_trail_id: AuditTrail.uid,
                     new_value: prmlov,
                     original_value: tempdata.recordset,
                 }
-                await log.InsertLogAudit(prmLogAudit)
+                await ServiceInsertLogAudit(prmLogAudit)
             }
 
             ////////////////////// Alert Message JSON //////////////////////             
@@ -990,9 +989,9 @@ async function EditCompanyAccount(req, res, reqBody, authData) {
                 company_code: company_code,
             }
             //Get Message Alert.
-            const messageAlert = await message.GetMessageByCode(msg_type.CodeE0001, prmMsg)
+            const messageAlert = await ServiceGetMessageByCode(CodeE0001, prmMsg)
             const data = {
-                "status": status_type.UnComplate,
+                "status": StatusUnComplate,
                 "message": messageAlert,
             }
             await res.setHeader('Content-Type', 'application/json');

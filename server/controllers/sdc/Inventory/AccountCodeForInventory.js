@@ -1,40 +1,42 @@
-const jwt = require('jsonwebtoken')
-const browserdetect = require('browser-detect')
-const menu = require('../../../models/Services/Menu')
+import { sign } from 'jsonwebtoken';
+import browserdetect from 'browser-detect';
+import { ServiceGetScreenById } from '../../../models/Services/Menu';
 
-const log = require('../../../models/Services/Log')
-const Inventory = require('../../../models/Services/Inventory')
-const message = require('../../../models/Services/Messsage')
+import { ServiceInsertLogAuditTrail, ServiceInsertLogAudit } from '../../../models/Services/Log';
+import { ServiceGetAccountCodeForInventory, ServiceGetDropDownGrpBy,  ServiceGetDropDownCatCode, ServiceGetDropDownAccType, ServiceCheckDuplicateAccountCodeForInventory, ServiceInsertAccountCodeForInventory, ServiceGetTempAccountCodeForInventory, ServiceEditAccountCodeForInventory } from '../../../models/Services/Inventory';
+import { ServiceGetMessageByCode } from '../../../models/Services/Messsage';
 
-const action_type = require('../../../models/action_type')
-const status_type = require('../../../models/status_type')
-const msg_type = require('../../../models/msg_type')
+import { ActionAdd, ActionEdit } from '../../../models/action_type';
+import { StatusSuccess, StatusComplate, StatusError, StatusUnComplate } from '../../../models/status_type';
+import { MSGAddSuccess, CodeS0001, MSGAddUnSuccess, MSGAddDuplicate, CodeE0005, MSGEditSuccess, CodeS0002, MSGEditUnSuccess } from '../../../models/msg_type';
 
-const settings = require('../../../../settings')
+import { secretkey, tokenexpires } from '../../../../settings';
 
-module.exports.Get = Get
-module.exports.GetDropDownGrpBy = GetDropDownGrpBy
-module.exports.GetDropDownCatCode = GetDropDownCatCode
-module.exports.GetDropDownAccType = GetDropDownAccType
-module.exports.Add = Add
-module.exports.Edit = Edit
+export {
+    GetAccountCodeForInventory,
+    GetDropDownGrpBy,
+    GetDropDownCatCode,
+    GetDropDownAccType,
+    AddAccountCodeForInventory,
+    EditAccountCodeForInventory
+}
 
-async function Get(req, res, reqBody) {
+async function GetAccountCodeForInventory(req, res, reqBody) {
     try {
-        let result = await Inventory.GetAccountCodeForInventory()
+        let result = await ServiceGetAccountCodeForInventory()
         const rowdata = {
             "aaData": result.recordset
         }
         await res.setHeader('Content-Type', 'application/json');
         await res.send(JSON.stringify(rowdata));
     } catch (err) {
-       res.sendStatus(500)
+        res.sendStatus(500)
     }
 }
 
 async function GetDropDownGrpBy(req, res, reqBody) {
     try {
-        let result = await Inventory.GetDropDownGrpBy()
+        let result = await ServiceGetDropDownGrpBy()
 
         let data = []
         let items = result.recordset
@@ -51,7 +53,7 @@ async function GetDropDownGrpBy(req, res, reqBody) {
 
 async function GetDropDownCatCode(req, res, reqBody) {
     try {
-        let result = await Inventory.GetDropDownCatCode()
+        let result = await ServiceGetDropDownCatCode()
 
         let data = []
         let items = result.recordset
@@ -68,7 +70,7 @@ async function GetDropDownCatCode(req, res, reqBody) {
 
 async function GetDropDownAccType(req, res, reqBody) {
     try {
-        let result = await Inventory.GetDropDownAccType()
+        let result = await ServiceGetDropDownAccType()
 
         let data = []
         let items = result.recordset
@@ -83,7 +85,7 @@ async function GetDropDownAccType(req, res, reqBody) {
     }
 }
 
-async function Add(req, res, reqBody, authData) {
+async function AddAccountCodeForInventory(req, res, reqBody, authData) {
     if (reqBody.action_code == null) throw new Error("Input not valid")
     if (reqBody.inv_class == null) throw new Error("Input not valid")
     if (reqBody.action == null) throw new Error("Input not valid")
@@ -112,12 +114,12 @@ async function Add(req, res, reqBody, authData) {
 
     try {
         // Current DateTime
-        const datetime = new Date().toLocaleString().replace(',','');
+        const datetime = new Date().toLocaleString().replace(',', '');
         //Browser
         const browser = JSON.stringify(browserdetect(req.headers['user-agent']));
 
         //Get Screen name && Module name
-        const screen = await menu.GetScreenById(screen_id)
+        const screen = await ServiceGetScreenById(screen_id)
 
         if (Object.keys(screen).length > 0) {
             screen_name = screen.SCREEN_NAME
@@ -128,7 +130,7 @@ async function Add(req, res, reqBody, authData) {
             inv_class: inv_class,
             acc_type: acc_type
         }
-        let dupdata = await Inventory.CheckDuplicateAccountCodeForInventory(prmchk)
+        let dupdata = await ServiceCheckDuplicateAccountCodeForInventory(prmchk)
 
         //Set object prm
         const prm = {
@@ -147,41 +149,41 @@ async function Add(req, res, reqBody, authData) {
         }
 
         if (dupdata) {
-            let result = await Inventory.InsertAccountCodeForInventory(prm)
+            let result = await ServiceInsertAccountCodeForInventory(prm)
 
             if (result !== undefined) { //Insert Success            
                 const prmLog = {
                     audit_trail_date: datetime,
                     module: module_name,
                     screen_name: screen_name,
-                    action_type: action_type.Add,
-                    status: status_type.Success,
+                    action_type: ActionAdd,
+                    status: StatusSuccess,
                     user_id: authData.id,
                     client_ip: req.ip,
-                    msg: msg_type.AddSuccess,
+                    msg: MSGAddSuccess,
                     browser: browser
                 }
                 // Add Log.
-                let AuditTrail = await log.InsertLogAuditTrail(prmLog)
+                let AuditTrail = await ServiceInsertLogAuditTrail(prmLog)
                 if (AuditTrail.uid) {
                     //Add Log Audit         
                     const prmLogAudit = {
                         audit_date: datetime,
-                        action_type: action_type.Add,
+                        action_type: ActionAdd,
                         user_id: authData.id,
                         screen_name: screen_name,
                         client_ip: req.ip,
-                        status: status_type.Success,
-                        audit_msg: msg_type.AddSuccess,
+                        status: StatusSuccess,
+                        audit_msg: MSGAddSuccess,
                         audit_trail_id: AuditTrail.uid,
                         new_value: prm,
                         original_value: '',
                     }
-                    await log.InsertLogAudit(prmLogAudit)
+                    await ServiceInsertLogAudit(prmLogAudit)
                 }
 
                 //Get Message Alert.
-                let messageAlert = await message.GetMessageByCode(msg_type.CodeS0001)
+                let messageAlert = await ServiceGetMessageByCode(CodeS0001)
 
                 //Send JWT
                 const jwtdata = {
@@ -194,9 +196,9 @@ async function Add(req, res, reqBody, authData) {
                     phc_user: authData.phc_user,
                 }
 
-                await jwt.sign({ jwtdata }, settings.secretkey, { expiresIn: settings.tokenexpires }, (err, token) => {
+                await sign({ jwtdata }, secretkey, { expiresIn: tokenexpires }, (err, token) => {
                     res.json({
-                        "status": status_type.Complate,
+                        "status": StatusComplate,
                         "message": messageAlert,
                         "user": {
                             "id": authData.id,
@@ -215,36 +217,36 @@ async function Add(req, res, reqBody, authData) {
                     audit_trail_date: datetime,
                     module: module_name,
                     screen_name: screen_name,
-                    action_type: action_type.Add,
-                    status: status_type.Error,
+                    action_type: ActionAdd,
+                    status: StatusError,
                     user_id: authData.id,
                     client_ip: req.ip,
-                    msg: msg_type.AddUnSuccess,
+                    msg: MSGAddUnSuccess,
                     browser: browser
                 }
                 // Add Log.
-                let AuditTrail = await log.InsertLogAuditTrail(prmLog)
+                let AuditTrail = await ServiceInsertLogAuditTrail(prmLog)
                 if (AuditTrail.uid) {
                     //Add Log Audit         
                     const prmLogAudit = {
                         audit_date: datetime,
-                        action_type: action_type.Add,
+                        action_type: ActionAdd,
                         user_id: authData.id,
                         screen_name: screen_name,
                         client_ip: req.ip,
-                        status: status_type.Error,
-                        audit_msg: msg_type.AddUnSuccess,
+                        status: StatusError,
+                        audit_msg: MSGAddUnSuccess,
                         audit_trail_id: AuditTrail.uid,
                         new_value: prm,
                         original_value: '',
                     }
-                    await log.InsertLogAudit(prmLogAudit)
+                    await ServiceInsertLogAudit(prmLogAudit)
                 }
 
                 ////////////////////// Alert Message JSON ////////////////////// 
 
                 const data = {
-                    "status": status_type.UnComplate,
+                    "status": StatusUnComplate,
                     "message": "ไม่สามารถบันทึกข้อมูลลงในระบบได้",
                 }
                 await res.setHeader('Content-Type', 'application/json');
@@ -256,30 +258,30 @@ async function Add(req, res, reqBody, authData) {
                 audit_trail_date: datetime,
                 module: module_name,
                 screen_name: screen_name,
-                action_type: action_type.Add,
-                status: status_type.Error,
+                action_type: ActionAdd,
+                status: StatusError,
                 user_id: authData.id,
                 client_ip: req.ip,
-                msg: msg_type.AddDuplicate,
+                msg: MSGAddDuplicate,
                 browser: browser
             }
             // Add Log.
-            let AuditTrail = await log.InsertLogAuditTrail(prmLog)
+            let AuditTrail = await ServiceInsertLogAuditTrail(prmLog)
             if (AuditTrail.uid) {
                 //Add Log Audit 
                 const prmLogAudit1 = {
                     audit_date: datetime,
-                    action_type: action_type.Add,
+                    action_type: ActionAdd,
                     user_id: authData.id,
                     screen_name: screen_name,
                     client_ip: req.ip,
-                    status: status_type.Error,
-                    audit_msg: msg_type.AddDuplicate,
+                    status: StatusError,
+                    audit_msg: MSGAddDuplicate,
                     audit_trail_id: AuditTrail.uid,
                     new_value: prm,
                     original_value: '',
                 }
-                await log.InsertLogAudit(prmLogAudit1)
+                await ServiceInsertLogAudit(prmLogAudit1)
             }
 
             ////////////////////// Alert Message JSON //////////////////////             
@@ -289,9 +291,9 @@ async function Add(req, res, reqBody, authData) {
                 acc_type: prm.acc_type
             }
             //Get Message Alert.
-            const messageAlert = await message.GetMessageByCode(msg_type.CodeE0005, prmMsg)
+            const messageAlert = await ServiceGetMessageByCode(CodeE0005, prmMsg)
             const data = {
-                "status": status_type.UnComplate,
+                "status": StatusUnComplate,
                 "message": messageAlert,
             }
             await res.setHeader('Content-Type', 'application/json');
@@ -302,7 +304,7 @@ async function Add(req, res, reqBody, authData) {
     }
 }
 
-async function Edit(req, res, reqBody, authData) {
+async function EditAccountCodeForInventory(req, res, reqBody, authData) {
     if (reqBody.action_code == null) throw new Error("Input not valid")
     if (reqBody.inv_class == null) throw new Error("Input not valid")
     if (reqBody.action == null) throw new Error("Input not valid")
@@ -331,12 +333,12 @@ async function Edit(req, res, reqBody, authData) {
 
     try {
         // Current DateTime
-        const datetime = new Date().toLocaleString().replace(',','')
+        const datetime = new Date().toLocaleString().replace(',', '')
         //Browser
         const browser = JSON.stringify(browserdetect(req.headers['user-agent']))
 
         //Get Screen name && Module name
-        const screen = await menu.GetScreenById(screen_id)
+        const screen = await ServiceGetScreenById(screen_id)
 
         if (Object.keys(screen).length > 0) {
             screen_name = screen.SCREEN_NAME
@@ -348,7 +350,7 @@ async function Edit(req, res, reqBody, authData) {
             inv_class: inv_class,
             acc_type: acc_type
         }
-        const tempdata = await Inventory.GetTempAccountCodeForInventory(prmtemp)
+        const tempdata = await ServiceGetTempAccountCodeForInventory(prmtemp)
 
         //Set object prm
         const prm = {
@@ -366,41 +368,41 @@ async function Edit(req, res, reqBody, authData) {
             update_by: authData.id
         }
 
-        let result = await Inventory.EditAccountCodeForInventory(prm)
+        let result = await ServiceEditAccountCodeForInventory(prm)
 
         if (result !== undefined) { //Edit Success            
             const prmLog = {
                 audit_trail_date: datetime,
                 module: module_name,
                 screen_name: screen_name,
-                action_type: action_type.Edit,
-                status: status_type.Success,
+                action_type: ActionEdit,
+                status: Success,
                 user_id: authData.id,
                 client_ip: req.ip,
-                msg: msg_type.EditSuccess,
+                msg: MSGEditSuccess,
                 browser: browser
             }
             // Add Log.
-            let AuditTrail = await log.InsertLogAuditTrail(prmLog)
+            let AuditTrail = await ServiceInsertLogAuditTrail(prmLog)
             if (AuditTrail.uid) {
                 //Add Log Audit         
                 const prmLogAudit = {
                     audit_date: datetime,
-                    action_type: action_type.Edit,
+                    action_type: ActionEdit,
                     user_id: authData.id,
                     screen_name: screen_name,
                     client_ip: req.ip,
-                    status: status_type.Success,
-                    audit_msg: msg_type.EditSuccess,
+                    status: Success,
+                    audit_msg: MSGEditSuccess,
                     audit_trail_id: AuditTrail.uid,
                     new_value: prm,
                     original_value: tempdata.recordset,
                 }
-                await log.InsertLogAudit(prmLogAudit)
+                await ServiceInsertLogAudit(prmLogAudit)
             }
 
             //Get Message Alert.
-            let messageAlert = await message.GetMessageByCode(msg_type.CodeS0002)
+            let messageAlert = await ServiceGetMessageByCode(CodeS0002)
 
             //Send JWT
             const jwtdata = {
@@ -413,9 +415,9 @@ async function Edit(req, res, reqBody, authData) {
                 phc_user: authData.phc_user,
             }
 
-            await jwt.sign({ jwtdata }, settings.secretkey, { expiresIn: settings.tokenexpires }, (err, token) => {
-                res.json({                   
-                    "status": status_type.Complate,
+            await sign({ jwtdata }, secretkey, { expiresIn: tokenexpires }, (err, token) => {
+                res.json({
+                    "status": StatusComplate,
                     "message": messageAlert,
                     "user": {
                         "id": authData.id,
@@ -434,36 +436,36 @@ async function Edit(req, res, reqBody, authData) {
                 audit_trail_date: datetime,
                 module: module_name,
                 screen_name: screen_name,
-                action_type: action_type.Edit,
-                status: status_type.Error,
+                action_type: ActionEdit,
+                status: StatusError,
                 user_id: authData.id,
                 client_ip: req.ip,
-                msg: msg_type.EditUnSuccess,
+                msg: MSGEditUnSuccess,
                 browser: browser
             }
             // Add Log.
-            let AuditTrail = await log.InsertLogAuditTrail(prmLog)
+            let AuditTrail = await ServiceInsertLogAuditTrail(prmLog)
             if (AuditTrail.uid) {
                 //Add Log Audit         
                 const prmLogAudit = {
                     audit_date: datetime,
-                    action_type: action_type.Edit,
+                    action_type: ActionEdit,
                     user_id: authData.id,
                     screen_name: screen_name,
                     client_ip: req.ip,
-                    status: status_type.Error,
-                    audit_msg: msg_type.EditUnSuccess,
+                    status: StatusError,
+                    audit_msg: MSGEditUnSuccess,
                     audit_trail_id: AuditTrail.uid,
                     new_value: prm,
                     original_value: tempdata.recordset,
                 }
-                await log.InsertLogAudit(prmLogAudit)
+                await ServiceInsertLogAudit(prmLogAudit)
             }
 
             ////////////////////// Alert Message JSON ////////////////////// 
 
             const data = {
-                "status": status_type.UnComplate,
+                "status": StatusUnComplate,
                 "message": "ไม่สามารถบันทึกข้อมูลลงในระบบได้",
             }
             await res.setHeader('Content-Type', 'application/json');

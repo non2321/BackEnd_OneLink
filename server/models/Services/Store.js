@@ -1,24 +1,23 @@
-const sql = require('mssql') // MS Sql Server client
-const uuid = require('uuid/v1');
+import { connect, close, NVarChar } from 'mssql'; // MS Sql Server client
 
-const settings = require('../../../settings')
-const digit = require('../digit_number')
-const utils = require('../../models/Services/utils')
+import { dbConfig } from '../../../settings';
 
-// Store Config
-module.exports.GetAllStore = GetAllStore
-module.exports.GetVendor = GetVendor
-module.exports.GetRegion = GetRegion
-module.exports.GetAllBank = GetAllBank
-module.exports.GetStoreConfig = GetStoreConfig
-module.exports.GetPopupStore = GetPopupStore
-module.exports.GetDropDownBank = GetDropDownBank
-module.exports.GetStoreConfigByStoreCode = GetStoreConfigByStoreCode
-module.exports.InsertStoreConfig = InsertStoreConfig
-module.exports.EditStoreConfig = EditStoreConfig
-module.exports.DeleteStoreConfig = DeleteStoreConfig
+export {
+    // Store Config
+    ServiceGetAllStore,
+    ServiceGetVendor,
+    ServiceGetRegion,
+    ServiceGetAllBank,
+    ServiceGetStoreConfig,
+    ServiceGetPopupStore,
+    ServiceGetDropDownBank,
+    ServiceGetStoreConfigByStoreCode,
+    ServiceInsertStoreConfig,
+    ServiceEditStoreConfig,
+    ServiceDeleteStoreConfig
+}
 
-async function GetAllStore() {
+async function ServiceGetAllStore() {
     let res = {}
     try {
         let querysql = `SELECT STORE_ID, CAST(STORE_ID AS VARCHAR) + ' - ' + STORE_NAME AS STORE_NAME 
@@ -26,63 +25,63 @@ async function GetAllStore() {
         WHERE COMPANY = 'Y' 
         ORDER BY STORE_ID ASC`
 
-        let pool = await sql.connect(settings.dbConfig)
+        let pool = await connect(dbConfig)
         let result = await pool.request().query(querysql)
         res = result
     } catch (err) {
     } finally {
-        await sql.close()
+        await close()
     }
     return await res
 }
 
-async function GetVendor() {
+async function ServiceGetVendor() {
     let res = {}
     try {
         let querysql = `SELECT * FROM  ACC_M_VENDORS ORDER BY VENDOR ASC`
 
-        let pool = await sql.connect(settings.dbConfig)
+        let pool = await connect(dbConfig)
         let result = await pool.request().query(querysql)
         res = result
     } catch (err) {
     } finally {
-        await sql.close()
+        await close()
     }
     return await res
 }
 
-async function GetRegion() {
+async function ServiceGetRegion() {
     let res = {}
     try {
         let querysql = `SELECT * FROM REGION_MASTER ORDER BY REGION_ID ASC`
 
-        let pool = await sql.connect(settings.dbConfig)
+        let pool = await connect(dbConfig)
         let result = await pool.request().query(querysql)
         res = result
     } catch (err) {
     } finally {
-        await sql.close()
+        await close()
     }
     return await res
 }
 
-async function GetAllBank() {
+async function ServiceGetAllBank() {
     let res = {}
     try {
         let querysql = `SELECT B.BANK_CODE,b.BANK_CODE + ' ' + B.BANK_NAME as BANK  from ACC_M_BANK B
 		ORDER BY B.BANK_CODE ASC`
 
-        let pool = await sql.connect(settings.dbConfig)
+        let pool = await connect(dbConfig)
         let result = await pool.request().query(querysql)
         res = result
     } catch (err) {
     } finally {
-        await sql.close()
+        await close()
     }
     return await res
 }
 
-async function GetStoreConfig() {
+async function ServiceGetStoreConfig() {
     let res = {}
     try {
         let querysql = ` SELECT A.STORE_CODE,
@@ -97,17 +96,17 @@ async function GetStoreConfig() {
                                     ON A.STORE_CODE = C.STORE_ID
                     ORDER  BY A.STORE_CODE`
 
-        let pool = await sql.connect(settings.dbConfig)
+        let pool = await connect(dbConfig)
         let result = await pool.request().query(querysql)
         res = result
     } catch (err) {
     } finally {
-        await sql.close()
+        await close()
     }
     return await res
 }
 
-async function GetPopupStore() {
+async function ServiceGetPopupStore() {
     let res = {}
     try {
         let querysql = ` SELECT STORE_ID,STORE_NAME 
@@ -116,17 +115,17 @@ async function GetPopupStore() {
                                 FROM   ACC_M_STORE A 
                                 WHERE  A.STORE_CODE = S.STORE_ID)`
 
-        let pool = await sql.connect(settings.dbConfig)
+        let pool = await connect(dbConfig)
         let result = await pool.request().query(querysql)
         res = result
     } catch (err) {
     } finally {
-        await sql.close()
+        await close()
     }
     return await res
 }
 
-async function GetDropDownBank() {
+async function ServiceGetDropDownBank() {
     let res = {}
     try {
         let querysql = ` SELECT B.BANK_CODE, 
@@ -134,38 +133,38 @@ async function GetDropDownBank() {
                         FROM   ACC_M_BANK B 
                         ORDER  BY B.BANK_CODE ASC`
 
-        let pool = await sql.connect(settings.dbConfig)
+        let pool = await connect(dbConfig)
         let result = await pool.request().query(querysql)
         res = result
     } catch (err) {
     } finally {
-        await sql.close()
+        await close()
     }
     return await res
 }
 
-async function GetStoreConfigByStoreCode(store_code) {
+async function ServiceGetStoreConfigByStoreCode(store_code) {
     let res = {}
-    try {  
-        let querysql = `SELECT * FROM  ACC_M_STORE  WHERE  STORE_CODE = @input_store_code ` 
+    try {
+        let querysql = `SELECT * FROM  ACC_M_STORE  WHERE  STORE_CODE = @input_store_code `
         const input_store_code = 'input_store_code'
-        let pool = await sql.connect(settings.dbConfig)      
-        let result = await pool.request().input(input_store_code, sql.NVarChar, store_code.trim()).query(querysql) 
+        let pool = await connect(dbConfig)
+        let result = await pool.request().input(input_store_code, NVarChar, store_code.trim()).query(querysql)
         if (result !== undefined) {
             if (result.rowsAffected > 0) res = result
-        }  
+        }
 
     } catch (err) {
 
     } finally {
-        await sql.close()
+        await close()
     }
 
     return await res
 }
 
-async function InsertStoreConfig(prm) {
-    let res 
+async function ServiceInsertStoreConfig(prm) {
+    let res
     try {
         if (prm.store_code) {
             const querysql = `
@@ -190,18 +189,18 @@ async function InsertStoreConfig(prm) {
             const input_bank_code = 'input_bank_code'
             const input_area_code = 'input_area_code'
             const input_dm_code = 'input_dm_code'
-            const input_create_date = 'input_create_date'           
-            const input_create_by = 'input_create_by'           
+            const input_create_date = 'input_create_date'
+            const input_create_by = 'input_create_by'
 
-            let pool = await sql.connect(settings.dbConfig)
+            let pool = await connect(dbConfig)
             let result = await pool.request()
-                .input(input_store_code, sql.NVarChar, prm.store_code.trim())
-                .input(input_co_code, sql.NVarChar, (prm.co_code != undefined) ? prm.co_code.trim() : '')
-                .input(input_bank_code, sql.NVarChar, (prm.bank_code != undefined) ? prm.bank_code.trim() : '')
-                .input(input_area_code, sql.NVarChar, (prm.area_code != undefined) ? prm.area_code.trim() : '')
-                .input(input_dm_code, sql.NVarChar, (prm.dm_code != undefined) ? prm.dm_code.trim() : '')
-                .input(input_create_date, sql.NVarChar, (prm.create_date != undefined) ? prm.create_date : '')               
-                .input(input_create_by, sql.NVarChar, (prm.create_by != undefined) ? prm.create_by.trim() : '')
+                .input(input_store_code, NVarChar, prm.store_code.trim())
+                .input(input_co_code, NVarChar, (prm.co_code != undefined) ? prm.co_code.trim() : '')
+                .input(input_bank_code, NVarChar, (prm.bank_code != undefined) ? prm.bank_code.trim() : '')
+                .input(input_area_code, NVarChar, (prm.area_code != undefined) ? prm.area_code.trim() : '')
+                .input(input_dm_code, NVarChar, (prm.dm_code != undefined) ? prm.dm_code.trim() : '')
+                .input(input_create_date, NVarChar, (prm.create_date != undefined) ? prm.create_date : '')
+                .input(input_create_by, NVarChar, (prm.create_by != undefined) ? prm.create_by.trim() : '')
                 .query(querysql)
             if (result !== undefined) {
                 if (result.rowsAffected > 0) res = true
@@ -210,14 +209,14 @@ async function InsertStoreConfig(prm) {
     } catch (err) {
 
     } finally {
-        await sql.close()
+        await close()
     }
 
     return await res
 
 }
 
-async function EditStoreConfig(prm) {
+async function ServiceEditStoreConfig(prm) {
     let res
     try {
         if (prm.store_code) {
@@ -225,31 +224,31 @@ async function EditStoreConfig(prm) {
 
             if (prm.co_code != undefined) querysql = [querysql, `CO_CODE = @input_co_code `].join(",")
             if (prm.bank_code != undefined) querysql = [querysql, `BANK_CODE = @input_bank_code `].join(",")
-            if (prm.area_code != undefined) querysql = [querysql, `AREA_CODE = @input_area_code `].join(",") 
-            if (prm.dm_code != undefined) querysql = [querysql, `DM_CODE = @input_dm_code `].join(",")             
+            if (prm.area_code != undefined) querysql = [querysql, `AREA_CODE = @input_area_code `].join(",")
+            if (prm.dm_code != undefined) querysql = [querysql, `DM_CODE = @input_dm_code `].join(",")
             if (prm.update_date != undefined) querysql = [querysql, `UPDATE_DATE = @input_update_date `].join(",")
             if (prm.update_by != undefined) querysql = [querysql, `UPDATE_BY = @input_update_by `].join(",")
 
             querysql += ` WHERE STORE_CODE = @input_store_code `
-           
+
             const input_store_code = 'input_store_code'
             const input_co_code = 'input_co_code'
             const input_bank_code = 'input_bank_code'
-            const input_area_code = 'input_area_code'          
-            const input_dm_code = 'input_dm_code'         
+            const input_area_code = 'input_area_code'
+            const input_dm_code = 'input_dm_code'
             const input_update_date = 'input_update_date'
             const input_update_by = 'input_update_by'
 
-            let pool = await sql.connect(settings.dbConfig)
+            let pool = await connect(dbConfig)
             let result = await pool.request()
 
-            if (prm.store_code != undefined) await result.input(input_store_code, sql.NVarChar, prm.store_code.trim())
-            if (prm.co_code != undefined) await result.input(input_co_code, sql.NVarChar, prm.co_code.trim())
-            if (prm.bank_code != undefined) await result.input(input_bank_code, sql.NVarChar, prm.bank_code.trim())
-            if (prm.area_code != undefined) await result.input(input_area_code, sql.NVarChar, prm.area_code.trim()) 
-            if (prm.dm_code != undefined) await result.input(input_dm_code, sql.NVarChar, prm.dm_code.trim()) 
-            if (prm.update_date != undefined) await result.input(input_update_date, sql.NVarChar, prm.update_date.trim())
-            if (prm.update_by != undefined) await result.input(input_update_by, sql.NVarChar, prm.update_by.trim())
+            if (prm.store_code != undefined) await result.input(input_store_code, NVarChar, prm.store_code.trim())
+            if (prm.co_code != undefined) await result.input(input_co_code, NVarChar, prm.co_code.trim())
+            if (prm.bank_code != undefined) await result.input(input_bank_code, NVarChar, prm.bank_code.trim())
+            if (prm.area_code != undefined) await result.input(input_area_code, NVarChar, prm.area_code.trim())
+            if (prm.dm_code != undefined) await result.input(input_dm_code, NVarChar, prm.dm_code.trim())
+            if (prm.update_date != undefined) await result.input(input_update_date, NVarChar, prm.update_date.trim())
+            if (prm.update_by != undefined) await result.input(input_update_by, NVarChar, prm.update_by.trim())
             result = await result.query(querysql)
 
             if (result !== undefined) {
@@ -259,24 +258,24 @@ async function EditStoreConfig(prm) {
     } catch (err) {
 
     } finally {
-        await sql.close()
+        await close()
     }
     return await res
 }
 
-async function DeleteStoreConfig(store_code) {
+async function ServiceDeleteStoreConfig(store_code) {
     let res
-    try {    
-        if (store_code) {          
-            let querysql = `DELETE ACC_M_STORE  WHERE STORE_CODE =  @input_store_code `   
-           
-            const input_store_code = 'input_store_code'  
+    try {
+        if (store_code) {
+            let querysql = `DELETE ACC_M_STORE  WHERE STORE_CODE =  @input_store_code `
 
-            let pool = await sql.connect(settings.dbConfig)
+            const input_store_code = 'input_store_code'
+
+            let pool = await connect(dbConfig)
             let result = await pool.request()
-            .input(input_store_code, sql.NVarChar, store_code.trim())           
-            .query(querysql)            
-            
+                .input(input_store_code, NVarChar, store_code.trim())
+                .query(querysql)
+
             if (result !== undefined) {
                 if (result.rowsAffected > 0) res = true
             }
@@ -284,7 +283,7 @@ async function DeleteStoreConfig(store_code) {
     } catch (err) {
 
     } finally {
-        await sql.close()
+        await close()
     }
 
     return await res

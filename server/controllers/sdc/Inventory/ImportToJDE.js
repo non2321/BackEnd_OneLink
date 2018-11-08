@@ -1,23 +1,11 @@
-const jwt = require('jsonwebtoken')
-const browserdetect = require('browser-detect')
-const menu = require('../../../models/Services/Menu')
 
-const log = require('../../../models/Services/Log')
-const Inventory = require('../../../models/Services/Inventory')
-const message = require('../../../models/Services/Messsage')
+import { ServiceGetDropDownPeriod } from '../../../models/Services/Inventory';
 
-const action_type = require('../../../models/action_type')
-const status_type = require('../../../models/status_type')
-const msg_type = require('../../../models/msg_type')
-
-const settings = require('../../../../settings')
-
-module.exports.GetDropDownPeriod = GetDropDownPeriod
-
+export { GetDropDownPeriod };
 
 async function GetDropDownPeriod(req, res, reqBody) {
     try {
-        let result = await Inventory.GetDropDownPeriod()
+        let result = await ServiceGetDropDownPeriod()
 
         let data = []
         let items = result.recordset

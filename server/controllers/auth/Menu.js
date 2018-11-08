@@ -1,11 +1,6 @@
-const sql = require('mssql') // MS Sql Server client
-const settings = require('../../../settings')
+import { ServiceGetMenuByUserID } from '../../models/Services/Menu';
 
-const module_type = require('../../models/module_type')
-
-const menu = require('../../models/Services/Menu')
-
-module.exports.Menu = Menu;  
+export { Menu };  
 
 async function Menu(req, res, reqBody) {
     try {
@@ -13,7 +8,7 @@ async function Menu(req, res, reqBody) {
 
         let userid = req.params.userid
 
-        let result = await menu.GetMenuByUserID(userid)
+        let result = await ServiceGetMenuByUserID(userid)
         
         if (result.rowsAffected > 0) {
             await res.setHeader('Content-Type', 'application/json')

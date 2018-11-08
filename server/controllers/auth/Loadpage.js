@@ -1,20 +1,19 @@
-const sql = require('mssql') // MS Sql Server client
-const jwt = require('jsonwebtoken')
-const browserdetect = require('browser-detect');
+import { sign } from 'jsonwebtoken';
+import browserdetect from 'browser-detect';
 
-const settings = require('../../../settings')
+import { secretkey, tokenexpires } from '../../../settings';
 
-const log = require('../../models/Services/Log')
-const menu = require('../../models/Services/Menu')
+import { ServiceInsertLogAuditTrail } from '../../models/Services/Log';
+import { ServiceGetScreenById, ServiceGetModifyData } from '../../models/Services/Menu';
 
-const msg_type = require('../../models/msg_type')
-const action_type = require('../../models/action_type')
-const status_type = require('../../models/status_type')
+import { MSGLoadPage, MSGAuthSuccess } from '../../models/msg_type';
+import { ActionLoadPage } from '../../models/action_type';
+import { StatusSuccess, StatusComplate } from '../../models/status_type';
 
 
-module.exports.Loadpage = Loadpage;
+export { LoadPage };
 
-async function Loadpage(req, res, reqBody, authData) {
+async function LoadPage(req, res, reqBody, authData) {
     try {        
         if (reqBody.screen_id == null) throw new Error("Input not valid")
 
@@ -23,14 +22,14 @@ async function Loadpage(req, res, reqBody, authData) {
         let module_name = ''
 
         //Get Screen name && module
-        const screen = await menu.GetScreenById(screen_id)
+        const screen = await ServiceGetScreenById(screen_id)
         if (Object.keys(screen).length > 0) {         
             screen_name = screen.SCREEN_NAME
             module_name = screen.MODULE
         }
         // Data Modify
         const prm = { user_id: authData.id, screen_id: screen_id }
-        const modify = await menu.GetModifyData(prm)
+        const modify = await ServiceGetModifyData(prm)
 
         // Current DateTime
         const datetime = new Date().toLocaleString().replace(',','');
@@ -41,16 +40,16 @@ async function Loadpage(req, res, reqBody, authData) {
             audit_trail_date: datetime,
             module: module_name,
             screen_name: screen_name,
-            action_type: action_type.LoadPage,
-            status: status_type.Success,
+            action_type: ActionLoadPage,
+            status: StatusSuccess,
             user_id: authData.id,
             client_ip: req.ip,
-            msg: `${msg_type.LoadPage} ${screen_name}`,
+            msg: `${MSGLoadPage} ${screen_name}`,
             browser: browser,
         }
 
         //Add Log.
-        await log.InsertLogAuditTrail(prmLog)
+        await ServiceInsertLogAuditTrail(prmLog)
 
         const jwtdata = {
             id: authData.id,
@@ -62,10 +61,10 @@ async function Loadpage(req, res, reqBody, authData) {
             phc_user: authData.phc_user,
         }
         
-        await jwt.sign({ jwtdata }, settings.secretkey, { expiresIn: settings.tokenexpires }, (err, token) => {
+        await sign({ jwtdata }, secretkey, { expiresIn: tokenexpires }, (err, token) => {
             res.json({
-                "status": status_type.Complate,
-                "message": msg_type.AuthSuccess,
+                "status": StatusComplate,
+                "message": MSGAuthSuccess,
                 "user": {
                     "id": authData.id,
                     "firstname": authData.firstname,

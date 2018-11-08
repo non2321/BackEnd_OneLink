@@ -1,52 +1,52 @@
-exports.LoginSuccess = 'LoginSuccess';
+export const MSGLoginSuccess = 'LoginSuccess';
 
-exports.LoginUnSuccess = 'LoginUnSuccess';
+export const MSGLoginUnSuccess = 'LoginUnSuccess';
 
-exports.LogoutSuccess = 'LogoutSuccess';
+export const MSGLogoutSuccess = 'LogoutSuccess';
 
-exports.LoadPage = 'LoadPage';
+export const MSGLoadPage = 'LoadPage';
 
-exports.SelectSuccess = 'SelectSuccess'
-exports.SelectDuplicate = 'Duplicate Data'
-exports.SelectUnSuccess = 'SelectUnSuccess'
+export const MSGSelectSuccess = 'SelectSuccess'
+export const MSGSelectDuplicate = 'Duplicate Data'
+export const MSGSelectUnSuccess = 'SelectUnSuccess'
 
-exports.AddSuccess = 'AddSuccess'
-exports.AddDuplicate = 'Duplicate Data'
-exports.AddUnSuccess = 'AddUnSuccess'
+export const MSGAddSuccess = 'AddSuccess'
+export const MSGAddDuplicate = 'Duplicate Data'
+export const MSGAddUnSuccess = 'AddUnSuccess'
 
-exports.EditSuccess = 'EditSuccess'
-exports.EditDuplicate = 'Duplicate Data'
-exports.EditUnSuccess = 'EditUnSuccess'
+export const MSGEditSuccess = 'EditSuccess'
+export const MSGEditDuplicate = 'Duplicate Data'
+export const MSGEditUnSuccess = 'EditUnSuccess'
 
-exports.DeleteSuccess = 'DeleteSuccess'
-exports.DeleteDuplicate = 'Duplicate Data'
-exports.DeleteUnSuccess = 'DeleteUnSuccess'
+export const MSGDeleteSuccess = 'DeleteSuccess'
+export const MSGDeleteDuplicate = 'Duplicate Data'
+export const MSGDeleteUnSuccess = 'DeleteUnSuccess'
 
-exports.EditUploadSuccess = 'EditUploadSuccess'
-exports.EditUploadDuplicate = 'EditUploadDuplicate'
-exports.EditUploadUnSuccess = 'EditUploadUnSuccess'
+export const MSGEditUploadSuccess = 'EditUploadSuccess'
+export const MSGEditUploadDuplicate = 'EditUploadDuplicate'
+export const MSGEditUploadUnSuccess = 'EditUploadUnSuccess'
 
-exports.AuthSuccess = 'Authorization Successfully';
+export const MSGAuthSuccess = 'Authorization Successfully';
 
-exports.AuthTokenExpired = 'Authorization Token Expired'
+export const MSGAuthTokenExpired = 'Authorization Token Expired'
 
-exports.Procedures_GEN_GL_TO_E1 = 'GEN_GL_TO_E1'
-exports.Procedures_GEN_IVENTORY_TO_E1 = 'GEN_IVENTORY_TO_E1'
+export const MSGProcedures_GEN_GL_TO_E1 = 'GEN_GL_TO_E1'
+export const MSGProcedures_GEN_IVENTORY_TO_E1 = 'GEN_IVENTORY_TO_E1'
 
 
-exports.CodeS0001 = 'S0001'
-exports.CodeS0002 = 'S0002'
-exports.CodeS0003 = 'S0003'
-exports.CodeS0004 = 'S0004'
-exports.CodeS0005 = 'S0005'
+export const CodeS0001 = 'S0001'
+export const CodeS0002 = 'S0002'
+export const CodeS0003 = 'S0003'
+export const CodeS0004 = 'S0004'
+export const CodeS0005 = 'S0005'
 
-exports.CodeE0001 = 'E0001'
-exports.CodeE0002 = 'E0002'
-exports.CodeE0003 = 'E0003'
-exports.CodeE0005 = 'E0005'
-exports.CodeE0007 = 'E0007'
-exports.CodeE0008 = 'E0008'
-exports.CodeE0009 = 'E0009'
+export const CodeE0001 = 'E0001'
+export const CodeE0002 = 'E0002'
+export const CodeE0003 = 'E0003'
+export const CodeE0005 = 'E0005'
+export const CodeE0007 = 'E0007'
+export const CodeE0008 = 'E0008'
+export const CodeE0009 = 'E0009'
 
-exports.CodeW0002 = 'W0002'
+export const CodeW0002 = 'W0002'
 

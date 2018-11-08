@@ -1,13 +1,15 @@
-const sql = require('mssql') // MS Sql Server client
-const settings = require('../../../settings')
+import { connect, close } from 'mssql'; // MS Sql Server client
+import { dbConfig } from '../../../settings';
 
-module.exports.FormatNumberLength = FormatNumberLength;
-module.exports.GetCountUserId = GetCountUserId;
-module.exports.GetCountLOVId = GetCountLOVId;
-module.exports.GetCountACC_M_ACCOUNT_SALE = GetCountACC_M_ACCOUNT_SALE;
-module.exports.ObjectToString_UpperName = ObjectToString_UpperName;
+export {
+    FormatNumberLength,
+    GetCountUserId,
+    GetCountLOVId,
+    GetCountACC_M_ACCOUNT_SALE,
+    ObjectToString_UpperName,
 
-module.exports.GetCountACC_TERM_CLOSING = GetCountACC_TERM_CLOSING
+    GetCountACC_TERM_CLOSING
+}
 
 //Fromat integer to a specific length.
 function FormatNumberLength(num, length) {
@@ -23,10 +25,10 @@ async function GetCountUserId() {
     let count = 0;
     try {
         const querysql = `SELECT  ISNULL((MAX(CONVERT(INT, CASE WHEN ISNUMERIC(USER_ID) = 1 THEN USER_ID ELSE 0 END))),0) + 1 ID FROM USERS`
-        let pool = await sql.connect(settings.dbConfig)
+        let pool = await connect(dbConfig)
         let result = await pool.request()
             .query(querysql)
-        await sql.close()
+        await close()
         if (result.rowsAffected > 0) {
             count = result.recordset[0].ID
         } else {
@@ -44,10 +46,10 @@ async function GetCountLOVId() {
     let count = 0;
     try {
         const querysql = `SELECT ISNULL((MAX(CONVERT(INT, CASE WHEN ISNUMERIC(LOV_ID) = 1 THEN LOV_ID ELSE 0 END))),0) + 1 ID FROM LOV_DATA `
-        let pool = await sql.connect(settings.dbConfig)
+        let pool = await connect(dbConfig)
         let result = await pool.request()
             .query(querysql)
-        await sql.close()
+        await close()
         if (result.rowsAffected > 0) {
             count = result.recordset[0].ID
         } else {
@@ -65,10 +67,10 @@ async function GetCountACC_M_ACCOUNT_SALE() {
     let count = 0;
     try {
         const querysql = `SELECT ISNULL(MAX(FORMULARID),0) + 1 ID FROM ACC_M_ACCOUNT_SALE`
-        let pool = await sql.connect(settings.dbConfig)
+        let pool = await connect(dbConfig)
         let result = await pool.request()
             .query(querysql)
-        await sql.close()
+        await close()
         if (result.rowsAffected > 0) {
             count = result.recordset[0].ID
         } else {
@@ -106,10 +108,10 @@ async function GetCountACC_TERM_CLOSING() {
     let count = 0;
     try {
         const querysql = `SELECT ISNULL((MAX(CONVERT(INT, CASE WHEN ISNUMERIC(TERM_ID) = 1 THEN TERM_ID ELSE 0 END))),0) + 1 ID from ACC_TERM_CLOSING`
-        let pool = await sql.connect(settings.dbConfig)
+        let pool = await connect(dbConfig)
         let result = await pool.request()
             .query(querysql)
-        await sql.close()
+        await close()
         if (result.rowsAffected > 0) {
             count = result.recordset[0].ID
         } else {

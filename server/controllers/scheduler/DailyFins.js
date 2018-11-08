@@ -1,7 +1,7 @@
-const DailyFins = require('../../models/Services/DailyFins')
+import ServicerunDailyFinsByDate from '../../models/Services/DailyFins';
 
 
-module.exports.runTaskDailyFins = runTaskDailyFins
+export { runTaskDailyFins };
 
 async function runTaskDailyFins() {
     try {
