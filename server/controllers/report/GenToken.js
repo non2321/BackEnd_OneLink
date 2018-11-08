@@ -148,6 +148,7 @@ async function GenTokenTableauForFullScreen(req, res, reqBody, authData) {
         // const response = await fetch(settings.tableautoken.path, { method: 'POST', body: form })
         // const tableautoken = await response.text()
 
+        
 
         //Mock api gen token tableau
         const response = await fetch(tableautokens.servergentoken, { method: 'GET' })
