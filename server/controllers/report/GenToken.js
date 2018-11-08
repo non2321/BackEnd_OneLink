@@ -13,7 +13,7 @@ import { Select } from '../../models/action_type';
 import { StatusSuccess, StatusComplate, StatusError } from '../../models/status_type';
 import { MSGSelectSuccess, CodeS0001, MSGSelectUnSuccess } from '../../models/msg_type';
 
-import { secretkey, tokenexpires } from '../../../settings';
+import { secretkey, tokenexpires, tableautoken as  tableautokens} from '../../../settings';
 
 
 export {
@@ -149,8 +149,8 @@ async function GenTokenTableauForFullScreen(req, res, reqBody, authData) {
         // const tableautoken = await response.text()
 
 
-        //Mock api gen token tableau 192.168.151.113:3000
-        const response = await fetch('http://192.168.151.113:3000/api/test', { method: 'GET' })
+        //Mock api gen token tableau
+        const response = await fetch(tableautokens.servergentoken, { method: 'GET' })
         const tableautoken = await response.text()
 
         if (tableautoken.length > 5) {

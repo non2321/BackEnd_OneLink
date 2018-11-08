@@ -20,7 +20,8 @@ exports.adConfig = {
 
 exports.tableautoken = {
     path: 'http://192.168.151.31/trusted',
-    username: 'admin'   
+    username: 'admin',
+    servergentoken : 'http://192.168.151.113:3000/api/tableautoken'
 }
 
 exports.domain = 'phthailand'

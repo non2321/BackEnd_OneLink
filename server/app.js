@@ -5,6 +5,8 @@ import { urlencoded, json } from 'body-parser';    //used to extract the body fr
 import { verify } from 'jsonwebtoken';
 import { mw } from 'request-ip';
 import { schedule } from 'node-cron';
+import fetch from 'node-fetch';
+import FormData from 'form-data';
 
 const app = express();
 import config, { output } from '../webpack.config.js';
@@ -44,7 +46,7 @@ import { GenTokenTableau, GenTokenTableauForFullScreen } from './controllers/rep
 
 import { StatusUnauthorized } from "./models/status_type";
 import { CodeW0002 } from "./models/msg_type";
-import { secretkey, webPort } from "../settings";
+import { secretkey, webPort, tableautoken } from "../settings";
 
 //Task Scheduler
 import taskDailyFins from './controllers/scheduler/DailyFins';
@@ -887,6 +889,14 @@ app.get('/api/endinginventory/:stamp/:store/:diff/:period', (req, res) => {
 app.get('/api/transferinventory/:stamp/:store/:datefrom/:dateto', (req, res) => {
   console.log('get_endinginventory')
   GetDataTableTransferInventory(req, res, req.body)
+})
+
+app.get('/api/tableautoken', async (req, res) => {
+  const form = new FormData();
+  form.append('username', tableautoken.username)
+  const response = await fetch(tableautoken.path, { method: 'POST', body: form })
+  const tableautokens = await response.text()  
+  res.send(tableautokens)
 })
 
 
