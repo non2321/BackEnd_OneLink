@@ -14,7 +14,7 @@ import { secretkey, tokenexpires } from '../../../../settings';
 
 export {
     GetBankInAdjustment,
-    GetPopupStore,
+    GetPopupStoreBankInAdjustment,
     GetValidationstore,
     GetValidationfinancialcode,
     EditBankInAdjustment,
@@ -41,7 +41,7 @@ async function GetBankInAdjustment(req, res, reqBody) {
     }
 }
 
-async function GetPopupStore(req, res, reqBody) {
+async function GetPopupStoreBankInAdjustment(req, res, reqBody) {
     try {
         let result = await ServiceGetPopupStoreBankInAdjustment()
         const rowdata = {

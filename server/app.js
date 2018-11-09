@@ -26,7 +26,7 @@ import { GetFinancialCode, AddFinancialCode, EditFinancialCode } from './control
 import { GetBankAccount, AddBankAccount, EditBankAccount, DeleteBankAccount } from './controllers/sdc/Sales/BankAccount';
 import { GetStoreConfig, GetPopupStore, GetDropDownBank, AddStoreConfig, EditStoreConfig, DeleteStoreConfig, GetAllStore, GetAllBank, GetVendor, GetRegion } from './controllers/sdc/Sales/Store';
 import { GetAccountCode, GetDropDownBuType, GetDropDownType, AddAccountCode, EditAccountCode } from './controllers/sdc/Sales/AccountCode';
-import { GetBankInAdjustment, GetPopupStore as _GetPopupStore, GetValidationstore, GetValidationfinancialcode, EditBankInAdjustment, ImportBankInAdjustment, GenGLBankInAdjustment } from './controllers/sdc/Sales/BankInAdjustment';
+import { GetBankInAdjustment, GetPopupStoreBankInAdjustment, GetValidationstore, GetValidationfinancialcode, EditBankInAdjustment, ImportBankInAdjustment, GenGLBankInAdjustment } from './controllers/sdc/Sales/BankInAdjustment';
 import { StampCloseDaiyFins } from './controllers/sdc/Sales/StampCloseDailyFins';
 
 //--Inventory
@@ -75,507 +75,507 @@ app.use(function (req, res, next) {
 });
 
 //Login Page
-app.post('/api/login', (req, res) => {
+app.post('/api/login', async (req, res) => {
   console.log('login')
-  Login(req, res, req.body)
+  await Login(req, res, req.body)
 });
 
 //Logout Page
-app.post('/api/logout', verifyToken, (req, res) => {
+app.post('/api/logout', verifyToken, async (req, res) => {
   console.log('logout')
 
-  verify(req.token, secretkey, (err, authData) => {
+  await verify(req.token, secretkey, async (err, authData) => {
     if (err) {
       const data = {
         status: StatusUnauthorized,
         Code: CodeW0002,
       }
-      Expired(req, res, data)
+      await Expired(req, res, data)
 
     } else {
       const user = authData.jwtdata
-      Logout(req, res, req.body, user);
+      await Logout(req, res, req.body, user);
     }
   })
 });
 
 //Load Page
-app.post('/api/loadpage', verifyToken, (req, res) => {
+app.post('/api/loadpage', verifyToken, async (req, res) => {
   console.log('loadpage')
-  verify(req.token, secretkey, (err, authData) => {
+  await verify(req.token, secretkey, async (err, authData) => {
     if (err) {
       const data = {
         status: StatusUnauthorized,
         Code: CodeW0002,
       }
-      Expired(req, res, data)
+      await Expired(req, res, data)
 
     } else {
       const user = authData.jwtdata
-      LoadPage(req, res, req.body, user);
+      await LoadPage(req, res, req.body, user);
     }
   })
 })
 
 //Menu Auth
-app.get('/api/menuauth/:userid', (req, res) => {
+app.get('/api/menuauth/:userid', async (req, res) => {
   console.log('meunauth')
-  Menu(req, res, req.body)
+  await Menu(req, res, req.body)
 });
 
 //Get Company Setup
-app.get('/api/companyconfig', (req, res) => {
+app.get('/api/companyconfig', async (req, res) => {
   console.log('get_company')
-  GetCompany(req, res, req.body);
+  await GetCompany(req, res, req.body);
 })
 
 //Add Company Setup
-app.post('/api/companyconfig', verifyToken, (req, res) => {
+app.post('/api/companyconfig', verifyToken, async (req, res) => {
   console.log('add_company')
-  verify(req.token, secretkey, (err, authData) => {
+  await verify(req.token, secretkey, async (err, authData) => {
     if (err) {
       const data = {
         status: StatusUnauthorized,
         Code: CodeW0002,
       }
-      Expired(req, res, data)
+      await Expired(req, res, data)
 
     } else {
       const user = authData.jwtdata
-      AddCompany(req, res, req.body, user);
+      await AddCompany(req, res, req.body, user);
     }
   })
 })
 
 //Edit Company Setup
-app.put('/api/companyconfig', verifyToken, (req, res) => {
+app.put('/api/companyconfig', verifyToken, async (req, res) => {
   console.log('edit_company')
-  verify(req.token, secretkey, (err, authData) => {
+  await verify(req.token, secretkey, async (err, authData) => {
     if (err) {
       const data = {
         status: StatusUnauthorized,
         Code: CodeW0002,
       }
-      Expired(req, res, data)
+      await Expired(req, res, data)
 
     } else {
       const user = authData.jwtdata
-      EditCompany(req, res, req.body, user);
+      await EditCompany(req, res, req.body, user);
     }
   })
 })
 
 //Delete Company Setup
-app.delete('/api/companyconfig', verifyToken, (req, res) => {
+app.delete('/api/companyconfig', verifyToken, async (req, res) => {
   console.log('delete_companyconfig')
-  verify(req.token, secretkey, (err, authData) => {
+  verify(req.token, secretkey, async (err, authData) => {
     if (err) {
       const data = {
         status: StatusUnauthorized,
-        Code: CodeW0002,
+        Code: CodeW0002
       }
-      Expired(req, res, data)
+      await Expired(req, res, data)
 
     } else {
       const user = authData.jwtdata
-      DeleteCompany(req, res, req.body, user);
+      await DeleteCompany(req, res, req.body, user);
     }
   })
 })
 
 //Get CompanyAccount Setup
-app.get('/api/companyaccountconfig', (req, res) => {
+app.get('/api/companyaccountconfig', async (req, res) => {
   console.log('companyaccountconfig')
-  GetCompanyAccount(req, res, req.body);
+  await GetCompanyAccount(req, res, req.body);
 })
 
 //Add CompanyAccount Setup
-app.post('/api/companyaccountconfig', verifyToken, (req, res) => {
+app.post('/api/companyaccountconfig', verifyToken, async (req, res) => {
   console.log('add_companyaccountconfig')
-  verify(req.token, secretkey, (err, authData) => {
+  await verify(req.token, secretkey, async (err, authData) => {
     if (err) {
       const data = {
         status: StatusUnauthorized,
         Code: CodeW0002,
       }
-      Expired(req, res, data)
+      await Expired(req, res, data)
 
     } else {
       const user = authData.jwtdata
-      AddCompanyAccount(req, res, req.body, user);
+      await AddCompanyAccount(req, res, req.body, user);
     }
   })
 })
 
 //Edit CompanyAccount Setup
-app.put('/api/companyaccountconfig', verifyToken, (req, res) => {
+app.put('/api/companyaccountconfig', verifyToken, async (req, res) => {
   console.log('edit_companyaccountconfig')
-  verify(req.token, secretkey, (err, authData) => {
+  await verify(req.token, secretkey, async (err, authData) => {
     if (err) {
       const data = {
         status: StatusUnauthorized,
         Code: CodeW0002,
       }
-      Expired(req, res, data)
+      await Expired(req, res, data)
 
     } else {
       const user = authData.jwtdata
-      EditCompanyAccount(req, res, req.body, user);
+      await EditCompanyAccount(req, res, req.body, user);
     }
   })
 })
 
 //Delete CompanyAccount Setup
-app.delete('/api/companyaccountconfig', verifyToken, (req, res) => {
+app.delete('/api/companyaccountconfig', verifyToken, async (req, res) => {
   console.log('delete_companyaccountconfig')
-  verify(req.token, secretkey, (err, authData) => {
+  await verify(req.token, secretkey, async (err, authData) => {
     if (err) {
       const data = {
         status: StatusUnauthorized,
         Code: CodeW0002,
       }
-      Expired(req, res, data)
+      await Expired(req, res, data)
 
     } else {
       const user = authData.jwtdata
-      DeleteCompany(req, res, req.body, user);
+      await DeleteCompany(req, res, req.body, user);
     }
   })
 })
 
 //Get Financial Code Setup
-app.get('/api/financialcodeconfig', (req, res) => {
+app.get('/api/financialcodeconfig', async (req, res) => {
   console.log('financialcodeconfig')
-  GetFinancialCode(req, res, req.body);
+  await GetFinancialCode(req, res, req.body);
 })
 
 //Add Financial Code Setup
-app.post('/api/financialcodeconfig', verifyToken, (req, res) => {
+app.post('/api/financialcodeconfig', verifyToken, async (req, res) => {
   console.log('add_financialcodeconfig')
-  verify(req.token, secretkey, (err, authData) => {
+  await verify(req.token, secretkey, async (err, authData) => {
     if (err) {
       const data = {
         status: StatusUnauthorized,
         Code: CodeW0002,
       }
-      Expired(req, res, data)
+      await Expired(req, res, data)
 
     } else {
       const user = authData.jwtdata
-      AddFinancialCode(req, res, req.body, user);
+      await AddFinancialCode(req, res, req.body, user);
     }
   })
 })
 
 //Edit Financial Code Setup
-app.put('/api/financialcodeconfig', verifyToken, (req, res) => {
+app.put('/api/financialcodeconfig', verifyToken, async (req, res) => {
   console.log('edit_financialcodeconfig')
-  verify(req.token, secretkey, (err, authData) => {
+  await verify(req.token, secretkey, async (err, authData) => {
     if (err) {
       const data = {
         status: StatusUnauthorized,
         Code: CodeW0002,
       }
-      Expired(req, res, data)
+      await Expired(req, res, data)
 
     } else {
       const user = authData.jwtdata
       const obj = req.body['obj']
 
-      EditFinancialCode(req, res, obj, user);
+      await EditFinancialCode(req, res, obj, user);
     }
   })
 })
 
 //Get ฺBank Account Setup
-app.get('/api/bankaccountconfig', (req, res) => {
+app.get('/api/bankaccountconfig', async (req, res) => {
   console.log('bankaccountconfig')
-  GetBankAccount(req, res, req.body);
+  await GetBankAccount(req, res, req.body);
 })
 
 //Add ฺBank Account Setup
-app.post('/api/bankaccountconfig', verifyToken, (req, res) => {
+app.post('/api/bankaccountconfig', verifyToken, async (req, res) => {
   console.log('add_bankaccountconfig')
-  verify(req.token, secretkey, (err, authData) => {
+  await verify(req.token, secretkey, async (err, authData) => {
     if (err) {
       const data = {
         status: StatusUnauthorized,
         Code: CodeW0002,
       }
-      Expired(req, res, data)
+      await Expired(req, res, data)
 
     } else {
       const user = authData.jwtdata
-      AddBankAccount(req, res, req.body, user);
+      await AddBankAccount(req, res, req.body, user);
     }
   })
 })
 
 //Edit ฺBank Account Setup
-app.put('/api/bankaccountconfig', verifyToken, (req, res) => {
+app.put('/api/bankaccountconfig', verifyToken, async (req, res) => {
   console.log('edit_bankaccountconfig')
-  verify(req.token, secretkey, (err, authData) => {
+  await verify(req.token, secretkey, async (err, authData) => {
     if (err) {
       const data = {
         status: StatusUnauthorized,
         Code: CodeW0002,
       }
-      Expired(req, res, data)
+      await Expired(req, res, data)
     } else {
       const user = authData.jwtdata
-      EditBankAccount(req, res, req.body, user);
+      await EditBankAccount(req, res, req.body, user);
     }
   })
 })
 
 //Delete Bank Account Setup
-app.delete('/api/bankaccountconfig', verifyToken, (req, res) => {
+app.delete('/api/bankaccountconfig', verifyToken, async (req, res) => {
   console.log('delete_bankaccountconfig')
-  verify(req.token, secretkey, (err, authData) => {
+  await verify(req.token, secretkey, async (err, authData) => {
     if (err) {
       const data = {
         status: StatusUnauthorized,
         Code: CodeW0002,
       }
-      Expired(req, res, data)
+      await Expired(req, res, data)
 
     } else {
       const user = authData.jwtdata
-      DeleteBankAccount(req, res, req.body, user);
+      await DeleteBankAccount(req, res, req.body, user);
     }
   })
 })
 
 //Get Store Setup
-app.get('/api/storeconfig', (req, res) => {
+app.get('/api/storeconfig', async (req, res) => {
   console.log('storeconfig')
-  GetStoreConfig(req, res, req.body);
+  await GetStoreConfig(req, res, req.body);
 })
 
 //Get Store Setup /Popup Store Name
-app.get('/api/storeconfig/popupstore', (req, res) => {
+app.get('/api/storeconfig/popupstore', async (req, res) => {
   console.log('storeconfig/popupstore')
-  GetPopupStore(req, res, req.body);
+  await GetPopupStore(req, res, req.body);
 })
 
 //Get Store Setup /DropDown Bank Name
-app.get('/api/storeconfig/ddlbank', (req, res) => {
+app.get('/api/storeconfig/ddlbank', async (req, res) => {
   console.log('storeconfig/ddlbank')
-  GetDropDownBank(req, res, req.body);
+  await GetDropDownBank(req, res, req.body);
 })
 
 //Add Store Setup
-app.post('/api/storeconfig', verifyToken, (req, res) => {
+app.post('/api/storeconfig', verifyToken, async (req, res) => {
   console.log('add_storeconfig')
-  verify(req.token, secretkey, (err, authData) => {
+  await verify(req.token, secretkey, async (err, authData) => {
     if (err) {
       const data = {
         status: StatusUnauthorized,
         Code: CodeW0002,
       }
-      Expired(req, res, data)
+      await Expired(req, res, data)
 
     } else {
       const user = authData.jwtdata
-      AddStoreConfig(req, res, req.body, user);
+      await AddStoreConfig(req, res, req.body, user);
     }
   })
 })
 
 //Edit Store Setup
-app.put('/api/storeconfig', verifyToken, (req, res) => {
+app.put('/api/storeconfig', verifyToken, async (req, res) => {
   console.log('edit_storeconfig')
-  verify(req.token, secretkey, (err, authData) => {
+  await verify(req.token, secretkey, async (err, authData) => {
     if (err) {
       const data = {
         status: StatusUnauthorized,
         Code: CodeW0002,
       }
-      Expired(req, res, data)
+      await Expired(req, res, data)
 
     } else {
       const user = authData.jwtdata
-      EditStoreConfig(req, res, req.body, user);
+      await EditStoreConfig(req, res, req.body, user);
     }
   })
 })
 
 //Delete Store Setup
-app.delete('/api/storeconfig', verifyToken, (req, res) => {
+app.delete('/api/storeconfig', verifyToken, async (req, res) => {
   console.log('delete_storeconfig')
-  verify(req.token, secretkey, (err, authData) => {
+  await verify(req.token, secretkey, async (err, authData) => {
     if (err) {
       const data = {
         status: StatusUnauthorized,
         Code: CodeW0002,
       }
-      Expired(req, res, data)
+      await Expired(req, res, data)
 
     } else {
       const user = authData.jwtdata
-      DeleteStoreConfig(req, res, req.body, user);
+      await DeleteStoreConfig(req, res, req.body, user);
     }
   })
 })
 
 //Get Account Code Setup For Sale
-app.get('/api/accountcodeconfigforsale', (req, res) => {
+app.get('/api/accountcodeconfigforsale', async (req, res) => {
   console.log('accountcodeconfigforsale')
-  GetAccountCode(req, res, req.body);
+  await GetAccountCode(req, res, req.body);
 })
 
 //Get Account Code Setup For Sale /DropDown Bu Type
-app.get('/api/accountcodeconfigforsale/ddlbutype', (req, res) => {
+app.get('/api/accountcodeconfigforsale/ddlbutype', async (req, res) => {
   console.log('accountcodeconfigforsale/ddlbutype')
-  GetDropDownBuType(req, res, req.body);
+  await GetDropDownBuType(req, res, req.body);
 })
 
 //Get Account Code Setup For Sale /DropDown Type
-app.get('/api/accountcodeconfigforsale/ddltype', (req, res) => {
+app.get('/api/accountcodeconfigforsale/ddltype', async (req, res) => {
   console.log('accountcodeconfigforsale/ddltype')
-  GetDropDownType(req, res, req.body);
+  await GetDropDownType(req, res, req.body);
 })
 
 //Add Account Code Setup For Sale
-app.post('/api/accountcodeconfigforsale', verifyToken, (req, res) => {
+app.post('/api/accountcodeconfigforsale', verifyToken, async (req, res) => {
   console.log('add_accountcodeconfigforsale')
-  verify(req.token, secretkey, (err, authData) => {
+  await verify(req.token, secretkey, async (err, authData) => {
     if (err) {
       const data = {
         status: StatusUnauthorized,
         Code: CodeW0002,
       }
-      Expired(req, res, data)
+      await Expired(req, res, data)
 
     } else {
       const user = authData.jwtdata
-      AddAccountCode(req, res, req.body, user);
+      await AddAccountCode(req, res, req.body, user);
     }
   })
 })
 
 //Edit Account Code Setup For Sale
-app.put('/api/accountcodeconfigforsale', verifyToken, (req, res) => {
+app.put('/api/accountcodeconfigforsale', verifyToken, async (req, res) => {
   console.log('edit_accountcodeconfigforsale')
-  verify(req.token, secretkey, (err, authData) => {
+  await verify(req.token, secretkey, async (err, authData) => {
     if (err) {
       const data = {
         status: StatusUnauthorized,
         Code: CodeW0002,
       }
-      Expired(req, res, data)
+      await Expired(req, res, data)
 
     } else {
       const user = authData.jwtdata
-      EditAccountCode(req, res, req.body, user);
+      await EditAccountCode(req, res, req.body, user);
     }
   })
 })
 
 
 //Get Bank In Adjustment
-app.get('/api/bankinadjustment/:store/:dateofstore', (req, res) => {
+app.get('/api/bankinadjustment/:store/:dateofstore', async (req, res) => {
   console.log('bankinadjustment')
-  GetBankInAdjustment(req, res, req.body);
+  await GetBankInAdjustment(req, res, req.body);
 })
 
 //Get Bank In Adjustment /Popup Store Name
-app.get('/api/bankinadjustment/popupstore', (req, res) => {
+app.get('/api/bankinadjustment/popupstore', async (req, res) => {
   console.log('bankinadjustment/popupstore')
-  _GetPopupStore(req, res, req.body);
+  await GetPopupStoreBankInAdjustment(req, res, req.body);
 })
 
 //Get Bank In Adjustment /Validation Store
-app.get('/api/bankinadjustment/validationstore', (req, res) => {
+app.get('/api/bankinadjustment/validationstore', async (req, res) => {
   console.log('bankinadjustment/validationstore')
-  GetValidationstore(req, res, req.body);
+  await GetValidationstore(req, res, req.body);
 })
 
 //Get Bank In Adjustment /Validation Financial  Code
-app.get('/api/bankinadjustment/validationfinancialcode', (req, res) => {
+app.get('/api/bankinadjustment/validationfinancialcode', async (req, res) => {
   console.log('bankinadjustment/validationfinancialcode')
-  GetValidationfinancialcode(req, res, req.body);
+  await GetValidationfinancialcode(req, res, req.body);
 })
 
 //Edit Bank In Adjustment
-app.put('/api/bankinadjustment', verifyToken, (req, res) => {
+app.put('/api/bankinadjustment', verifyToken, async (req, res) => {
   console.log('edit_bankinadjustment')
-  verify(req.token, secretkey, (err, authData) => {
+  await verify(req.token, secretkey, async (err, authData) => {
     if (err) {
       const data = {
         status: StatusUnauthorized,
         Code: CodeW0002,
       }
-      Expired(req, res, data)
+      await Expired(req, res, data)
 
     } else {
       const user = authData.jwtdata
       const obj = req.body['obj']
 
-      EditBankInAdjustment(req, res, obj, user);
+      await EditBankInAdjustment(req, res, obj, user);
     }
   })
 })
 
 //Upload Bank In Adjustment
-app.get('/api/upload/bankinadjustment_template', function (req, res) {
+app.get('/api/upload/bankinadjustment_template', async (req, res) => {
   console.log('downloadtemplate_bankinadjustment')
   let file = __dirname + '/upload/TemplateBankInAdjustment.xlsx'
-  res.download(file)
+  await res.download(file)
 })
 
 //Import Bank In Adjustment
-app.put('/api/bankinadjustment/import', verifyToken, (req, res) => {
+app.put('/api/bankinadjustment/import', verifyToken, async (req, res) => {
   console.log('import_bankinadjustment')
-  verify(req.token, secretkey, (err, authData) => {
+  await verify(req.token, secretkey, async (err, authData) => {
     if (err) {
       const data = {
         status: StatusUnauthorized,
         Code: CodeW0002,
       }
-      Expired(req, res, data)
+      await Expired(req, res, data)
 
     } else {
       const user = authData.jwtdata
       const obj = req.body['obj']
 
-      ImportBankInAdjustment(req, res, obj, user);
+      await ImportBankInAdjustment(req, res, obj, user);
     }
   })
 })
 
 //Process Bank In Adjustment
-app.post('/api/glprocessbankinadjustment', verifyToken, (req, res) => {
+app.post('/api/glprocessbankinadjustment', verifyToken, async (req, res) => {
   console.log('glprocessbankinadjustment')
-  verify(req.token, secretkey, (err, authData) => {
+  await verify(req.token, secretkey, async (err, authData) => {
     if (err) {
       const data = {
         status: StatusUnauthorized,
         Code: CodeW0002,
       }
-      Expired(req, res, data)
+      await Expired(req, res, data)
 
     } else {
       const user = authData.jwtdata
-      GenGLBankInAdjustment(req, res, req.body, user);
+      await GenGLBankInAdjustment(req, res, req.body, user);
     }
   })
 })
 
 //Stemp Closed Daily Fins
-app.post('/api/stampclosedailyfins', verifyToken, (req, res) => {
+app.post('/api/stampclosedailyfins', verifyToken, async (req, res) => {
   console.log('stampclosedailyfins')
-  verify(req.token, secretkey, (err, authData) => {
+  await verify(req.token, secretkey, async (err, authData) => {
     if (err) {
       const data = {
         status: StatusUnauthorized,
         Code: CodeW0002,
       }
-      Expired(req, res, data)
+      await Expired(req, res, data)
 
     } else {
       const user = authData.jwtdata
-      StampCloseDaiyFins(req, res, req.body, user);
+      await StampCloseDaiyFins(req, res, req.body, user);
     }
   })
 })
@@ -583,312 +583,312 @@ app.post('/api/stampclosedailyfins', verifyToken, (req, res) => {
 
 //Report
 //Get AllStore / ForDropDown
-app.get('/api/report/storeall', (req, res) => {
+app.get('/api/report/storeall', async (req, res) => {
   console.log('getallstore')
-  GetAllStore(req, res, req.body);
+  await GetAllStore(req, res, req.body);
 })
 
 //Get AllBank / ForDropDown
-app.get('/api/report/bankall', (req, res) => {
+app.get('/api/report/bankall', async (req, res) => {
   console.log('getallbank')
-  GetAllBank(req, res, req.body);
+  await GetAllBank(req, res, req.body);
 })
 
 //Get Vendor / ForDropDown
-app.get('/api/report/vendor', (req, res) => {
+app.get('/api/report/vendor', async (req, res) => {
   console.log('getvendor')
-  GetVendor(req, res, req.body);
+  await GetVendor(req, res, req.body);
 })
 
 //Get Region / ForDropDown
-app.get('/api/report/region', (req, res) => {
+app.get('/api/report/region', async (req, res) => {
   console.log('getregion')
-  GetRegion(req, res, req.body);
+  await GetRegion(req, res, req.body);
 })
 
 //Gen Token for Tableau
-app.post('/api/report/gentokentableau', verifyToken, (req, res) => {
+app.post('/api/report/gentokentableau', verifyToken, async (req, res) => {
   console.log('gentokentableau')
-  verify(req.token, secretkey, (err, authData) => {
+  await verify(req.token, secretkey, async (err, authData) => {
     if (err) {
       const data = {
         status: StatusUnauthorized,
         Code: CodeW0002,
       }
-      Expired(req, res, data)
+      await Expired(req, res, data)
 
     } else {
       const user = authData.jwtdata
-      GenTokenTableau(req, res, req.body, user);
+      await GenTokenTableau(req, res, req.body, user);
     }
   })
 })
 
 //Gen Token for Tableau For FullScreen
-app.post('/api/report/gentokentableauforfullscreen', verifyToken, (req, res) => {
+app.post('/api/report/gentokentableauforfullscreen', verifyToken, async (req, res) => {
   console.log('gentokentableauforfullscreen')
-  verify(req.token, secretkey, (err, authData) => {
+  await verify(req.token, secretkey, async (err, authData) => {
     if (err) {
       const data = {
         status: StatusUnauthorized,
         Code: CodeW0002,
       }
-      Expired(req, res, data)
+      await Expired(req, res, data)
 
     } else {
       const user = authData.jwtdata
-      GenTokenTableauForFullScreen(req, res, req.body, user);
+      await GenTokenTableauForFullScreen(req, res, req.body, user);
     }
   })
 })
 
 
 //Get Account Code For Inventory
-app.get('/api/accountcodeforinventory', (req, res) => {
+app.get('/api/accountcodeforinventory', async (req, res) => {
   console.log('get_accountcodeforinventory')
-  GetAccountCodeForInventory(req, res, req.body);
+  await GetAccountCodeForInventory(req, res, req.body);
 })
 
 //Get Account Code For Inventory /DropDown Grp By
-app.get('/api/accountcodeforinventory/ddlgrp_by', (req, res) => {
+app.get('/api/accountcodeforinventory/ddlgrp_by', async (req, res) => {
   console.log('accountcodeforinventory/ddlgrp_by')
-  GetDropDownGrpBy(req, res, req.body)
+  await GetDropDownGrpBy(req, res, req.body)
 })
 
 //Get Account Code For Inventory /DropDown CatCode
-app.get('/api/accountcodeforinventory/ddlcatcode', (req, res) => {
+app.get('/api/accountcodeforinventory/ddlcatcode', async (req, res) => {
   console.log('accountcodeforinventory/ddlcatcode')
-  GetDropDownCatCode(req, res, req.body)
+  await GetDropDownCatCode(req, res, req.body)
 })
 
 //Get Account Code For Inventory /DropDown Acc Type
-app.get('/api/accountcodeforinventory/ddlacc_type', (req, res) => {
+app.get('/api/accountcodeforinventory/ddlacc_type', async (req, res) => {
   console.log('accountcodeforinventory/ddlacc_type')
-  GetDropDownAccType(req, res, req.body)
+  await GetDropDownAccType(req, res, req.body)
 })
 
 //Add Account Code For Inventory
-app.post('/api/accountcodeforinventory', verifyToken, (req, res) => {
+app.post('/api/accountcodeforinventory', verifyToken, async (req, res) => {
   console.log('add_accountcodeforinventory')
-  verify(req.token, secretkey, (err, authData) => {
+  await verify(req.token, secretkey, async (err, authData) => {
     if (err) {
       const data = {
         status: StatusUnauthorized,
         Code: CodeW0002,
       }
-      Expired(req, res, data)
+      await Expired(req, res, data)
 
     } else {
       const user = authData.jwtdata
-      AddAccountCodeForInventory(req, res, req.body, user);
+      await AddAccountCodeForInventory(req, res, req.body, user);
     }
   })
 })
 
 //Edit Account Code For Inventory
-app.put('/api/accountcodeforinventory', verifyToken, (req, res) => {
+app.put('/api/accountcodeforinventory', verifyToken, async (req, res) => {
   console.log('edit_accountcodeforinventory')
-  verify(req.token, secretkey, (err, authData) => {
+  await verify(req.token, secretkey, async (err, authData) => {
     if (err) {
       const data = {
         status: StatusUnauthorized,
         Code: CodeW0002,
       }
-      Expired(req, res, data)
+      await Expired(req, res, data)
 
     } else {
       const user = authData.jwtdata
-      EditAccountCodeForInventory(req, res, req.body, user);
+      await EditAccountCodeForInventory(req, res, req.body, user);
     }
   })
 })
 
 //Stemp Inventory
-app.post('/api/stampinventory', verifyToken, (req, res) => {
+app.post('/api/stampinventory', verifyToken, async (req, res) => {
   console.log('stampinventory')
-  verify(req.token, secretkey, (err, authData) => {
+  await verify(req.token, secretkey, async (err, authData) => {
     if (err) {
       const data = {
         status: StatusUnauthorized,
         Code: CodeW0002,
       }
-      Expired(req, res, data)
+      await Expired(req, res, data)
 
     } else {
       const user = authData.jwtdata
-      AddStampInventory(req, res, req.body, user);
+      await AddStampInventory(req, res, req.body, user);
     }
   })
 })
 
 //Get Import To JDE /DropDown Period
-app.get('/api/importtojde/ddlperiod', (req, res) => {
+app.get('/api/importtojde/ddlperiod', async (req, res) => {
   console.log('importtojde/ddlperiod')
-  GetDropDownPeriod(req, res, req.body)
+  await GetDropDownPeriod(req, res, req.body)
 })
 
 //Get Unitcost /DropDown Inven Category
-app.get('/api/unitcost/ddlinvencategory', (req, res) => {
+app.get('/api/unitcost/ddlinvencategory', async (req, res) => {
   console.log('unitcost/ddlinvencategory')
-  GetDropDownInvenCategory(req, res, req.body);
+  await GetDropDownInvenCategory(req, res, req.body);
 })
 
 //Get Unitcost
-app.get('/api/unitcost/:period', (req, res) => {
+app.get('/api/unitcost/:period', async (req, res) => {
   console.log('get_unitcost')
-  GetDataTableUnitCost(req, res, req.body)
+  await GetDataTableUnitCost(req, res, req.body)
 })
 
 //Get Unitcost
-app.get('/api/unitcost/:period/:invencategory', (req, res) => {
+app.get('/api/unitcost/:period/:invencategory', async (req, res) => {
   console.log('get_unitcost')
-  GetDataTableUnitCost(req, res, req.body)
+  await GetDataTableUnitCost(req, res, req.body)
 })
 
 //Get Unitcost
-app.get('/api/unitcost/:period/:invencategory/:stockno', (req, res) => {
+app.get('/api/unitcost/:period/:invencategory/:stockno', async (req, res) => {
   console.log('get_unitcost')
-  GetDataTableUnitCost(req, res, req.body)
+  await GetDataTableUnitCost(req, res, req.body)
 })
 
 //Edit Unitcost
-app.put('/api/unitcost', verifyToken, (req, res) => {
+app.put('/api/unitcost', verifyToken, async (req, res) => {
   console.log('edit_unitcost')
-  verify(req.token, secretkey, (err, authData) => {
+  await verify(req.token, secretkey, async (err, authData) => {
     if (err) {
       const data = {
         status: StatusUnauthorized,
         Code: CodeW0002,
       }
-      Expired(req, res, data)
+      await Expired(req, res, data)
 
     } else {
       const user = authData.jwtdata
       const obj = req.body['obj']
 
-      EditUnitCost(req, res, obj, user);
+      await EditUnitCost(req, res, obj, user);
     }
   })
 })
 
 //Upload Unitcost
-app.get('/api/upload/unitcost_template', function (req, res) {
+app.get('/api/upload/unitcost_template', async (req, res) => {
   console.log('downloadtemplate_unitcost')
   let file = __dirname + '/upload/TemplateUnitCost.xlsx'
-  res.download(file)
+  await res.download(file)
 })
 
 //Import UnitCost
-app.put('/api/unitcost/import', verifyToken, (req, res) => {
+app.put('/api/unitcost/import', verifyToken, async (req, res) => {
   console.log('import_unitcost')
-  verify(req.token, secretkey, (err, authData) => {
+  await verify(req.token, secretkey, async (err, authData) => {
     if (err) {
       const data = {
         status: StatusUnauthorized,
         Code: CodeW0002,
       }
-      Expired(req, res, data)
+      await Expired(req, res, data)
 
     } else {
       const user = authData.jwtdata
       const obj = req.body['obj']
 
-      Import(req, res, obj, user);
+      await Import(req, res, obj, user);
     }
   })
 })
 
 //Gen PH Inventroy To E1 (UnitCost)
-app.post('/api/genunitocst', verifyToken, (req, res) => {
+app.post('/api/genunitocst', verifyToken, async (req, res) => {
   console.log('genunitocst')
-  verify(req.token, secretkey, (err, authData) => {
+  await verify(req.token, secretkey, async (err, authData) => {
     if (err) {
       const data = {
         status: StatusUnauthorized,
         Code: CodeW0002,
       }
-      Expired(req, res, data)
+      await Expired(req, res, data)
 
     } else {
       const user = authData.jwtdata
-      GenInveotory(req, res, req.body, user);
+      await GenInveotory(req, res, req.body, user);
     }
   })
 })
 
 
 //Get Receipts
-app.get('/api/receipts/:store/:datefrom/:dateto', (req, res) => {
+app.get('/api/receipts/:store/:datefrom/:dateto', async (req, res) => {
   console.log('get_receipts')
-  GetDataTableReceipts(req, res, req.body)
+  await GetDataTableReceipts(req, res, req.body)
 })
 
 //Get Receipts
-app.get('/api/receipts/:store/:datefrom/:dateto/:invoice*', (req, res) => {
+app.get('/api/receipts/:store/:datefrom/:dateto/:invoice*', async (req, res) => {
   console.log('get_receipts')
-  GetDataTableReceipts(req, res, req.body)
+  await GetDataTableReceipts(req, res, req.body)
 })
 
 //Get Term Closing
-app.get('/api/termclosing', (req, res) => {
+app.get('/api/termclosing', async (req, res) => {
   console.log('termclosing')
-  GetDataTableTermClosing(req, res, req.body)
+  await GetDataTableTermClosing(req, res, req.body)
 })
 
 //Add Term Closing
-app.post('/api/termclosing', verifyToken, (req, res) => {
+app.post('/api/termclosing', verifyToken, async (req, res) => {
   console.log('add_termclosing')
-  verify(req.token, secretkey, (err, authData) => {
+  await verify(req.token, secretkey, async (err, authData) => {
     if (err) {
       const data = {
         status: StatusUnauthorized,
         Code: CodeW0002,
       }
-      Expired(req, res, data)
+      await Expired(req, res, data)
 
     } else {
       const user = authData.jwtdata
-      AddTermClosing(req, res, req.body, user);
+      await AddTermClosing(req, res, req.body, user);
     }
   })
 })
 
 //Edit Term Closing
-app.put('/api/termclosing', verifyToken, (req, res) => {
+app.put('/api/termclosing', verifyToken, async (req, res) => {
   console.log('edit_termclosing')
-  verify(req.token, secretkey, (err, authData) => {
+  await verify(req.token, secretkey, async (err, authData) => {
     if (err) {
       const data = {
         status: StatusUnauthorized,
         Code: CodeW0002,
       }
-      Expired(req, res, data)
+      await Expired(req, res, data)
 
     } else {
       const user = authData.jwtdata
       const obj = req.body['obj']
 
-      EditTermClosing(req, res, obj, user);
+      await EditTermClosing(req, res, obj, user);
     }
   })
 })
 
 //Get Ending Inventory Period
-app.get('/api/endinginventory/getperiod/:year/:month', (req, res) => {
+app.get('/api/endinginventory/getperiod/:year/:month', async (req, res) => {
   console.log('endinginventory/getperiod')
-  GetPeriodEndingInventory(req, res, req.body)
+  await GetPeriodEndingInventory(req, res, req.body)
 })
 
 //Get Ending Inventory
-app.get('/api/endinginventory/:stamp/:store/:diff/:period', (req, res) => {
+app.get('/api/endinginventory/:stamp/:store/:diff/:period', async (req, res) => {
   console.log('get_endinginventory')
-  GetDataTableEndingInventory(req, res, req.body)
+  await GetDataTableEndingInventory(req, res, req.body)
 })
 
 //Get Transfer Inventory
-app.get('/api/transferinventory/:stamp/:store/:datefrom/:dateto', (req, res) => {
+app.get('/api/transferinventory/:stamp/:store/:datefrom/:dateto', async (req, res) => {
   console.log('get_endinginventory')
-  GetDataTableTransferInventory(req, res, req.body)
+  await GetDataTableTransferInventory(req, res, req.body)
 })
 
 app.get('/api/tableautoken', async (req, res) => {
@@ -902,7 +902,7 @@ app.get('/api/tableautoken', async (req, res) => {
 
 
 // Serve the files on port.
-app.listen(webPort, function () {
+app.listen(webPort, () => {
   console.log('Server started on port %s \n', webPort);
 });
 
