@@ -3,12 +3,12 @@ import browserdetect from 'browser-detect';
 import { ServiceGetScreenById } from '../../../models/Services/Menu';
 
 import { ServiceInsertLogAuditTrail, ServiceInsertLogAudit } from '../../../models/Services/Log';
-import { ServiceGetAccountCodeForInventory, ServiceGetDropDownGrpBy,  ServiceGetDropDownCatCode, ServiceGetDropDownAccType, ServiceCheckDuplicateAccountCodeForInventory, ServiceInsertAccountCodeForInventory, ServiceGetTempAccountCodeForInventory, ServiceEditAccountCodeForInventory } from '../../../models/Services/Inventory';
+import { ServiceGetAccountCodeForInventory, ServiceGetDropDownGrpBy, ServiceGetDropDownCatCode, ServiceGetDropDownAccType, ServiceCheckDuplicateAccountCodeForInventory, ServiceInsertAccountCodeForInventory, ServiceGetTempAccountCodeForInventory, ServiceEditAccountCodeForInventory, ServiceGetValidationAccountCodeForInventory } from '../../../models/Services/Inventory';
 import { ServiceGetMessageByCode } from '../../../models/Services/Messsage';
 
-import { ActionAdd, ActionEdit } from '../../../models/action_type';
+import { ActionAdd, ActionEdit, ActionAddUpload } from '../../../models/action_type';
 import { StatusSuccess, StatusComplate, StatusError, StatusUnComplate } from '../../../models/status_type';
-import { MSGAddSuccess, CodeS0001, MSGAddUnSuccess, MSGAddDuplicate, CodeE0005, MSGEditSuccess, CodeS0002, MSGEditUnSuccess } from '../../../models/msg_type';
+import { MSGAddSuccess, CodeS0001, MSGAddUnSuccess, MSGAddDuplicate, CodeE0005, MSGEditSuccess, MSGAddUploadSuccess, MSGAddUploadUnSuccess, CodeS0002, MSGEditUnSuccess } from '../../../models/msg_type';
 
 import { secretkey, tokenexpires } from '../../../../settings';
 
@@ -18,7 +18,9 @@ export {
     GetDropDownCatCode,
     GetDropDownAccType,
     AddAccountCodeForInventory,
-    EditAccountCodeForInventory
+    EditAccountCodeForInventory,
+    ImportAccountCodeForInventory,
+    GetValidationAccountCodeForInventory
 }
 
 async function GetAccountCodeForInventory(req, res, reqBody) {
@@ -343,14 +345,7 @@ async function EditAccountCodeForInventory(req, res, reqBody, authData) {
         if (Object.keys(screen).length > 0) {
             screen_name = screen.SCREEN_NAME
             module_name = screen.MODULE
-        }
-        //Set prmtemp
-        const prmtemp = {
-            action_code: action_code,
-            inv_class: inv_class,
-            acc_type: acc_type
-        }
-        const tempdata = await ServiceGetTempAccountCodeForInventory(prmtemp)
+        }        
 
         //Set object prm
         const prm = {
@@ -368,6 +363,8 @@ async function EditAccountCodeForInventory(req, res, reqBody, authData) {
             update_by: authData.id
         }
 
+        const tempdata = await ServiceGetTempAccountCodeForInventory(prm)
+
         let result = await ServiceEditAccountCodeForInventory(prm)
 
         if (result !== undefined) { //Edit Success            
@@ -376,7 +373,7 @@ async function EditAccountCodeForInventory(req, res, reqBody, authData) {
                 module: module_name,
                 screen_name: screen_name,
                 action_type: ActionEdit,
-                status: Success,
+                status: StatusSuccess,
                 user_id: authData.id,
                 client_ip: req.ip,
                 msg: MSGEditSuccess,
@@ -392,7 +389,7 @@ async function EditAccountCodeForInventory(req, res, reqBody, authData) {
                     user_id: authData.id,
                     screen_name: screen_name,
                     client_ip: req.ip,
-                    status: Success,
+                    status: StatusSuccess,
                     audit_msg: MSGEditSuccess,
                     audit_trail_id: AuditTrail.uid,
                     new_value: prm,
@@ -473,6 +470,225 @@ async function EditAccountCodeForInventory(req, res, reqBody, authData) {
         }
 
     } catch (err) {
+        res.sendStatus(500)
+    }
+}
+
+async function ImportAccountCodeForInventory(req, res, obj, authData) {
+    if (obj == null) throw new Error("Input not valid")
+    if (req.body.screen_id == null) throw new Error("Input not valid")
+    let screen_id = req.body.screen_id
+    let screen_name = ''
+    let module_name = ''
+
+    try {
+        // Current DateTime
+        const datetime = new Date().toLocaleString().replace(',', '');
+        //Browser
+        const browser = JSON.stringify(browserdetect(req.headers['user-agent']));
+
+        //Get Screen name && Module name
+        const screen = await ServiceGetScreenById(screen_id)
+
+        if (Object.keys(screen).length > 0) {
+            screen_name = screen.SCREEN_NAME
+            module_name = screen.MODULE
+        }
+
+        const prmLog = {
+            audit_trail_date: datetime,
+            module: module_name,
+            screen_name: screen_name,
+            action_type: ActionAddUpload,
+            status: StatusSuccess,
+            user_id: authData.id,
+            client_ip: req.ip,
+            msg: MSGAddUploadSuccess,
+            browser: browser
+        }
+
+        // Add Log.
+        let AuditTrail = await ServiceInsertLogAuditTrail(prmLog)
+
+        let rescheck = true
+        let itemStatusSuccess = []
+        let itemerror = []
+
+        for (let item of obj) {            
+            const prm = {
+                action_code: item['Action Code'],
+                inv_class: item['Inv Class'],
+                action: item['Action'],
+                obj_account: item['Obj Account'],
+                subsidary: item['Subsidary'],
+                grp_by: item['GrpBy'],
+                cat_code: item['CatCode'],
+                acc_type: item['Acc Type'],
+                doc_no: item['Doc No'],
+                remark: item['Remark'],
+                create_date: datetime,
+                create_by: authData.id
+            }
+           
+            let res = await ServiceInsertAccountCodeForInventory(prm)            
+
+            if (res != undefined) {
+                const prmitem = {
+                    action_code: item['Action Code'],
+                    inv_class: item['Inv Class'],
+                    action: item['Action'],
+                    obj_account: item['Obj Account'],
+                    subsidary: item['Subsidary'],
+                    grp_by: item['GrpBy'],
+                    cat_code: item['CatCode'],
+                    acc_type: item['Acc Type'],
+                    doc_no: item['Doc No'],
+                    remark: item['Remark'],
+                    create_date: datetime,
+                    create_by: authData.id,
+                    original_value: ''
+                }
+                itemStatusSuccess.push(prmitem)
+            }
+            else if (res == undefined) {
+                const prmitem = {
+                    action_code: item['Action Code'],
+                    inv_class: item['Inv Class'],
+                    action: item['Action'],
+                    obj_account: item['Obj Account'],
+                    subsidary: item['Subsidary'],
+                    grp_by: item['GrpBy'],
+                    cat_code: item['CatCode'],
+                    acc_type: item['Acc Type'],
+                    doc_no: item['Doc No'],
+                    remark: item['Remark'],
+                    create_date: datetime,
+                    create_by: authData.id,
+                    original_value: ''
+                }
+                itemerror.push(prmitem)
+                rescheck = false
+            }
+        }
+        //Add Log Audit StatusSuccess     
+        for (let item of itemStatusSuccess) {
+            const new_value = {
+                action_code: item['action_code'],
+                inv_class: item['inv_class'],
+                action: item['action'],
+                obj_account: item['obj_account'],
+                subsidary: item['subsidary'],
+                grp_by: item['grp_by'],
+                cat_code: item['cat_code'],
+                acc_type: item['acc_type'],
+                doc_no: item['doc_no'],
+                remark: item['remark'],
+                create_date: item.create_date,
+                create_by: item.create_by,
+            }
+            if (AuditTrail.uid) {
+                const prmLogAudit = {
+                    audit_date: datetime,
+                    action_type: ActionAdd,
+                    user_id: authData.id,
+                    screen_name: screen_name,
+                    client_ip: req.ip,
+                    status: StatusSuccess,
+                    audit_msg: MSGAddUploadSuccess,
+                    audit_trail_id: AuditTrail.uid,
+                    new_value: new_value,
+                    original_value: '',
+                }
+                await ServiceInsertLogAudit(prmLogAudit)
+            }
+        }
+
+        //Add Log Audit Error
+        for (let item of itemerror) {
+            const new_value = {
+                action_code: item['action_code'],
+                inv_class: item['inv_class'],
+                action: item['action'],
+                obj_account: item['obj_account'],
+                subsidary: item['subsidary'],
+                grp_by: item['grp_by'],
+                cat_code: item['cat_code'],
+                acc_type: item['acc_type'],
+                doc_no: item['doc_no'],
+                remark: item['remark'],
+                create_date: item.create_date,
+                create_by: item.create_by,
+            }
+
+            if (AuditTrail.uid) {
+                const prmLogAudit = {
+                    audit_date: datetime,
+                    action_type: ActionAdd,
+                    user_id: authData.id,
+                    screen_name: screen_name,
+                    client_ip: req.ip,
+                    status: StatusError,
+                    audit_msg: MSGAddUploadUnSuccess,
+                    audit_trail_id: AuditTrail.uid,
+                    new_value: new_value,
+                    original_value: '',
+                }
+                await ServiceInsertLogAudit(prmLogAudit)
+            }
+        }
+
+
+        //Respone StatusSuccess
+        if (rescheck == true) {
+            //Get Message Alert.
+            let messageAlert = await ServiceGetMessageByCode(CodeS0001)
+
+            //Send JWT
+            const jwtdata = {
+                id: authData.id,
+                firstname: authData.firstname,
+                lastname: authData.lastname,
+                position: authData.position,
+                email: authData.email,
+                mobile_no: authData.mobile_no,
+                phc_user: authData.phc_user,
+            }
+            await sign({ jwtdata }, secretkey, { expiresIn: tokenexpires }, (err, token) => {
+                res.json({
+                    "status": StatusComplate,
+                    "message": messageAlert,
+                    "user": {
+                        "id": authData.id,
+                        "firstname": authData.firstname,
+                        "lastname": authData.lastname,
+                        "position": authData.position,
+                        "email": authData.email,
+                        "mobile_no": authData.mobile_no,
+                        "phc_user": authData.phc_user,
+                        token
+                    }
+                })
+            })
+        } else { //Respone Error
+            const data = {
+                "status": StatusUnComplate,
+                "message": `AccountCode For Inventory ${itemerror.map((item) => { return `Action Code: ${item['action_code']} , Inv Class: ${item['inv_class']} , Acc Type: ${item['acc_type']}` })} ไม่สามารถบันทึกข้อมูลลงในระบบได้`
+            }
+            await res.setHeader('Content-Type', 'application/json');
+            await res.send(JSON.stringify(data));
+        }
+    } catch (err) {
+        res.sendStatus(500)
+    }
+}
+
+async function GetValidationAccountCodeForInventory(req, res, reqBody) {   
+    try {       
+        let result = await ServiceGetValidationAccountCodeForInventory()        
+        await res.setHeader('Content-Type', 'application/json');
+        await res.send(JSON.stringify(result.recordset));
+    } catch (err) {
+        console.log(err)
         res.sendStatus(500)
     }
 }

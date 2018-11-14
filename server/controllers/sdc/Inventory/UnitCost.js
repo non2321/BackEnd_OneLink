@@ -3,7 +3,7 @@ import browserdetect from 'browser-detect';
 import { ServiceGetScreenById } from '../../../models/Services/Menu';
 
 import { ServiceInsertLogAuditTrail, ServiceInsertLogAudit } from '../../../models/Services/Log';
-import { ServiceGetUnitCost, ServiceGetUnitCostDropDownInvenCategory, ServiceGetUnitCostByData, ServiceEditUnitCost, ServiceGenUnitCost } from '../../../models/Services/Inventory';
+import { ServiceGetUnitCost, ServiceGetUnitCostDropDownInvenCategory, ServiceGetUnitCostByData, ServiceEditUnitCost, ServiceGenUnitCost, ServiceGetValidationInvItemUnitCost } from '../../../models/Services/Inventory';
 import { ServiceGetMessageByCode } from '../../../models/Services/Messsage';
 
 import { ActionEdit, ActionEditUpload, ActionCallProcedures } from '../../../models/action_type';
@@ -16,7 +16,8 @@ export {
     GetDataTableUnitCost,
     GetDropDownInvenCategory,
     EditUnitCost,
-    Import,
+    ImportUnitCost,
+    GetValidationInvItem,
     GenInveotory
 }
 
@@ -243,7 +244,7 @@ async function EditUnitCost(req, res, obj, authData) {
     }
 }
 
-async function Import(req, res, obj, authData) {
+async function ImportUnitCost(req, res, obj, authData) {
     if (obj == null) throw new Error("Input not valid")
     if (req.body.screen_id == null) throw new Error("Input not valid")
     let screen_id = req.body.screen_id
@@ -328,11 +329,11 @@ async function Import(req, res, obj, authData) {
         //Add Log Audit StatusSuccess     
         for (let item of itemStatusSuccess) {
             const new_value = {
-                period: item['Period'],
-                stockno: item['Stock No'],
-                inv_item: item['Inv Item'],
-                unitcost: item['Unit Cost'],
-                countunit: item['Unit'],
+                period: item['period'],
+                stockno: item['stockno'],
+                inv_item: item['inv_item'],
+                unitcost: item['unitcost'],
+                countunit: item['countunit'],
                 update_date: item.update_date,
                 update_by: item.update_by,
             }
@@ -356,11 +357,11 @@ async function Import(req, res, obj, authData) {
         //Add Log Audit Error
         for (let item of itemerror) {
             const new_value = {
-                period: item['Period'],
-                stockno: item['Stock No'],
-                inv_item: item['Inv Item'],
-                unitcost: item['Unit Cost'],
-                countunit: item['Unit'],
+                period: item['period'],
+                stockno: item['stockno'],
+                inv_item: item['inv_item'],
+                unitcost: item['unitcost'],
+                countunit: item['countunit'],
                 update_date: item.update_date,
                 update_by: item.update_by,
             }
@@ -423,6 +424,17 @@ async function Import(req, res, obj, authData) {
             await res.send(JSON.stringify(data));
         }
     } catch (err) {
+        res.sendStatus(500)
+    }
+}
+
+async function GetValidationInvItem(req, res, reqBody) {   
+    try {       
+        let result = await ServiceGetValidationInvItemUnitCost()        
+        await res.setHeader('Content-Type', 'application/json');
+        await res.send(JSON.stringify(result.recordset));
+    } catch (err) {
+        console.log(err)
         res.sendStatus(500)
     }
 }

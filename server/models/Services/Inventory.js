@@ -12,6 +12,7 @@ export {
     ServiceInsertAccountCodeForInventory,
     ServiceGetTempAccountCodeForInventory,
     ServiceEditAccountCodeForInventory,
+    ServiceGetValidationAccountCodeForInventory,
 
     //Ending Inventory
     ServiceGetEndingInventory,
@@ -39,6 +40,7 @@ export {
     ServiceGetUnitCostDropDownInvenCategory,
     ServiceGetUnitCostByData,
     ServiceEditUnitCost,
+    ServiceGetValidationInvItemUnitCost,
 
     //Stamp Inventory
     ServiceSearchTempStampInventory,
@@ -338,12 +340,27 @@ async function ServiceEditAccountCodeForInventory(prm) {
             if (prm.update_by != undefined) await result.input(input_update_by, NVarChar, prm.update_by)
             result = await result.query(querysql)
 
-            if (result !== undefined) {
+            if (result !== undefined) {                
                 if (result.rowsAffected > 0) res = true
             }
         }
     } catch (err) {
 
+    } finally {
+        await close()
+    }
+    return await res
+}
+
+async function ServiceGetValidationAccountCodeForInventory() {
+    let res = {}
+    try {
+        let querysql = `SELECT DISTINCT ACTIONCODE, INV_CLASS, ACCTYPE FROM ACC_M_ACCOUNT_INVEN `
+
+        let pool = await connect(dbConfig)
+        let result = await pool.request().query(querysql)
+        res = result
+    } catch (err) {
     } finally {
         await close()
     }
@@ -945,6 +962,23 @@ async function ServiceEditUnitCost(prm) {
         }
     } catch (err) {
 
+    } finally {
+        await close()
+    }
+    return await res
+}
+
+async function ServiceGetValidationInvItemUnitCost() {
+    let res = {}
+    try {
+        let querysql = `SELECT PERIOD_ID
+                            ,INV_ITEM     
+                        FROM ACC_UNIT_COST`
+
+        let pool = await connect(dbConfig)
+        let result = await pool.request().query(querysql)
+        res = result
+    } catch (err) {
     } finally {
         await close()
     }

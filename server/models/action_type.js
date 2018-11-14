@@ -8,6 +8,8 @@ export const ActionEdit = 'EDIT';
 
 export const ActionDelete = 'DELETE';
 
+export const ActionAddUpload = 'ADDUPLOAD';
+
 export const ActionEditUpload = 'EDITUPLOAD';
 
 export const ActionCallProcedures  = 'CALLPROCEDURES';

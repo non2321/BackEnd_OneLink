@@ -44,6 +44,7 @@ async function AddAccountCode(req, res, reqBody, authData) {
     let type = reqBody.type.trim()
     let subledger_type = reqBody.subledger_type.trim()
     let subledger = reqBody.subledger.trim()
+    let fincode = reqBody.fincode.trim()
     let screen_id = reqBody.screen_id
     let screen_name = ''
     let module_name = ''
@@ -72,6 +73,7 @@ async function AddAccountCode(req, res, reqBody, authData) {
         prm['type'] = type
         prm['subledger_type'] = subledger_type
         prm['subledger'] = subledger
+        prm['fincode'] = fincode
         if (datetime) prm['create_date'] = datetime
         if (authData.id) prm['create_by'] = authData.id
 
@@ -243,6 +245,7 @@ async function EditAccountCode(req, res, reqBody, authData) {
     let type = reqBody.type.trim()
     let subledger_type = reqBody.subledger_type.trim()
     let subledger = reqBody.subledger.trim()
+    let fincode = reqBody.fincode.trim()
     let screen_id = reqBody.screen_id
     let screen_name = ''
     let module_name = ''
@@ -277,6 +280,7 @@ async function EditAccountCode(req, res, reqBody, authData) {
         prm['type'] = type
         prm['subledger_type'] = subledger_type
         prm['subledger'] = subledger
+        prm['fincode'] = fincode
         if (datetime) prm['update_date'] = datetime
         if (authData.id) prm['update_by'] = authData.id
 

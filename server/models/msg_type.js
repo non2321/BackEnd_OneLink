@@ -22,6 +22,10 @@ export const MSGDeleteSuccess = 'DeleteSuccess'
 export const MSGDeleteDuplicate = 'Duplicate Data'
 export const MSGDeleteUnSuccess = 'DeleteUnSuccess'
 
+export const MSGAddUploadSuccess = 'AddUploadSuccess'
+export const MSGAddUploadDuplicate = 'AddUploadDuplicate'
+export const MSGAddUploadUnSuccess = 'AddUploadUnSuccess'
+
 export const MSGEditUploadSuccess = 'EditUploadSuccess'
 export const MSGEditUploadDuplicate = 'EditUploadDuplicate'
 export const MSGEditUploadUnSuccess = 'EditUploadUnSuccess'

@@ -516,7 +516,8 @@ async function ServiceInsertAccountCodeForSale(prm) {
                     SUBLEDGERTYPE, 
                     SUBLEDGER, 
                     CREATE_DATE, 
-                    CREATE_BY) 
+                    CREATE_BY,
+                    FIN_CODE) 
             VALUES  (@input_formular_id, 
                     @input_formular_name, 
                     @input_account_code, 
@@ -525,7 +526,8 @@ async function ServiceInsertAccountCodeForSale(prm) {
                     @input_subledger_type,
                     @input_subledger,
                     @input_create_date,
-                    @input_create_by) `
+                    @input_create_by,
+                    @input_fincode) `
 
             const input_formular_id = 'input_formular_id'
             const input_formular_name = 'input_formular_name'
@@ -536,6 +538,7 @@ async function ServiceInsertAccountCodeForSale(prm) {
             const input_subledger = 'input_subledger'
             const input_create_date = 'input_create_date'
             const input_create_by = 'input_create_by'
+            const input_fincode = 'input_fincode'
 
             let pool = await connect(dbConfig)
             let result = await pool.request()
@@ -548,6 +551,7 @@ async function ServiceInsertAccountCodeForSale(prm) {
                 .input(input_subledger, NVarChar, (prm.subledger != undefined) ? prm.subledger : '')
                 .input(input_create_date, NVarChar, (prm.create_date != undefined) ? prm.create_date : '')
                 .input(input_create_by, NVarChar, (prm.create_by != undefined) ? prm.create_by : '')
+                .input(input_fincode, NVarChar, (prm.fincode != undefined) ? prm.fincode : '')
                 .query(querysql)
             if (result !== undefined) {
                 if (result.rowsAffected > 0) res = true
@@ -577,6 +581,7 @@ async function ServiceEditAccountCodeForSale(prm) {
             if (prm.subledger != undefined) querysql = [querysql, `SUBLEDGER    = @input_subledger `].join(",")
             if (prm.update_date != undefined) querysql = [querysql, `UPDATE_DATE = @input_update_date `].join(",")
             if (prm.update_by != undefined) querysql = [querysql, `UPDATE_BY = @input_update_by `].join(",")
+            if (prm.fincode != undefined) querysql = [querysql, `FIN_CODE = @input_fincode `].join(",")
 
             querysql += ` WHERE FORMULARID  = @input_formular_id `
 
@@ -589,6 +594,7 @@ async function ServiceEditAccountCodeForSale(prm) {
             const input_subledger = 'input_subledger'
             const input_update_date = 'input_update_date'
             const input_update_by = 'input_update_by'
+            const input_fincode = 'input_fincode'
 
             let pool = await connect(dbConfig)
             let result = await pool.request()
@@ -602,6 +608,7 @@ async function ServiceEditAccountCodeForSale(prm) {
             if (prm.subledger != undefined) await result.input(input_subledger, NVarChar, prm.subledger)
             if (prm.update_date != undefined) await result.input(input_update_date, NVarChar, prm.update_date)
             if (prm.update_by != undefined) await result.input(input_update_by, NVarChar, prm.update_by)
+            if (prm.fincode != undefined) await result.input(input_fincode, NVarChar, prm.fincode)
             result = await result.query(querysql)
 
             if (result !== undefined) {

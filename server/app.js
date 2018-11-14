@@ -30,13 +30,13 @@ import { GetBankInAdjustment, GetPopupStoreBankInAdjustment, GetValidationstore,
 import { StampCloseDaiyFins } from './controllers/sdc/Sales/StampCloseDailyFins';
 
 //--Inventory
-import { GetAccountCodeForInventory, GetDropDownGrpBy, GetDropDownCatCode, GetDropDownAccType, AddAccountCodeForInventory, EditAccountCodeForInventory } from './controllers/sdc/Inventory/AccountCodeForInventory';
+import { GetAccountCodeForInventory, GetDropDownGrpBy, GetDropDownCatCode, GetDropDownAccType, AddAccountCodeForInventory, EditAccountCodeForInventory, ImportAccountCodeForInventory, GetValidationAccountCodeForInventory } from './controllers/sdc/Inventory/AccountCodeForInventory';
 import { GetPeriodEndingInventory, GetDataTableEndingInventory } from './controllers/sdc/Inventory/EndingInventory';
 import { GetDataTableTransferInventory } from './controllers/sdc/Inventory/TransferInventory';
 import { GetDataTableReceipts } from './controllers/sdc/Inventory/Receipts';
 import { GetDataTableTermClosing, AddTermClosing, EditTermClosing } from './controllers/sdc/Inventory/TermClosing';
 import { GetDropDownPeriod } from './controllers/sdc/Inventory/ImportToJDE';
-import { GetDropDownInvenCategory, GetDataTableUnitCost, EditUnitCost, Import, GenInveotory } from './controllers/sdc/Inventory/UnitCost';
+import { GetDropDownInvenCategory, GetDataTableUnitCost, EditUnitCost, ImportUnitCost,  GenInveotory, GetValidationInvItem } from './controllers/sdc/Inventory/UnitCost';
 import { AddStampInventory } from './controllers/sdc/Inventory/StampInventory';
 
 //Report
@@ -703,6 +703,39 @@ app.put('/api/accountcodeforinventory', verifyToken, async (req, res) => {
   })
 })
 
+//Upload Account Code For Inventory
+app.get('/api/upload/accountcodeforinventory_template', async (req, res) => {
+  console.log('downloadtemplate_accountcodeforinventory')
+  let file = __dirname + '/upload/TemplateAccountCodeForInventory.xlsx'
+  await res.download(file)
+})
+
+//Import Account Code For Inventory
+app.put('/api/accountcodeforinventory/import', verifyToken, async (req, res) => {
+  console.log('import_accountcodeforinventory')
+  await verify(req.token, secretkey, async (err, authData) => {
+    if (err) {
+      const data = {
+        status: StatusUnauthorized,
+        Code: CodeW0002,
+      }
+      await Expired(req, res, data)
+
+    } else {
+      const user = authData.jwtdata
+      const obj = req.body['obj']
+
+      await ImportAccountCodeForInventory(req, res, obj, user);
+    }
+  })
+})
+
+//Get Account Code For Inventory /Validation Import
+app.get('/api/accountcodeforinventoryvalidation', async (req, res) => {
+  console.log('accountcodeforinventoryvalidation')
+  await GetValidationAccountCodeForInventory(req, res, req.body); 
+})
+
 //Stemp Inventory
 app.post('/api/stampinventory', verifyToken, async (req, res) => {
   console.log('stampinventory')
@@ -793,9 +826,15 @@ app.put('/api/unitcost/import', verifyToken, async (req, res) => {
       const user = authData.jwtdata
       const obj = req.body['obj']
 
-      await Import(req, res, obj, user);
+      await ImportUnitCost(req, res, obj, user);
     }
   })
+})
+
+//Get UnitCost /Validation InvItem
+app.get('/api/unitcostvalidationinvitem', async (req, res) => {
+  console.log('unitcostvalidationinvitem')
+  await GetValidationInvItem(req, res, req.body); 
 })
 
 //Gen PH Inventroy To E1 (UnitCost)
