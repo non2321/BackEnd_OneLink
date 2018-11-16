@@ -262,8 +262,21 @@ async function ServiceGetTempAccountCodeForInventory(prm) {
     let res = {}
     try {
         if (prm.action_code && prm.inv_class && prm.acc_type) {
-            let querysql = `SELECT * 
-            FROM   acc_m_account_inven 
+            let querysql = `SELECT actioncode, 
+                    inv_class, 
+                    action, 
+                    objaccout, 
+                    subsidary, 
+                    grpby, 
+                    catcode, 
+                    acctype, 
+                    docno, 
+                    remark, 
+                    Format(create_date, 'MM/dd/yyyy hh:mm:ss tt') AS CREATE_DATE, 
+                    create_by, 
+                    Format(update_date, 'MM/dd/yyyy hh:mm:ss tt') AS UPDATE_DATE, 
+                    update_by 
+            FROM   acc_m_account_inven  
             WHERE  actioncode = @input_action_code 
                 AND inv_class = @input_inv_class 
                 AND acctype = @input_acc_type`
@@ -593,7 +606,16 @@ async function ServiceGetTermClosing() {
 async function ServiceGetTermClosingById(term_id) {
     let res = {}
     try {
-        let querysql = `SELECT * FROM ACC_TERM_CLOSING  WHERE TERM_ID = @input_term_id `
+        let querysql = `SELECT term_id, 
+                            period_id, 
+                            Format(pb_date, 'MM/dd/yyyy hh:mm:ss tt')     AS PB_DATE, 
+                            Format(pe_date, 'MM/dd/yyyy hh:mm:ss tt')     AS PE_DATE, 
+                            Format(create_date, 'MM/dd/yyyy hh:mm:ss tt') AS CREATE_DATE, 
+                            create_by, 
+                            Format(update_date, 'MM/dd/yyyy hh:mm:ss tt') AS UPDATE_DATE, 
+                            update_by 
+                    FROM   acc_term_closing 
+                    WHERE TERM_ID = @input_term_id `
         const input_term_id = 'input_term_id'
         let pool = await connect(dbConfig)
         let result = await pool.request().input(input_term_id, NVarChar, term_id).query(querysql)
@@ -904,7 +926,19 @@ async function ServiceGetUnitCostDropDownInvenCategory() {
 async function ServiceGetUnitCostByData(obj) {
     let res
     try {
-        let querysql = `SELECT * FROM ACC_UNIT_COST  WHERE PERIOD_ID = @input_period AND INV_ITEM = @input_inv_item `
+        let querysql = `SELECT period_id, 
+                            inv_item, 
+                            uom, 
+                            unit_cost, 
+                            stock_zone, 
+                            count_per_unit, 
+                            Format(create_date, 'MM/dd/yyyy hh:mm:ss tt') AS CREATE_DATE, 
+                            create_by, 
+                            Format(update_date, 'MM/dd/yyyy hh:mm:ss tt') AS UPDATE_DATE, 
+                            update_by, 
+                            lastupdateby 
+                    FROM   acc_unit_cost 
+                    WHERE PERIOD_ID = @input_period AND INV_ITEM = @input_inv_item `
         const input_period = 'input_period'
         const input_inv_item = 'input_inv_item'
 
@@ -929,7 +963,7 @@ async function ServiceEditUnitCost(prm) {
     let res
 
     try {
-        if (prm) {
+        if (prm) {            
             let querysql = `UPDATE ACC_UNIT_COST SET  PERIOD_ID=PERIOD_ID `
             if (prm.unitcost != undefined) querysql = [querysql, `UNIT_COST  = @input_unitcost `].join(",")
             if (prm.countunit != undefined) querysql = [querysql, `COUNT_PER_UNIT = @input_countunit `].join(",")
@@ -1011,7 +1045,17 @@ async function ServiceGenUnitCost(prm) {
 async function ServiceSearchTempStampInventory(prm) {
     let res = {}
     try {
-        let querysql = ` SELECT * FROM ACC_STAMPCLOSEDATA 
+        let querysql = ` SELECT table_name, 
+                    owner, 
+                    Format(start_date, 'MM/dd/yyyy hh:mm:ss tt')  AS START_DATE, 
+                    Format(end_date, 'MM/dd/yyyy hh:mm:ss tt')    AS END_DATE, 
+                    Format(create_date, 'MM/dd/yyyy hh:mm:ss tt') AS CREATE_DATE, 
+                    create_by, 
+                    Format(update_date, 'MM/dd/yyyy hh:mm:ss tt') AS UPDATE_DATE, 
+                    update_by, 
+                    lastupdate_by, 
+                    status 
+            FROM   acc_stampclosedata  
             WHERE TABLE_NAME = @input_post_date_type
                 AND START_DATE = @input_datefrom
                 AND END_DATE = @input_dateto

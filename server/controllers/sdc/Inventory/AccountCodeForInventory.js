@@ -569,9 +569,9 @@ async function ImportAccountCodeForInventory(req, res, obj, authData) {
                 itemerror.push(prmitem)
                 rescheck = false
             }
-        }
+        }       
         //Add Log Audit StatusSuccess     
-        for (let item of itemStatusSuccess) {
+        for (let item of itemStatusSuccess) {           
             const new_value = {
                 action_code: item['action_code'],
                 inv_class: item['inv_class'],

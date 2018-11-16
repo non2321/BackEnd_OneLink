@@ -18,6 +18,9 @@ import { Logout } from './controllers/auth/Logout';
 import { Expired } from './controllers/auth/Expired';
 import { Menu } from './controllers/auth/Menu';
 
+//Administration
+import { GetDataTableLogSDC } from './controllers/administration/sdc/LogSDC'
+
 
 //SDC
 //--Sales
@@ -122,6 +125,12 @@ app.get('/api/menuauth/:userid', async (req, res) => {
   console.log('meunauth')
   await Menu(req, res, req.body)
 });
+
+//Get LogSDC
+app.get('/api/logsdc/:datefrom/:dateto', async (req, res) => {
+  console.log('get_logsdc')
+  await GetDataTableLogSDC(req, res, req.body)
+})
 
 //Get Company Setup
 app.get('/api/companyconfig', async (req, res) => {

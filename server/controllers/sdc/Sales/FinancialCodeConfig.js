@@ -284,6 +284,7 @@ async function EditFinancialCode(req, res, obj, authData) {
                     fin_code: item.fin_code,
                     fin_desc: item.fin_desc,
                     fin_flag: item.fin_flag,
+                    fin_show: item.fin_show,
                     update_date: datetime,
                     update_by: authData.id,
                     original_value: tempdata.recordset
@@ -295,6 +296,7 @@ async function EditFinancialCode(req, res, obj, authData) {
                     fin_code: item.fin_code,
                     fin_desc: item.fin_desc,
                     fin_flag: item.fin_flag,
+                    fin_show: item.fin_show,
                     update_date: datetime,
                     update_by: authData.id,
                     original_value: tempdata.recordset
@@ -310,6 +312,7 @@ async function EditFinancialCode(req, res, obj, authData) {
                 fin_code: item.fin_code,
                 fin_desc: item.fin_desc,
                 fin_flag: item.fin_flag,
+                fin_show: item.fin_show,
                 update_date: item.update_date,
                 update_by: item.update_by,
             }
@@ -337,6 +340,7 @@ async function EditFinancialCode(req, res, obj, authData) {
                 fin_code: item.fin_code,
                 fin_desc: item.fin_desc,
                 fin_flag: item.fin_flag,
+                fin_show: item.fin_show,
                 update_date: item.update_date,
                 update_by: item.update_by,
             }

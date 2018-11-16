@@ -146,7 +146,17 @@ async function ServiceGetDropDownBank() {
 async function ServiceGetStoreConfigByStoreCode(store_code) {
     let res = {}
     try {
-        let querysql = `SELECT * FROM  ACC_M_STORE  WHERE  STORE_CODE = @input_store_code `
+        let querysql = `SELECT store_code, 
+                            co_code, 
+                            bank_code, 
+                            area_code, 
+                            dm_code, 
+                            Format(create_date, 'MM/dd/yyyy hh:mm:ss tt') AS CREATE_DATE, 
+                            create_by, 
+                            Format(update_date, 'MM/dd/yyyy hh:mm:ss tt') AS UPDATE_DATE, 
+                            update_by 
+                    FROM   acc_m_store 
+                    WHERE  STORE_CODE = @input_store_code `
         const input_store_code = 'input_store_code'
         let pool = await connect(dbConfig)
         let result = await pool.request().input(input_store_code, NVarChar, store_code.trim()).query(querysql)

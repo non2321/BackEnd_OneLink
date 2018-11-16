@@ -66,7 +66,25 @@ async function ServiceGetFinancialCode() {
 async function ServiceGetFinancialCodeById(fin_code) {
     let res = {}
     try {
-        let querysql = `SELECT * FROM ACC_M_FINANCIAL_CODES WHERE FINANCIAL_CODE = @input_fin_code `
+        let querysql = `SELECT financial_code, 
+                            financial_desc, 
+                            fin_gl_code, 
+                            post_to_gl, 
+                            db_or_cr, 
+                            reconcile, 
+                            cost_center, 
+                            Format(create_date, 'MM/dd/yyyy hh:mm:ss tt') AS CREATE_DATE, 
+                            create_by, 
+                            Format(update_date, 'MM/dd/yyyy hh:mm:ss tt') AS UPDATE_DATE, 
+                            update_by, 
+                            fixflag, 
+                            priority, 
+                            negative_flag, 
+                            block_flag,
+                            remark_flag,
+                            s_daily_fins_flag 
+                    FROM   acc_m_financial_codes 
+                    WHERE FINANCIAL_CODE = @input_fin_code `
         const input_fin_code = 'input_fin_code'
         let pool = await connect(dbConfig)
         let result = await pool.request().input(input_fin_code, NVarChar, fin_code).query(querysql)
@@ -296,7 +314,16 @@ async function ServiceGetBankAccount() {
 async function ServiceGetBankAccountById(bank_code) {
     let res = {}
     try {
-        let querysql = `SELECT * FROM ACC_M_BANK WHERE BANK_CODE = @input_bank_code `
+        let querysql = `SELECT BANK_CODE, 
+                            BANK_NAME, 
+                            BANK_BRANCH,
+                            ACCOUNT_CODE, 
+                            FORMAT(CREATE_DATE,'MM/dd/yyyy hh:mm:ss tt') AS CREATE_DATE,
+                            CREATE_BY, 
+                            FORMAT(UPDATE_DATE,'MM/dd/yyyy hh:mm:ss tt') AS UPDATE_DATE, 
+                            UPDATE_BY  
+                    FROM ACC_M_BANK 
+                    WHERE BANK_CODE = @input_bank_code`
         const input_bank_code = 'input_bank_code'
         let pool = await connect(dbConfig)
         let result = await pool.request().input(input_bank_code, NVarChar, bank_code.trim()).query(querysql)
@@ -484,7 +511,20 @@ async function ServiceGetAccountCodeForSale() {
 async function ServiceGetAccountCodeForSaleById(formular_id) {
     let res = {}
     try {
-        let querysql = `SELECT * FROM ACC_M_ACCOUNT_SALE WHERE FORMULARID = @input_formular_id `
+        let querysql = `SELECT formularid, 
+                                formularname, 
+                                accountcode, 
+                                bu_type, 
+                                type, 
+                                subledgertype, 
+                                subledger, 
+                                Format(create_date, 'MM/dd/yyyy hh:mm:ss tt') AS CREATE_DATE, 
+                                create_by, 
+                                Format(update_date, 'MM/dd/yyyy hh:mm:ss tt') AS UPDATE_DATE, 
+                                update_by, 
+                                fin_code 
+                        FROM   acc_m_account_sale 
+                        WHERE FORMULARID = @input_formular_id `
         const input_formular_id = 'input_formular_id'
         let pool = await connect(dbConfig)
         let result = await pool.request().input(input_formular_id, NVarChar, formular_id.trim()).query(querysql)
@@ -816,7 +856,21 @@ async function ServiceGetBankInAdjustment(store, dateofstore) {
 async function ServiceGetDailyFinsByData(obj) {
     let res
     try {
-        let querysql = `SELECT * FROM ACC_DAILY_FINS  WHERE STORE = @input_store_id AND FINANCIAL_CODE = @input_fin_code AND FINANCIAL_DATE = @input_fin_date `
+        let querysql = `SELECT store, 
+                            financial_code, 
+                            Format(financial_date, 'MM/dd/yyyy hh:mm:ss tt') AS FINANCIAL_DATE, 
+                            daily_fin, 
+                            s_daily_fin, 
+                            Format(create_date, 'MM/dd/yyyy hh:mm:ss tt')    AS CREATE_DATE, 
+                            create_by, 
+                            Format(update_date, 'MM/dd/yyyy hh:mm:ss tt')    AS UPDATE_DATE, 
+                            update_by, 
+                            lastupdateby, 
+                            remark_code, 
+                            remark_text, 
+                            mod_flag 
+                    FROM   acc_daily_fins 
+                    WHERE STORE = @input_store_id AND FINANCIAL_CODE = @input_fin_code AND FINANCIAL_DATE = @input_fin_date `
         const input_store_id = 'input_store_id'
         const input_fin_code = 'input_fin_code'
         const input_fin_date = 'input_fin_date'
@@ -922,11 +976,21 @@ async function ServiceGenGLBankInAdjustment(prm) {
 async function ServiceSearchTempStampCloseDaiyFins(prm) {
     let res = {}
     try {
-        let querysql = ` SELECT * FROM ACC_STAMPCLOSEDATA 
-            WHERE TABLE_NAME = 'DAILY_FINS'
-                AND START_DATE = @input_datefrom
-                AND END_DATE = @input_dateto
-                AND STATUS = 'A' `
+        let querysql = ` SELECT table_name, 
+                            owner, 
+                            Format(start_date, 'MM/dd/yyyy hh:mm:ss tt')  AS START_DATE, 
+                            Format(end_date, 'MM/dd/yyyy hh:mm:ss tt')    AS END_DATE, 
+                            Format(create_date, 'MM/dd/yyyy hh:mm:ss tt') AS CREATE_DATE, 
+                            create_by, 
+                            Format(update_date, 'MM/dd/yyyy hh:mm:ss tt') AS UPDATE_DATE, 
+                            update_by, 
+                            lastupdate_by, 
+                            status 
+                    FROM   acc_stampclosedata  
+                    WHERE TABLE_NAME = 'DAILY_FINS'
+                        AND START_DATE = @input_datefrom
+                        AND END_DATE = @input_dateto
+                        AND STATUS = 'A' `
 
         const input_datefrom = 'input_datefrom'
         const input_dateto = 'input_dateto'

@@ -46,7 +46,31 @@ async function ServiceGetCompanyConfig() {
 async function ServiceGetLovById(Id) {
     let res = {}
     try {  
-        let querysql = `SELECT * FROM   LOV_DATA  WHERE  LOV_ID = @input_lov_id ` 
+        let querysql = `SELECT lov_id, 
+                            lov_group, 
+                            lov_type, 
+                            parent_lov_id, 
+                            lov_code, 
+                            lov1, 
+                            lov2, 
+                            lov3, 
+                            lov4, 
+                            lov5, 
+                            lov6, 
+                            lov7, 
+                            lov8, 
+                            lov9, 
+                            lov10, 
+                            lov_desc, 
+                            lov_desc, 
+                            lov_order, 
+                            active_flag, 
+                            Format(create_date, 'MM/dd/yyyy hh:mm:ss:mmm tt') AS CREATE_DATE, 
+                            create_by, 
+                            Format(update_date, 'MM/dd/yyyy hh:mm:ss:mmm tt') AS UPDATE_DATE, 
+                            update_by 
+                    FROM   lov_data 
+                    WHERE  LOV_ID = @input_lov_id ` 
         const input_lov_id = 'input_lov_id'
         let pool = await connect(dbConfig)      
         let result = await pool.request().input(input_lov_id, NVarChar, Id.trim()).query(querysql) 
