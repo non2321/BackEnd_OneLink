@@ -130,10 +130,10 @@ async function runTaskSDCInterface() {
                                     const impprocess = await ServiceGetImpProcessById(resImpProcess.uid)
                                     if (impprocess) {
                                         const dataimpprocess = impprocess.recordset[0]
-                                        const datadate = impprocess.recordset[0].PROCESS_DATA_DATE.toLocaleString().replace(',', '')
-                                        const datayear = datadate.substring(6, 10)
-                                        const datamonth = datadate.substring(0, 2)
-                                        const dataday = datadate.substring(3, 5)
+                                        const datadate = impprocess.recordset[0].PROCESS_DATA_DATE
+                                        const datayear = datadate.getFullYear()
+                                        const datamonth = datadate.getMonth() + 1
+                                        const dataday = datadate.getDate()
 
                                         let status = true
                                         for await (let itemdata of resStatus.recordset) {
