@@ -39,7 +39,7 @@ import { GetDataTableTransferInventory } from './controllers/sdc/Inventory/Trans
 import { GetDataTableReceipts } from './controllers/sdc/Inventory/Receipts';
 import { GetDataTableTermClosing, AddTermClosing, EditTermClosing } from './controllers/sdc/Inventory/TermClosing';
 import { GetDropDownPeriod } from './controllers/sdc/Inventory/ImportToJDE';
-import { GetDropDownInvenCategory, GetDataTableUnitCost, EditUnitCost, ImportUnitCost,  GenInveotory, GetValidationInvItem } from './controllers/sdc/Inventory/UnitCost';
+import { GetDropDownInvenCategory, GetDataTableUnitCost, EditUnitCost, ImportUnitCost, GenInveotory, GetValidationInvItem } from './controllers/sdc/Inventory/UnitCost';
 import { AddStampInventory } from './controllers/sdc/Inventory/StampInventory';
 
 //Report
@@ -49,9 +49,10 @@ import { GenTokenTableau, GenTokenTableauForFullScreen } from './controllers/rep
 
 import { StatusUnauthorized } from "./models/status_type";
 import { CodeW0002 } from "./models/msg_type";
-import { secretkey, webPort, tableautoken } from "../settings";
+import { secretkey, webPort, tableautoken, mmxsftp } from "../settings";
 
 //Task Scheduler
+import { runTaskSDCInterface } from './controllers/scheduler/SDC_Interface'
 import taskDailyFins from './controllers/scheduler/DailyFins';
 
 // It extracts the data out of the request headers like the form data, etc,.
@@ -742,7 +743,7 @@ app.put('/api/accountcodeforinventory/import', verifyToken, async (req, res) => 
 //Get Account Code For Inventory /Validation Import
 app.get('/api/accountcodeforinventoryvalidation', async (req, res) => {
   console.log('accountcodeforinventoryvalidation')
-  await GetValidationAccountCodeForInventory(req, res, req.body); 
+  await GetValidationAccountCodeForInventory(req, res, req.body);
 })
 
 //Stemp Inventory
@@ -843,7 +844,7 @@ app.put('/api/unitcost/import', verifyToken, async (req, res) => {
 //Get UnitCost /Validation InvItem
 app.get('/api/unitcostvalidationinvitem', async (req, res) => {
   console.log('unitcostvalidationinvitem')
-  await GetValidationInvItem(req, res, req.body); 
+  await GetValidationInvItem(req, res, req.body);
 })
 
 //Gen PH Inventroy To E1 (UnitCost)
@@ -943,7 +944,7 @@ app.get('/api/tableautoken', async (req, res) => {
   const form = new FormData();
   form.append('username', tableautoken.username)
   const response = await fetch(tableautoken.path, { method: 'POST', body: form })
-  const tableautokens = await response.text()  
+  const tableautokens = await response.text()
   res.send(tableautokens)
 })
 
@@ -982,12 +983,11 @@ function verifyToken(req, res, next) {
   }
 }
 
-//Task Scheduler
 
-// cron.schedule('0 0 4 * * *', async function(){
-schedule('*/5 * * * * *', async function () {
-  // console.log('running schedule')
-  // await taskDailyFins.runTaskDailyFins()  
+//Task Scheduler
+schedule('0 0 7 * * *', async function () {  
+    console.log('running schedule SDCInterface 7 AM')  
+    await runTaskSDCInterface()  
 });
 
 
