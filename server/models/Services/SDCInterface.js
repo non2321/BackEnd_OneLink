@@ -1,4 +1,5 @@
 import { connect, close, NVarChar, Int, Date } from 'mssql'; // MS Sql Server client
+import db from '../db'
 import uuid from 'uuid/v1'
 import { dbConfig } from '../../../settings'
 
@@ -166,58 +167,6 @@ async function ServiceInsertImpData(prm) {
     return await res
 }
 
-async function ServiceInsertImpData(prm) {
-    let res
-    try {
-        const querysql = `INSERT INTO  IMP_DATA (
-                DATA_ID,
-                FILE_TYPE_ID,               
-                FILE_NAME,
-                IMP_DATA_START,
-                IMP_DATA_STATUS,
-                IMP_DATA_MESSAGE,
-                PROCESS_ID) 
-     VALUES (   @input_data_id,
-                @input_filetype_id,
-                @input_filename,
-                @input_impdata_start,
-                @input_impdata_status,
-                @input_impdata_message,
-                @input_process_id) `
-
-        const input_data_id = 'input_data_id'
-        const input_filetype_id = 'input_filetype_id'
-        const input_filename = 'input_filename'
-        const input_impdata_start = 'input_impdata_start'
-        const input_impdata_status = 'input_impdata_status'
-        const input_impdata_message = 'input_impdata_message'
-        const input_process_id = 'input_process_id'
-
-        let pool = await connect(dbConfig)
-        const uid = uuid()
-        let result = await pool.request()
-            .input(input_data_id, NVarChar, uid)
-            .input(input_filetype_id, NVarChar, prm.filetype_id)
-            .input(input_filename, NVarChar, prm.filename)
-            .input(input_impdata_start, NVarChar, prm.impdata_start)
-            .input(input_impdata_status, NVarChar, prm.impdata_status)
-            .input(input_impdata_message, NVarChar, prm.impdata_message)
-            .input(input_process_id, NVarChar, prm.process_id)
-            .query(querysql)
-
-        if (result !== undefined) {
-            if (result.rowsAffected > 0) {
-                res = { uid: uid }
-            }
-        }
-    } catch (err) {
-        console.log(err)
-    } finally {
-        await close()
-    }
-    return await res
-}
-
 async function ServiceInsertImpRow(prm) {
     let res
     try {
@@ -267,8 +216,10 @@ async function ServiceInsertImpRow(prm) {
         const input_row_status = 'input_row_status'
         const input_row_message = 'input_row_message'
 
-        let pool = await connect(dbConfig)
+       
+        // let pool = await connect(dbConfig)
         const uid = uuid()
+        const pool = await db.poolPromise
         let result = await pool.request()
             .input(input_row_id, NVarChar, uid)
             .input(input_c1, NVarChar, (prm.C1 != undefined) ? prm.C1.trim() : null)
@@ -294,7 +245,7 @@ async function ServiceInsertImpRow(prm) {
     } catch (err) {
         console.log(err)
     } finally {
-        await close()
+        // await close()
     }
     return await res
 }

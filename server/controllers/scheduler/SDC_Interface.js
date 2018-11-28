@@ -93,7 +93,7 @@ async function runTaskSDCInterface() {
                             if (resImpData.uid) {
                                 const tempfile = await readFile(`${mmxsftp.pathinterfacetemp}/${file}`)
                                 const tempfiletostring = tempfile.toString('utf8')
-                                const tempfilebyline = tempfiletostring.match(/[^\r\n]+/g)                               
+                                const tempfilebyline = tempfiletostring.match(/[^\r\n]+/g)                                             
                                 if (tempfilebyline) {
                                     for await (let temp of tempfilebyline) {
                                         let tempdata = temp.trim().split(',')
@@ -117,8 +117,6 @@ async function runTaskSDCInterface() {
                             }
 
                             if (resImpProcess.uid) {
-                                // Current DateTime
-                                const datetimeend = new Date().toLocaleString().replace(',', '')
                                 const prmprocessid = {
                                     process_id: resImpProcess.uid
                                 }
@@ -188,6 +186,8 @@ async function runTaskSDCInterface() {
                                             }
                                         }
                                         if (status) {
+                                            // Current DateTime
+                                            const datetimeend = new Date().toLocaleString().replace(',', '')
                                             const prmEndProcess = {
                                                 process_id: resImpProcess.uid,
                                                 process_end: datetimeend,
@@ -195,6 +195,8 @@ async function runTaskSDCInterface() {
                                             }
                                             await ServiceUpdateEndProcess(prmEndProcess)
                                         } else {
+                                            // Current DateTime
+                                            const datetimeend = new Date().toLocaleString().replace(',', '')
                                             const prmEndProcess = {
                                                 process_id: resImpProcess.uid,
                                                 process_end: datetimeend,

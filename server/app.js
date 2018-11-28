@@ -985,7 +985,7 @@ function verifyToken(req, res, next) {
 
 
 //Task Scheduler
-schedule('0 0 7 * * *', async function () {  
+schedule('0 51 11 * * *', async function () {  
     console.log('running schedule SDCInterface 7 AM')  
     await runTaskSDCInterface()  
 });
