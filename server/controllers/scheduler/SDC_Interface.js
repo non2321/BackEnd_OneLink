@@ -35,7 +35,7 @@ async function runTaskSDCInterface() {
 
                     const filename = item.name.replace('.zip', '')
                     let data_date_now = new Date(filename.substr(filename.length - 10))
-                    data_date_now.setDate(data_date_now.getDate() - 1)
+                    // data_date_now.setDate(data_date_now.getDate() - 1)
                     data_date = data_date_now
                     //Move file
                     await sftp.fastGet(moveFrom, moveTo)
@@ -85,7 +85,7 @@ async function runTaskSDCInterface() {
                                 filename: file,
                                 impdata_start: datetimestart,
                                 impdata_end: datetimestart,
-                                impdata_status: '',
+                                impdata_status: 'S',
                                 impdata_message: '',
                                 process_id: resImpProcess.uid
                             }
