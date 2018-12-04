@@ -1,4 +1,5 @@
 import { connect, NVarChar, Char, close } from 'mssql'; // MS Sql Server client
+import db from '../db'
 import uuid from 'uuid/v1';
 import { dbConfig } from '../../../settings';
 import { ObjectToString_UpperName } from './utils';
@@ -9,7 +10,7 @@ export {
 }
 
 async function ServiceInsertLogAuditTrail(prm) {
-    let res    
+    let res
     try {
         const querysql = `INSERT INTO  LOG_AUDIT_TRAIL (
                 AUDIT_TRAIL_ID, 
@@ -44,8 +45,8 @@ async function ServiceInsertLogAuditTrail(prm) {
         const input_audit_trail_msg = 'input_audit_trail_msg'
         const input_browser = 'input_browser'
 
-        let pool = await connect(dbConfig)
-        const uid = uuid();       
+        const uid = uuid();
+        const pool = await db.poolPromise
         let result = await pool.request()
             .input(input_audit_trail_id, NVarChar, uid)
             .input(input_audit_trail_date, NVarChar, prm.audit_trail_date)
@@ -57,7 +58,7 @@ async function ServiceInsertLogAuditTrail(prm) {
             .input(input_client_ip, NVarChar, prm.client_ip.replace('::ffff:', ''))
             .input(input_audit_trail_msg, NVarChar, prm.msg)
             .input(input_browser, NVarChar, prm.browser)
-            .query(querysql)            
+            .query(querysql)
         if (result !== undefined) {
             if (result.rowsAffected > 0) {
                 res = { uid: uid }
@@ -68,7 +69,7 @@ async function ServiceInsertLogAuditTrail(prm) {
         }
     } catch (err) {
     } finally {
-        await close()
+        // await close()
     }
     return await res
 }
@@ -111,8 +112,8 @@ async function ServiceInsertLogAudit(prm) {
         const input_new_value = 'input_new_value'
         const input_original_value = 'input_original_value'
 
-        let pool = await connect(dbConfig)
         const uid = uuid();
+        const pool = await db.poolPromise
         let result = await pool.request()
             .input(input_audit_id, NVarChar, uid)
             .input(input_audit_date, NVarChar, prm.audit_date)
@@ -132,7 +133,7 @@ async function ServiceInsertLogAudit(prm) {
         }
     } catch (err) {
     } finally {
-        await close()
+        // await close()
     }
 }
 

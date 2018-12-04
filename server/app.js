@@ -30,7 +30,8 @@ import { GetBankAccount, AddBankAccount, EditBankAccount, DeleteBankAccount } fr
 import { GetStoreConfig, GetPopupStore, GetDropDownBank, AddStoreConfig, EditStoreConfig, DeleteStoreConfig, GetAllStore, GetAllBank, GetVendor, GetRegion } from './controllers/sdc/Sales/Store';
 import { GetAccountCode, GetDropDownBuType, GetDropDownType, AddAccountCode, EditAccountCode } from './controllers/sdc/Sales/AccountCode';
 import { GetBankInAdjustment, GetPopupStoreBankInAdjustment, GetValidationstore, GetValidationfinancialcode, EditBankInAdjustment, ImportBankInAdjustment, GenGLBankInAdjustment } from './controllers/sdc/Sales/BankInAdjustment';
-import { StampCloseDaiyFins } from './controllers/sdc/Sales/StampCloseDailyFins';
+import { StampCloseDaiyFins } from './controllers/sdc/Sales/StampCloseDailyFins'
+import { GenDataFilePL, GenDataFilePL_BALFile, GenDataFilePL_BAL_ADJFile, GenDataFilePL_BAL_ACTUALFile, GenDataFilePL_BAL_ACTUAL_ADJFile, GenDataFilePL_BAL_NetSalesFile, GenDataFilePL_BAL_ACTUAL_SPA_AND__ACTUAL_ADJ_SPA } from './controllers/sdc/Sales/GenDataPL'
 
 //--Inventory
 import { GetAccountCodeForInventory, GetDropDownGrpBy, GetDropDownCatCode, GetDropDownAccType, AddAccountCodeForInventory, EditAccountCodeForInventory, ImportAccountCodeForInventory, GetValidationAccountCodeForInventory } from './controllers/sdc/Inventory/AccountCodeForInventory';
@@ -56,8 +57,8 @@ import { runTaskSDCInterface } from './controllers/scheduler/SDC_Interface'
 import taskDailyFins from './controllers/scheduler/DailyFins';
 
 // It extracts the data out of the request headers like the form data, etc,.
-app.use(urlencoded({ extended: false }));
-app.use(json());
+app.use(urlencoded({ extended: false, limit: '50mb' }));
+app.use(json({ limit: '50mb' }));
 // parse request-ip
 app.use(mw())
 // Tell express to use the webpack-dev-middleware and use the webpack.config.js
@@ -65,6 +66,7 @@ app.use(mw())
 app.use(webpackDevMiddleware(compiler, {
   publicPath: output.publicPath
 }));
+
 
 app.use(function (req, res, next) {
   // res.header("Access-Control-Allow-Origin", settings.FontEndPath);
@@ -590,6 +592,134 @@ app.post('/api/stampclosedailyfins', verifyToken, async (req, res) => {
   })
 })
 
+//Gen Data File P&L
+app.post('/api/gendatafilePL', verifyToken, async (req, res) => {
+  console.log('gendatafilePL')
+  await verify(req.token, secretkey, async (err, authData) => {
+    if (err) {
+      const data = {
+        status: StatusUnauthorized,
+        Code: CodeW0002,
+      }
+      await Expired(req, res, data)
+
+    } else {
+      const user = authData.jwtdata
+      const obj = req.body['obj']
+      const year = req.body['year']
+      const month = req.body['month']          
+      await GenDataFilePL(req, res, year, month, obj, user)      
+    }
+  })
+})
+
+//Gen BAL File
+app.post('/api/gendatafilePL/BAL', verifyToken, async (req, res) => {
+  console.log('gendatafilePL_BAL')
+  await verify(req.token, secretkey, async (err, authData) => {
+    if (err) {
+      const data = {
+        status: StatusUnauthorized,
+        Code: CodeW0002,
+      }
+      await Expired(req, res, data)
+
+    } else {
+      const user = authData.jwtdata      
+      await GenDataFilePL_BALFile(req, res, req.body, user);
+    }
+  })
+})
+
+//Gen BAL_ADJ File
+app.post('/api/gendatafilePL/BAL_ADJ', verifyToken, async (req, res) => {
+  console.log('gendatafilePL_BAL_ADJ')
+  await verify(req.token, secretkey, async (err, authData) => {
+    if (err) {
+      const data = {
+        status: StatusUnauthorized,
+        Code: CodeW0002,
+      }
+      await Expired(req, res, data)
+
+    } else {
+      const user = authData.jwtdata
+      await GenDataFilePL_BAL_ADJFile(req, res, req.body, user);      
+    }
+  })
+})
+
+//Gen ACTUAL File
+app.post('/api/gendatafilePL/ACTUAL', verifyToken, async (req, res) => {
+  console.log('gendatafilePL_ACTUAL')
+  await verify(req.token, secretkey, async (err, authData) => {
+    if (err) {
+      const data = {
+        status: StatusUnauthorized,
+        Code: CodeW0002,
+      }
+      await Expired(req, res, data)
+
+    } else {     
+      const user = authData.jwtdata
+      await GenDataFilePL_BAL_ACTUALFile(req, res, req.body, user);    
+    }
+  })
+})
+
+//Gen ACTUAL_ADJ File
+app.post('/api/gendatafilePL/ACTUAL_ADJ', verifyToken, async (req, res) => {
+  console.log('gendatafile_ACTUAL_ADJ')
+  await verify(req.token, secretkey, async (err, authData) => {
+    if (err) {
+      const data = {
+        status: StatusUnauthorized,
+        Code: CodeW0002,
+      }
+      await Expired(req, res, data)
+
+    } else {      
+      const user = authData.jwtdata
+      await GenDataFilePL_BAL_ACTUAL_ADJFile(req, res, req.body, user);       
+    }
+  })
+})
+
+//Gen NetSales File
+app.post('/api/gendatafilePL/NetSales', verifyToken, async (req, res) => {
+  console.log('gendatafile_NetSales')
+  await verify(req.token, secretkey, async (err, authData) => {
+    if (err) {
+      const data = {
+        status: StatusUnauthorized,
+        Code: CodeW0002,
+      }
+      await Expired(req, res, data)
+
+    } else {     
+      const user = authData.jwtdata
+      await GenDataFilePL_BAL_NetSalesFile(req, res, req.body, user);       
+    }
+  })
+})
+
+//Gen ACTUAL_SPA AND ACTUAL_ADJ_SPA File
+app.post('/api/gendatafilePL/ACTUAL_SPA_AND_ACTUAL_ADJ_SPA', verifyToken, async (req, res) => {
+  console.log('gendatafile_ACTUAL_SPA_AND_ACTUAL_ADJ_SPA')
+  await verify(req.token, secretkey, async (err, authData) => {
+    if (err) {
+      const data = {
+        status: StatusUnauthorized,
+        Code: CodeW0002,
+      }
+      await Expired(req, res, data)
+
+    } else {       
+      const user = authData.jwtdata
+      await GenDataFilePL_BAL_ACTUAL_SPA_AND__ACTUAL_ADJ_SPA(req, res, req.body, user);  
+    }
+  })
+})
 
 //Report
 //Get AllStore / ForDropDown
@@ -985,9 +1115,9 @@ function verifyToken(req, res, next) {
 
 
 //Task Scheduler
-schedule('0 0 7 * * *', async function () {  
-    console.log('running schedule SDCInterface 7 AM')  
-    await runTaskSDCInterface()  
+schedule('0 0 7 * * *', async function () {
+  console.log('running schedule SDCInterface 7 AM')
+  await runTaskSDCInterface()
 });
 
 

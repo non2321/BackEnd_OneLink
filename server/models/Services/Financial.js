@@ -1,4 +1,5 @@
 import { connect, close, NVarChar, Int } from 'mssql'; // MS Sql Server client
+import db from '../db'
 
 import { dbConfig } from '../../../settings';
 import { GetCountACC_M_ACCOUNT_SALE } from '../../models/Services/utils';
@@ -40,8 +41,17 @@ export {
     ServiceAddStampCloseDaiyFins,
     ServiceEditStampCloseDaiyFins,
 
-    ServiceExportReportDailyFlashSales
- }
+    ServiceExportReportDailyFlashSales,
+
+    ServiceInsertPLBalE1,
+    ServiceDeletePLBalE1,
+    ServicePLBalE1_BALFile,
+    ServicePLBalE1_BAL_ADJFile,
+    ServicePLBalE1_ACTUALFile,
+    ServicePLBalE1_ACTUAL_ADJFile,
+    ServicePLBalE1_NetSalesFile,
+    ServicePLBalE1_ACTUAL_SPA_AND__ACTUAL_ADJ_SPAFile    
+}
 
 async function ServiceGetFinancialCode() {
     let res = {}
@@ -102,7 +112,7 @@ async function ServiceGetFinancialCodeById(fin_code) {
 }
 
 async function ServiceInsertFinancialCode(prm) {
-    let res   
+    let res
     try {
         if (prm.fin_code) {
             const querysql = `INSERT INTO ACC_M_FINANCIAL_CODES
@@ -126,21 +136,21 @@ async function ServiceInsertFinancialCode(prm) {
                             @input_active,
                             @input_show,
                             'N') `
-           
+
             const input_fin_code = 'input_fin_code'
             const input_fin_name = 'input_fin_name'
             const input_active = 'input_active'
             const input_show = 'input_show'
-            const input_create_date = 'input_create_date'           
+            const input_create_date = 'input_create_date'
             const input_create_by = 'input_create_by'
 
             let pool = await connect(dbConfig)
             let result = await pool.request()
                 .input(input_fin_code, NVarChar, (prm.fin_code != undefined) ? prm.fin_code : '')
-                .input(input_fin_name, NVarChar, (prm.fin_name != undefined) ? prm.fin_name : '')  
-                .input(input_active, NVarChar, (prm.active != undefined) ? prm.active : '')  
-                .input(input_show, NVarChar, (prm.show != undefined) ? prm.show : '')  
-                .input(input_create_date, NVarChar, (prm.create_date != undefined) ? prm.create_date : '')               
+                .input(input_fin_name, NVarChar, (prm.fin_name != undefined) ? prm.fin_name : '')
+                .input(input_active, NVarChar, (prm.active != undefined) ? prm.active : '')
+                .input(input_show, NVarChar, (prm.show != undefined) ? prm.show : '')
+                .input(input_create_date, NVarChar, (prm.create_date != undefined) ? prm.create_date : '')
                 .input(input_create_by, NVarChar, (prm.create_by != undefined) ? prm.create_by.trim() : '')
                 .query(querysql)
             if (result !== undefined) {
@@ -171,7 +181,7 @@ async function ServiceFinancialCodeCheckDuplicate(prmfin) {
         if (prmfin.negative != undefined) querysql += `AND NEGATIVE_FLAG = @input_negative `
         if (prmfin.block_flag != undefined) querysql += `AND BLOCK_FLAG = @input_block_flag `
         if (prmfin.remart_flag != undefined) querysql += `AND REMARK_FLAG = @input_remart_flag `
-       
+
         const input_fin_code = 'input_fin_code'
         const input_fin_desc = 'input_fin_desc'
         const input_fin_gl_code = 'input_fin_gl_code'
@@ -232,7 +242,7 @@ async function ServiceEditFinancialCode(prmfin) {
             if (prmfin.cost_center != undefined) querysql = [querysql, `COST_CENTER = @input_cost_center `].join(",")
             if (prmfin.fin_flag != undefined) querysql = [querysql, `FIXFLAG = @input_fixflag `].join(",")
             if (prmfin.fin_show != undefined) querysql = [querysql, `S_DAILY_FINS_FLAG = @input_s_daily_fins_flag `].join(",")
-            
+
             if (prmfin.priority != undefined) querysql = [querysql, `PRIORITY = @input_priority `].join(",")
             if (prmfin.negative != undefined) querysql = [querysql, `NEGATIVE_FLAG = @input_negative `].join(",")
             if (prmfin.block_flag != undefined) querysql = [querysql, `BLOCK_FLAG = @input_block_flag `].join(",")
@@ -1174,3 +1184,370 @@ async function ServiceExportReportDailyFlashSales(prm) {
     }
     return await res
 }
+
+////////////////////////  Gen Data File P&L  ////////////////////////
+async function ServiceInsertPLBalE1(prm) {
+    let res
+    try {
+        if (prm) {
+            const querysql = `INSERT INTO PL_BAL_E1
+                            (DESCRIPTION, 
+                            E1ACCCODE, 
+                            AMOUNT,
+                            PER_CENT,
+                            COSTCENTER,
+                            PERIOD_MONTH,
+                            PERIOD_YEAR) 
+                VALUES      (@input_description, 
+                            @input_e1acccode, 
+                            @input_amount, 
+                            @input_per_cent, 
+                            @input_costcenter,
+                            @input_period_month,
+                            @input_period_year) `
+
+            const input_description = 'input_description'
+            const input_e1acccode = 'input_e1acccode'
+            const input_amount = 'input_amount'
+            const input_per_cent = 'input_per_cent'
+            const input_costcenter = 'input_costcenter'
+            const input_period_month = 'input_period_month'
+            const input_period_year = 'input_period_year'
+
+            const pool = await db.poolPromise
+            let result = await pool.request()
+                .input(input_description, NVarChar, prm.description)
+                .input(input_e1acccode, NVarChar, prm.e1acccode)
+                .input(input_amount, NVarChar, prm.amount)
+                .input(input_per_cent, NVarChar, prm.per_cent)
+                .input(input_costcenter, NVarChar, prm.costcenter)
+                .input(input_period_month, NVarChar, prm.period_month)
+                .input(input_period_year, NVarChar, prm.period_year)
+                .query(querysql)
+
+            if (result !== undefined) {
+                if (result.rowsAffected > 0) res = true
+            }
+        }
+    } catch (err) {
+
+    } finally {
+        // await close()
+    }
+    return await res
+}
+
+async function ServiceDeletePLBalE1(prm) {
+    let res
+    try {
+        if (prm) {
+            let querysql = `DELETE PL_BAL_E1
+            WHERE  PERIOD_MONTH = @input_period_month 
+                AND PERIOD_YEAR = @input_period_year`
+
+            const input_period_month = 'input_period_month'
+            const input_period_year = 'input_period_year'
+
+            const pool = await db.poolPromise
+            let result = await pool.request()
+                .input(input_period_month, NVarChar, prm.period_month)
+                .input(input_period_year, NVarChar, prm.period_year)
+                .query(querysql)
+           
+            if (result !== undefined) {
+                if (result.rowsAffected > 0) res = true
+            }
+        }
+    } catch (err) {
+
+    } finally {
+        await close()
+    }
+
+    return await res
+
+}
+
+async function ServicePLBalE1_BALFile(prm) {
+    let res
+    try {
+        if (prm) {
+            let querysql = `SELECT Iif(LEFT([costcenter], 4) IN ( 6641, 6645 ), 
+                                        RIGHT([costcenter], Len([costcenter]) - 3), 
+                                        RIGHT([costcenter], Len([costcenter]) - 4)) AS CC, 
+                                B.description, 
+                                M.acccode, 
+                                Sum(B.amount)                                      AS Amt, 
+                                '00.00%'                                           AS Per_cent, 
+                                M.accone1, 
+                                B.e1acccode, 
+                                M.acccode 
+                            FROM   pl_bal_e1 B 
+                                INNER JOIN pl_masteracccodematche1 M 
+                                        ON B.e1acccode = M.accone1
+                            WHERE B.PERIOD_MONTH = @input_period_month AND B.PERIOD_YEAR = @input_period_year 
+                            GROUP  BY Iif(LEFT([costcenter], 4) IN ( 6641, 6645 ), 
+                                            RIGHT([costcenter], Len([costcenter]) - 3), 
+                                            RIGHT([costcenter], Len([costcenter]) - 4)), 
+                                    B.description, 
+                                    M.accone1, 
+                                    B.e1acccode, 
+                                    M.acccode, 
+                                    M.acccode 
+                            ORDER  BY Iif(LEFT([costcenter], 4) IN ( 6641, 6645 ), 
+                                            RIGHT([costcenter], Len([costcenter]) - 3), 
+                                            RIGHT([costcenter], Len([costcenter]) - 4)), 
+                                    M.acccode`
+
+            const input_period_month = 'input_period_month'
+            const input_period_year = 'input_period_year'
+
+            const pool = await db.poolPromise
+            let result = await pool.request()
+                .input(input_period_month, NVarChar, prm.period_month)
+                .input(input_period_year, NVarChar, prm.period_year)
+                .query(querysql)
+           
+            if (result !== undefined) {
+                if (result.rowsAffected > 0) res = result
+            }
+        }
+    } catch (err) {
+
+    } finally {
+        // await close()
+    }
+
+    return await res
+}
+
+async function ServicePLBalE1_BAL_ADJFile(prm) {
+    let res
+    try {
+        if (prm) {
+            let querysql = `SELECT Iif(LEFT([costcenter], 4) IN ( 6641, 6645 ), 
+                                        RIGHT([costcenter], Len([costcenter]) - 3), 
+                                        RIGHT([costcenter], Len([costcenter]) - 4)) AS CC, 
+                                B.description, 
+                                B.e1acccode, 
+                                M.acccode, 
+                                Sum(B.amount)                                 AS Amt, 
+                                '0.00%'                                            AS Per_cent, 
+                                M.bal_adj 
+                            FROM   pl_bal_e1 B
+                                INNER JOIN pl_masteracccodematche1 M
+                                        ON B.e1acccode = M.accone1 
+                            WHERE B.PERIOD_MONTH = @input_period_month AND B.PERIOD_YEAR = @input_period_year
+                            GROUP  BY Iif(LEFT([costcenter], 4) IN ( 6641, 6645 ), 
+                                            RIGHT([costcenter], Len([costcenter]) - 3), 
+                                            RIGHT([costcenter], Len([costcenter]) - 4)), 
+                                    B.description, 
+                                    B.e1acccode, 
+                                    M.acccode, 
+                                    M.bal_adj 
+                            HAVING    M.bal_adj = 'y' 
+                            ORDER  BY Iif(LEFT([costcenter], 4) IN ( 6641, 6645 ), 
+                                            RIGHT([costcenter], Len([costcenter]) - 3), 
+                                            RIGHT([costcenter], Len([costcenter]) - 4)), 
+                                    M.acccode`
+
+            const input_period_month = 'input_period_month'
+            const input_period_year = 'input_period_year'
+
+            const pool = await db.poolPromise
+            let result = await pool.request()
+                .input(input_period_month, NVarChar, prm.period_month)
+                .input(input_period_year, NVarChar, prm.period_year)
+                .query(querysql)
+           
+            if (result !== undefined) {
+                if (result.rowsAffected > 0) res = result
+            }
+        }
+    } catch (err) {
+
+    } finally {
+        // await close()
+    }
+
+    return await res
+}
+
+async function ServicePLBalE1_ACTUALFile(prm) {
+    let res
+    try {
+        if (prm) {
+            let querysql = `SELECT Iif(LEFT([costcenter], 4) IN ( 6641, 6645 ), 
+                                        RIGHT([costcenter], Len([costcenter]) - 3), 
+                                        RIGHT([costcenter], Len([costcenter]) - 4)) AS CC, 
+                                B.description, 
+                                B.e1acccode, 
+                                M.acccode, 
+                                Sum(B.amount)                                 AS Amt, 
+                                '0.00%'                                            AS Per_cent, 
+                                M.actual 
+                            FROM   pl_masteracccodematche1 M
+                                INNER JOIN pl_bal_e1 B
+                                        ON M.accone1 = B.e1acccode 
+                            WHERE B.PERIOD_MONTH = @input_period_month AND B.PERIOD_YEAR = @input_period_year
+                            GROUP  BY Iif(LEFT([costcenter], 4) IN ( 6641, 6645 ), 
+                                            RIGHT([costcenter], Len([costcenter]) - 3), 
+                                            RIGHT([costcenter], Len([costcenter]) - 4)), 
+                                    B.description, 
+                                    B.e1acccode, 
+                                    M.acccode, 
+                                    M.actual 
+                            HAVING    M.actual = 'y' 
+                            ORDER  BY Iif(LEFT([costcenter], 4) IN ( 6641, 6645 ), 
+                                            RIGHT([costcenter], Len([costcenter]) - 3), 
+                                            RIGHT([costcenter], Len([costcenter]) - 4)), 
+                                    M.acccode`
+
+            const input_period_month = 'input_period_month'
+            const input_period_year = 'input_period_year'
+
+            const pool = await db.poolPromise
+            let result = await pool.request()
+                .input(input_period_month, NVarChar, prm.period_month)
+                .input(input_period_year, NVarChar, prm.period_year)
+                .query(querysql)
+           
+            if (result !== undefined) {
+                if (result.rowsAffected > 0) res = result
+            }
+        }
+    } catch (err) {
+
+    } finally {
+        // await close()
+    }
+
+    return await res
+}
+
+async function ServicePLBalE1_ACTUAL_ADJFile(prm) {
+    let res
+    try {
+        if (prm) {
+            let querysql = `SELECT Iif(LEFT([costcenter], 4) IN ( 6641, 6645 ), 
+                                        RIGHT([costcenter], Len([costcenter]) - 3), 
+                                        RIGHT([costcenter], Len([costcenter]) - 4)) AS CC, 
+                                B.description, 
+                                B.e1acccode, 
+                                M.acccode, 
+                                Sum(B.amount)                                 AS Amt, 
+                                '0.00%'                                            AS Per_cent, 
+                                M.actual_adj 
+                            FROM   pl_bal_e1 B 
+                                INNER JOIN pl_masteracccodematche1 M 
+                                        ON B.e1acccode = M.accone1
+                            WHERE B.PERIOD_MONTH = @input_period_month AND B.PERIOD_YEAR = @input_period_year 
+                            GROUP  BY Iif(LEFT([costcenter], 4) IN ( 6641, 6645 ), 
+                                            RIGHT([costcenter], Len([costcenter]) - 3), 
+                                            RIGHT([costcenter], Len([costcenter]) - 4)), 
+                                    B.description, 
+                                    B.e1acccode, 
+                                    M.acccode, 
+                                    M.actual_adj 
+                            HAVING    M.actual_adj = 'y'
+                            ORDER  BY Iif(LEFT([costcenter], 4) IN ( 6641, 6645 ), 
+                                            RIGHT([costcenter], Len([costcenter]) - 3), 
+                                            RIGHT([costcenter], Len([costcenter]) - 4)), 
+                                    M.acccode`
+
+            const input_period_month = 'input_period_month'
+            const input_period_year = 'input_period_year'
+
+            const pool = await db.poolPromise
+            let result = await pool.request()
+                .input(input_period_month, NVarChar, prm.period_month)
+                .input(input_period_year, NVarChar, prm.period_year)
+                .query(querysql)
+           
+            if (result !== undefined) {
+                if (result.rowsAffected > 0) res = result
+            }
+        }
+    } catch (err) {
+
+    } finally {
+        // await close()
+    }
+
+    return await res
+}
+
+async function ServicePLBalE1_NetSalesFile(prm) {
+    let res
+    try {
+        if (prm) {
+            let querysql = `SELECT 'net sales'                                                 AS 
+                                Description, 
+                                Sum(B.amount)                                                  AS 
+                                Amt, 
+                                '0.00'                                                              AS 
+                                Per_cent, 
+                                Iif(LEFT([costcenter], 4) IN ( 6641, 6645 ), 
+                                RIGHT([costcenter], Len([costcenter]) - 3), RIGHT([costcenter], 
+                                                                            Len([costcenter]) - 4)) AS CC 
+                                ,M.netsales 
+                        FROM   pl_masteracccodematche1 M 
+                                INNER JOIN pl_bal_e1 B 
+                                        ON M.accone1 = B.e1acccode 
+                        WHERE B.PERIOD_MONTH = @input_period_month AND B.PERIOD_YEAR = @input_period_year
+                        GROUP  BY Iif(LEFT([costcenter], 4) IN ( 6641, 6645 ), 
+                                RIGHT([costcenter], Len([costcenter]) - 3), RIGHT([costcenter], 
+                                                                            Len([costcenter]) - 4)), 
+                                M.netsales 
+                        HAVING    M.netsales = 'y' 
+                        ORDER  BY Iif(LEFT([costcenter], 4) IN ( 6641, 6645 ), 
+                                            RIGHT([costcenter], Len([costcenter]) - 3), 
+                                            RIGHT([costcenter], Len([costcenter]) - 4))`
+
+            const input_period_month = 'input_period_month'
+            const input_period_year = 'input_period_year'
+
+            const pool = await db.poolPromise
+            let result = await pool.request()
+                .input(input_period_month, NVarChar, prm.period_month)
+                .input(input_period_year, NVarChar, prm.period_year)
+                .query(querysql)
+           
+            if (result !== undefined) {
+                if (result.rowsAffected > 0) res = result
+            }
+        }
+    } catch (err) {
+
+    } finally {
+        // await close()
+    }
+
+    return await res
+}
+
+async function ServicePLBalE1_ACTUAL_SPA_AND__ACTUAL_ADJ_SPAFile(prm) {
+    let res
+   
+    try {
+        if (prm) {
+            const p_month = 'p_month'
+            const p_year = 'p_year'           
+
+            let pool = await connect(dbConfig)
+            let result = await pool.request()
+                .input(p_month, NVarChar, prm.period_month)
+                .input(p_year, NVarChar, prm.period_year)                
+                .execute('EXPORT_NETSALES_P_AND_L')
+            if (result !== undefined) {                
+                res = result
+            }
+        }
+    } catch (err) {
+
+    } finally {
+        // await close()
+    }
+    return await res
+}
+
