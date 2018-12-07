@@ -16,7 +16,7 @@ import { Login } from './controllers/auth/Login';
 import { LoadPage } from './controllers/auth/Loadpage';
 import { Logout } from './controllers/auth/Logout';
 import { Expired } from './controllers/auth/Expired';
-import { Menu } from './controllers/auth/Menu';
+import { Menu, RoleData } from './controllers/auth/Menu';
 
 //Administration
 import { GetDataTableLogSDC } from './controllers/administration/sdc/LogSDC'
@@ -127,6 +127,12 @@ app.post('/api/loadpage', verifyToken, async (req, res) => {
 app.get('/api/menuauth/:userid', async (req, res) => {
   console.log('meunauth')
   await Menu(req, res, req.body)
+});
+
+//Role Data
+app.get('/api/roledata/:userid', async (req, res) => {
+  console.log('roledata')
+  await RoleData(req, res, req.body)
 });
 
 //Get LogSDC

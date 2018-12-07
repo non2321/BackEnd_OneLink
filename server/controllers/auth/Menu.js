@@ -1,6 +1,6 @@
-import { ServiceGetMenuByUserID } from '../../models/Services/Menu';
+import { ServiceGetMenuByUserID, ServiceGetRoleDataByUserID } from '../../models/Services/Menu';
 
-export { Menu };  
+export { Menu, RoleData };  
 
 async function Menu(req, res, reqBody) {
     try {
@@ -18,5 +18,17 @@ async function Menu(req, res, reqBody) {
         }
     } catch (err) {   
        res.sendStatus(500)     
+    }
+}
+
+async function RoleData(req, res, reqBody) {
+    try {
+        if (req.params.userid == null) throw new Error("Input not valid")
+        let userid = req.params.userid
+        let result = await ServiceGetRoleDataByUserID(userid)
+        await res.setHeader('Content-Type', 'application/json');
+        await res.send(JSON.stringify(result));
+    } catch (err) {
+        res.sendStatus(500)
     }
 }

@@ -1,12 +1,15 @@
 import { connect, NVarChar, close } from 'mssql'; // MS Sql Server client
 import { dbConfig } from '../../../settings';
+import db from '../db'
 
 import { ModuleOneLink } from '../module_type';
 
 export {
     ServiceGetMenuByUserID,
     ServiceGetScreenById,
-    ServiceGetModifyData
+    ServiceGetModifyData,
+
+    ServiceGetRoleDataByUserID,
 }
 
 async function ServiceGetMenuByUserID(userid) {
@@ -109,6 +112,46 @@ async function ServiceGetModifyData(prm) {
         res.sendStatus(500)
     } finally {
         await close()
+    }
+
+    return await res
+}
+
+async function ServiceGetRoleDataByUserID(userid) {
+    let res
+    try {
+        const querysql = `SELECT a.user_id, 
+                                a.first_name, 
+                                a.last_name, 
+                                a.position, 
+                                a.email, 
+                                a.mobile_no, 
+                                a.phc_user, 
+                                c.role_id, 
+                                c.role_name, 
+                                c.role_description 
+                        FROM   users a 
+                                INNER JOIN user_map_role b 
+                                        ON a.user_id = b.user_id 
+                                INNER JOIN role c 
+                                        ON b.role_id = c.role_id 
+                        WHERE  a.user_id = @input_USER_ID `
+        // input parameter           
+        const input_USER_ID = 'input_USER_ID'
+
+        const pool = await db.poolPromise
+        let result = await pool.request()
+            // set parameter
+            .input(input_USER_ID, NVarChar, userid.toString().trim())            
+            .query(querysql)
+
+        if (result.rowsAffected > 0) {
+            res = result.recordset[0]
+        }
+    } catch (err) {
+        res.sendStatus(500)
+    } finally {
+        // await close()
     }
 
     return await res
