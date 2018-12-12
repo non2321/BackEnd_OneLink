@@ -34,9 +34,11 @@ async function runTaskSDCInterface() {
                     const moveTo = `${mmxsftp.temppath}${item.name}`
 
                     const filename = item.name.replace('.zip', '')
-                    let data_date_now = new Date(filename.substr(filename.length - 10))
+                    const resfilename = filename.split('-')
+                    let data_date_now = new Date(`${resfilename[1]}-${resfilename[2]}-${resfilename[3]}`)                    
                     // data_date_now.setDate(data_date_now.getDate() - 1)
                     data_date = data_date_now
+                    
                     //Move file
                     await sftp.fastGet(moveFrom, moveTo)
 
@@ -48,7 +50,7 @@ async function runTaskSDCInterface() {
                     await fs.unlink(`${mmxsftp.pathinterface}${item.name}`, (err) => {
                         if (err) throw err;
                         //console.log(`${item.name} was deleted`);
-                    })
+                    }) 
                 }
             }
             const dir = mmxsftp.pathinterfacetemp

@@ -7,6 +7,7 @@ import { mw } from 'request-ip';
 import { schedule } from 'node-cron';
 import fetch from 'node-fetch';
 import FormData from 'form-data';
+import socketIO from 'socket.io';
 
 const app = express();
 import config, { output } from '../webpack.config.js';
@@ -613,8 +614,8 @@ app.post('/api/gendatafilePL', verifyToken, async (req, res) => {
       const user = authData.jwtdata
       const obj = req.body['obj']
       const year = req.body['year']
-      const month = req.body['month']          
-      await GenDataFilePL(req, res, year, month, obj, user)      
+      const month = req.body['month']
+      await GenDataFilePL(req, res, year, month, obj, user)
     }
   })
 })
@@ -631,7 +632,7 @@ app.post('/api/gendatafilePL/BAL', verifyToken, async (req, res) => {
       await Expired(req, res, data)
 
     } else {
-      const user = authData.jwtdata      
+      const user = authData.jwtdata
       await GenDataFilePL_BALFile(req, res, req.body, user);
     }
   })
@@ -650,7 +651,7 @@ app.post('/api/gendatafilePL/BAL_ADJ', verifyToken, async (req, res) => {
 
     } else {
       const user = authData.jwtdata
-      await GenDataFilePL_BAL_ADJFile(req, res, req.body, user);      
+      await GenDataFilePL_BAL_ADJFile(req, res, req.body, user);
     }
   })
 })
@@ -666,9 +667,9 @@ app.post('/api/gendatafilePL/ACTUAL', verifyToken, async (req, res) => {
       }
       await Expired(req, res, data)
 
-    } else {     
+    } else {
       const user = authData.jwtdata
-      await GenDataFilePL_BAL_ACTUALFile(req, res, req.body, user);    
+      await GenDataFilePL_BAL_ACTUALFile(req, res, req.body, user);
     }
   })
 })
@@ -684,9 +685,9 @@ app.post('/api/gendatafilePL/ACTUAL_ADJ', verifyToken, async (req, res) => {
       }
       await Expired(req, res, data)
 
-    } else {      
+    } else {
       const user = authData.jwtdata
-      await GenDataFilePL_BAL_ACTUAL_ADJFile(req, res, req.body, user);       
+      await GenDataFilePL_BAL_ACTUAL_ADJFile(req, res, req.body, user);
     }
   })
 })
@@ -702,9 +703,9 @@ app.post('/api/gendatafilePL/NetSales', verifyToken, async (req, res) => {
       }
       await Expired(req, res, data)
 
-    } else {     
+    } else {
       const user = authData.jwtdata
-      await GenDataFilePL_BAL_NetSalesFile(req, res, req.body, user);       
+      await GenDataFilePL_BAL_NetSalesFile(req, res, req.body, user);
     }
   })
 })
@@ -720,9 +721,9 @@ app.post('/api/gendatafilePL/ACTUAL_SPA_AND_ACTUAL_ADJ_SPA', verifyToken, async 
       }
       await Expired(req, res, data)
 
-    } else {       
+    } else {
       const user = authData.jwtdata
-      await GenDataFilePL_BAL_ACTUAL_SPA_AND__ACTUAL_ADJ_SPA(req, res, req.body, user);  
+      await GenDataFilePL_BAL_ACTUAL_SPA_AND__ACTUAL_ADJ_SPA(req, res, req.body, user);
     }
   })
 })
@@ -1087,9 +1088,46 @@ app.get('/api/tableautoken', async (req, res) => {
 
 
 // Serve the files on port.
-app.listen(webPort, () => {
+const server = app.listen(webPort, () => {
   console.log('Server started on port %s \n', webPort);
 });
+
+// const io = socketIO.listen(server);
+
+// let interval;
+
+// const getApiAndEmit = async client => {
+//   try {
+//     // const res = await axios.get(
+//     //   "https://api.darksky.net/forecast/PUT_YOUR_API_KEY_HERE/43.7695,11.2558"
+//     // ); // Getting the data from DarkSky
+//     // socket.emit("FromAPI", res.data.currently.temperature); // Emitting a new message. It will be consumed by the client
+   
+//     client.emit("FromAPI", new Date().toLocaleString()); // Emitting a new message. It will be consumed by the client
+//   } catch (error) {
+//     console.error(`Error: ${error.code}`);
+//   }
+// };
+
+// //Wating connect from client
+// io.on('connection', client => {
+//   console.log('user conected')
+//   if (interval) {
+//     clearInterval(interval);
+//   }
+//   interval = setInterval(() => getApiAndEmit(client), 1000);
+//   //Client disconnected
+//   client.on('disconnect', () => {
+//     console.log('user disconnected')
+//   })
+
+//   //Send data to client Realtime
+//   client.on('sent-message', function (message) {
+//     io.sockets.emit('new-message', message)
+//   })
+// })
+
+
 
 // FORMAT OF TOKEN
 // Authorization: Bearer <access_token>
@@ -1121,8 +1159,8 @@ function verifyToken(req, res, next) {
 
 
 //Task Scheduler
-schedule('0 0 7 * * *', async function () {
-  console.log('running schedule SDCInterface 7 AM')
+schedule('0 0 8 * * *', async function () {
+  console.log(`running schedule SDCInterface 8 AM at ${new Date().toLocaleString()}`)
   await runTaskSDCInterface()
 });
 
