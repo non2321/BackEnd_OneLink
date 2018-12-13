@@ -42,7 +42,9 @@ async function ServiceGetFileTypeSDCInterfaceActive() {
     let res
     try {
         const querysql = `SELECT file_type_id, 
-                                file_type
+                                file_type,
+                                file_type_desc,
+                                case [PROCESS_INTERVAL] when 'D' then 'Daily' when 'P' then 'Period' end as 'PROCESS_INTERVAL'
                         FROM   imp_file_type 
                         WHERE  act_flag = 'Y' `
 

@@ -54,7 +54,7 @@ import { CodeW0002 } from "./models/msg_type";
 import { secretkey, webPort, tableautoken, mmxsftp } from "../settings";
 
 //Task Scheduler
-import { runTaskSDCInterface } from './controllers/scheduler/SDC_Interface'
+import { runTaskSDCInterface, GetDropDownSDCInterfaceFile, GetFileSDCInterfaceTypeActive, GetDataTableFileSDCInterfaceTypeActive } from './controllers/scheduler/SDC_Interface'
 import taskDailyFins from './controllers/scheduler/DailyFins';
 
 // It extracts the data out of the request headers like the form data, etc,.
@@ -1083,6 +1083,23 @@ app.get('/api/tableautoken', async (req, res) => {
   const response = await fetch(tableautoken.path, { method: 'POST', body: form })
   const tableautokens = await response.text()
   res.send(tableautokens)
+})
+
+
+//Admin
+app.get('/api/sdcbatchfile/dropdownfile', async (req, res) => {
+  console.log('get_sdcbatchfile_dropdownfile')  
+  await GetDropDownSDCInterfaceFile(req, res, req.body)
+})
+
+app.get('/api/sdcbatchfile/filetypeactive', async (req, res) => {
+  console.log('get_sdcbatchfile_filetypeactive')
+  await GetFileSDCInterfaceTypeActive(req, res, req.body)
+})
+
+app.get('/api/sdcbatchfile/tablefiletypeactive', async (req, res) => {
+  console.log('get_sdcbatchfile_tablefiletypeactive')
+  await GetDataTableFileSDCInterfaceTypeActive(req, res, req.body)
 })
 
 

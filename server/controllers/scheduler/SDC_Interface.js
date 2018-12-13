@@ -8,7 +8,12 @@ import { mmxsftp } from '../../../settings'
 
 let sftp = new Client()
 
-export { runTaskSDCInterface };
+export {
+    runTaskSDCInterface,
+    GetDropDownSDCInterfaceFile,
+    GetFileSDCInterfaceTypeActive,
+    GetDataTableFileSDCInterfaceTypeActive
+};
 
 async function runTaskSDCInterface() {
     const readdir = promisify(fs.readdir)
@@ -35,10 +40,10 @@ async function runTaskSDCInterface() {
 
                     const filename = item.name.replace('.zip', '')
                     const resfilename = filename.split('-')
-                    let data_date_now = new Date(`${resfilename[1]}-${resfilename[2]}-${resfilename[3]}`)                    
+                    let data_date_now = new Date(`${resfilename[1]}-${resfilename[2]}-${resfilename[3]}`)
                     // data_date_now.setDate(data_date_now.getDate() - 1)
                     data_date = data_date_now
-                    
+
                     //Move file
                     await sftp.fastGet(moveFrom, moveTo)
 
@@ -50,7 +55,7 @@ async function runTaskSDCInterface() {
                     await fs.unlink(`${mmxsftp.pathinterface}${item.name}`, (err) => {
                         if (err) throw err;
                         //console.log(`${item.name} was deleted`);
-                    }) 
+                    })
                 }
             }
             const dir = mmxsftp.pathinterfacetemp
@@ -95,7 +100,7 @@ async function runTaskSDCInterface() {
                             if (resImpData.uid) {
                                 const tempfile = await readFile(`${mmxsftp.pathinterfacetemp}/${file}`)
                                 const tempfiletostring = tempfile.toString('utf8')
-                                const tempfilebyline = tempfiletostring.match(/[^\r\n]+/g)                                             
+                                const tempfilebyline = tempfiletostring.match(/[^\r\n]+/g)
                                 if (tempfilebyline) {
                                     for await (let temp of tempfilebyline) {
                                         let tempdata = temp.trim().split(',')
@@ -227,11 +232,80 @@ async function runTaskSDCInterface() {
                 }
             }, 5000)
         }
-
+        await sftp.client.removeAllListeners()
         await sftp.end()
 
     } catch (err) {
     }
 }
+
+async function GetDropDownSDCInterfaceFile(req, res, reqBody) {
+    try {
+        let resdata = []
+        await sftp.connect({
+            host: mmxsftp.host,
+            port: mmxsftp.port,
+            username: mmxsftp.username,
+            password: mmxsftp.password
+        })
+        let data = await sftp.list(mmxsftp.pathmmx)
+
+        if (data.length > 0) {
+            let resArray = []
+            for await (let item of data) {
+                const filename = item.name.replace('.zip', '')
+                const resfilename = filename.split('-')
+                const data_date = `${resfilename[1]}-${resfilename[2]}-${resfilename[3]}`
+                resArray.push(data_date)
+            }
+
+            const distinctres = [...new Set(resArray)].sort().reverse()
+            for await (let item of distinctres) {
+                let resdate = new Date(item)
+                resdate.setDate(resdate.getDate() - 1);
+                resdata.push({ value: `${resdate.getFullYear()}-${resdate.getMonth() + 1}-${resdate.getDate()}` })
+            }
+        }
+        await sftp.client.removeAllListeners()
+        await sftp.end()
+        await res.setHeader('Content-Type', 'application/json')
+        await res.send(resdata)
+    } catch (err) {
+        res.sendStatus(500)
+    }
+}
+
+async function GetFileSDCInterfaceTypeActive(req, res, reqBody) {
+    try {
+        let result = await ServiceGetFileTypeSDCInterfaceActive()
+
+        let data = []        
+        for (let item of result) {            
+            data.push({ value: item.file_type , label: item.file_type })
+        }
+
+        await res.setHeader('Content-Type', 'application/json')
+        await res.send(data)
+    } catch (err) {
+        res.sendStatus(500)
+    }
+}
+
+async function GetDataTableFileSDCInterfaceTypeActive(req, res, reqBody) {
+    try {
+        let result = await ServiceGetFileTypeSDCInterfaceActive()
+
+        const rowdata = {
+            "aaData": result
+        }        
+
+        await res.setHeader('Content-Type', 'application/json')
+        await res.send(rowdata)
+    } catch (err) {
+        res.sendStatus(500)
+    }
+}
+
+
 
 

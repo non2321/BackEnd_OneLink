@@ -925,7 +925,7 @@ async function ServiceEditBankInAdjustment(prm) {
             const input_update_date = 'input_update_date'
             const input_update_by = 'input_update_by'
 
-            let pool = await connect(dbConfig)
+            const pool = await db.poolPromise
             let result = await pool.request()
             if (prm.store_id != undefined) await result.input(input_store_id, NVarChar, prm.store_id.trim())
             if (prm.fin_code != undefined) await result.input(input_fin_code, NVarChar, prm.fin_code.trim())
@@ -943,7 +943,7 @@ async function ServiceEditBankInAdjustment(prm) {
     } catch (err) {
 
     } finally {
-        await close()
+        // await close()
     }
     return await res
 }

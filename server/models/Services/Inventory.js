@@ -1,5 +1,5 @@
 import { connect, close, NVarChar, Int, Date } from 'mssql'; // MS Sql Server client
-
+import db from '../db'
 import { dbConfig } from '../../../settings';
 
 export {
@@ -980,7 +980,7 @@ async function ServiceEditUnitCost(prm) {
             const input_update_date = 'input_update_date'
             const input_update_by = 'input_update_by'
 
-            let pool = await connect(dbConfig)
+            const pool = await db.poolPromise
             let result = await pool.request()
             if (prm.period != undefined) await result.input(input_period, NVarChar, prm.period.trim())
             if (prm.inv_item != undefined) await result.input(input_inv_item, NVarChar, prm.inv_item.trim())
@@ -997,7 +997,7 @@ async function ServiceEditUnitCost(prm) {
     } catch (err) {
 
     } finally {
-        await close()
+        // await close()
     }
     return await res
 }
