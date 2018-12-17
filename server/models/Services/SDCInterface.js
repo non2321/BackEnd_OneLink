@@ -87,9 +87,9 @@ async function ServiceInsertImpProcess(prm) {
         const input_message = 'input_message'
         const input_store = 'input_store'
         const input_data_date = 'input_data_date'
-
-        let pool = await connect(dbConfig)
+        
         const uid = uuid()
+        const pool = await db.poolPromise
         let result = await pool.request()
             .input(input_process_id, NVarChar, uid)
             .input(input_process_start, NVarChar, prm.process_start)
@@ -108,7 +108,7 @@ async function ServiceInsertImpProcess(prm) {
     } catch (err) {
         console.log(err)
     } finally {
-        await close()
+        // await close()
     }
     return await res
 }
@@ -142,9 +142,9 @@ async function ServiceInsertImpData(prm) {
         const input_impdata_status = 'input_impdata_status'
         const input_impdata_message = 'input_impdata_message'
         const input_process_id = 'input_process_id'
-
-        let pool = await connect(dbConfig)
+       
         const uid = uuid()
+        const pool = await db.poolPromise
         let result = await pool.request()
             .input(input_data_id, NVarChar, uid)
             .input(input_filetype_id, NVarChar, prm.filetype_id)
@@ -164,7 +164,7 @@ async function ServiceInsertImpData(prm) {
     } catch (err) {
         console.log(err)
     } finally {
-        await close()
+        // await close()
     }
     return await res
 }

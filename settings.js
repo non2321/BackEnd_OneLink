@@ -3,11 +3,11 @@ export const dbConfig = {
     password: 'r1ckY.1958',
     server: '192.168.151.114',
     database: 'PHCDB_DEV',
-    requestTimeout: 600000,
+    requestTimeout: 9999999,
     pool: {
-        max: 50,
+        max: 1000,
         min: 0,
-        idleTimeoutMillis: 30000
+        idleTimeoutMillis: 9999999
     }
 };
 
