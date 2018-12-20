@@ -1,5 +1,5 @@
 import { connect, close, NVarChar } from 'mssql'; // MS Sql Server client
-
+import db from '../db'
 import { dbConfig } from '../../../settings';
 
 export {
@@ -25,12 +25,12 @@ async function ServiceGetAllStore() {
         WHERE COMPANY = 'Y' 
         ORDER BY STORE_ID ASC`
 
-        let pool = await connect(dbConfig)
+        const pool = await db.poolPromise
         let result = await pool.request().query(querysql)
         res = result
     } catch (err) {
     } finally {
-        await close()
+        // await close()
     }
     return await res
 }
@@ -40,12 +40,12 @@ async function ServiceGetVendor() {
     try {
         let querysql = `SELECT * FROM  ACC_M_VENDORS ORDER BY VENDOR ASC`
 
-        let pool = await connect(dbConfig)
+        const pool = await db.poolPromise
         let result = await pool.request().query(querysql)
         res = result
     } catch (err) {
     } finally {
-        await close()
+        // await close()
     }
     return await res
 }
@@ -55,12 +55,12 @@ async function ServiceGetRegion() {
     try {
         let querysql = `SELECT * FROM REGION_MASTER ORDER BY REGION_ID ASC`
 
-        let pool = await connect(dbConfig)
+        const pool = await db.poolPromise
         let result = await pool.request().query(querysql)
         res = result
     } catch (err) {
     } finally {
-        await close()
+        // await close()
     }
     return await res
 }
@@ -71,12 +71,12 @@ async function ServiceGetAllBank() {
         let querysql = `SELECT B.BANK_CODE,b.BANK_CODE + ' ' + B.BANK_NAME as BANK  from ACC_M_BANK B
 		ORDER BY B.BANK_CODE ASC`
 
-        let pool = await connect(dbConfig)
+        const pool = await db.poolPromise
         let result = await pool.request().query(querysql)
         res = result
     } catch (err) {
     } finally {
-        await close()
+        // await close()
     }
     return await res
 }
@@ -96,12 +96,12 @@ async function ServiceGetStoreConfig() {
                                     ON A.STORE_CODE = C.STORE_ID
                     ORDER  BY A.STORE_CODE`
 
-        let pool = await connect(dbConfig)
+        const pool = await db.poolPromise
         let result = await pool.request().query(querysql)
         res = result
     } catch (err) {
     } finally {
-        await close()
+        // await close()
     }
     return await res
 }
@@ -115,12 +115,12 @@ async function ServiceGetPopupStore() {
                                 FROM   ACC_M_STORE A 
                                 WHERE  A.STORE_CODE = S.STORE_ID)`
 
-        let pool = await connect(dbConfig)
+                                const pool = await db.poolPromise
         let result = await pool.request().query(querysql)
         res = result
     } catch (err) {
     } finally {
-        await close()
+        // await close()
     }
     return await res
 }
@@ -133,12 +133,12 @@ async function ServiceGetDropDownBank() {
                         FROM   ACC_M_BANK B 
                         ORDER  BY B.BANK_CODE ASC`
 
-        let pool = await connect(dbConfig)
+                        const pool = await db.poolPromise
         let result = await pool.request().query(querysql)
         res = result
     } catch (err) {
     } finally {
-        await close()
+        // await close()
     }
     return await res
 }
@@ -158,7 +158,7 @@ async function ServiceGetStoreConfigByStoreCode(store_code) {
                     FROM   acc_m_store 
                     WHERE  STORE_CODE = @input_store_code `
         const input_store_code = 'input_store_code'
-        let pool = await connect(dbConfig)
+        const pool = await db.poolPromise
         let result = await pool.request().input(input_store_code, NVarChar, store_code.trim()).query(querysql)
         if (result !== undefined) {
             if (result.rowsAffected > 0) res = result
@@ -167,7 +167,7 @@ async function ServiceGetStoreConfigByStoreCode(store_code) {
     } catch (err) {
 
     } finally {
-        await close()
+        // await close()
     }
 
     return await res
@@ -202,7 +202,7 @@ async function ServiceInsertStoreConfig(prm) {
             const input_create_date = 'input_create_date'
             const input_create_by = 'input_create_by'
 
-            let pool = await connect(dbConfig)
+            const pool = await db.poolPromise
             let result = await pool.request()
                 .input(input_store_code, NVarChar, prm.store_code.trim())
                 .input(input_co_code, NVarChar, (prm.co_code != undefined) ? prm.co_code.trim() : '')
@@ -219,7 +219,7 @@ async function ServiceInsertStoreConfig(prm) {
     } catch (err) {
 
     } finally {
-        await close()
+        // await close()
     }
 
     return await res
@@ -249,7 +249,7 @@ async function ServiceEditStoreConfig(prm) {
             const input_update_date = 'input_update_date'
             const input_update_by = 'input_update_by'
 
-            let pool = await connect(dbConfig)
+            const pool = await db.poolPromise
             let result = await pool.request()
 
             if (prm.store_code != undefined) await result.input(input_store_code, NVarChar, prm.store_code.trim())
@@ -268,7 +268,7 @@ async function ServiceEditStoreConfig(prm) {
     } catch (err) {
 
     } finally {
-        await close()
+        // await close()
     }
     return await res
 }
@@ -281,7 +281,7 @@ async function ServiceDeleteStoreConfig(store_code) {
 
             const input_store_code = 'input_store_code'
 
-            let pool = await connect(dbConfig)
+            const pool = await db.poolPromise
             let result = await pool.request()
                 .input(input_store_code, NVarChar, store_code.trim())
                 .query(querysql)
@@ -293,7 +293,7 @@ async function ServiceDeleteStoreConfig(store_code) {
     } catch (err) {
 
     } finally {
-        await close()
+        // await close()
     }
 
     return await res

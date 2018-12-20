@@ -1,5 +1,6 @@
 import { connect, NVarChar, close } from 'mssql'; // MS Sql Server client
 import { dbConfig } from '../../../settings';
+import db from '../db'
 
 export {
     ServiceGetMessageByCode,
@@ -16,7 +17,7 @@ async function ServiceGetMessageByCode(prmCode, prmMsg) {
         // input parameter            
         const input_MSG_CODE = 'input_MSG_CODE'
         //    
-        let pool = await connect(dbConfig)
+        const pool = await db.poolPromise
         let result = await pool.request()
             // set parameter
             .input(input_MSG_CODE, NVarChar, prmCode.trim())
@@ -40,7 +41,7 @@ async function ServiceGetMessageByCode(prmCode, prmMsg) {
     } catch (err) {
         //400 Bad Request
     } finally {
-        await close()
+        // await close()
     }
 
     return await Msg

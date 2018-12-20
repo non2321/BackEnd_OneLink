@@ -1,5 +1,6 @@
 import { connect, close, NVarChar, Int, Date } from 'mssql'; // MS Sql Server client
 import { dbConfig } from '../../../settings'
+import db from '../db'
 
 export {
     ServiceGetLogSDC
@@ -27,15 +28,14 @@ async function ServiceGetLogSDC(prm) {
         const input_datefrom = 'input_datefrom'
         const input_dateto = 'input_dateto'      
 
-        let pool = await connect(dbConfig)
-
-        let result = await pool.request()       
+        const pool = await db.poolPromise
+        let result = await pool.request()     
         await result.input(input_datefrom, NVarChar, prm.datefrom)
         await result.input(input_dateto, NVarChar, prm.dateto)       
         res = await result.query(querysql)
     } catch (err) {
     } finally {
-        await close()
+        // await close()
     }
     return res
 }

@@ -1,6 +1,6 @@
 import { connect, close } from 'mssql'; // MS Sql Server client
 import { dbConfig } from '../../../settings';
-
+import db from '../db'
 export {
     FormatNumberLength,
     GetCountUserId,
@@ -25,10 +25,10 @@ async function GetCountUserId() {
     let count = 0;
     try {
         const querysql = `SELECT  ISNULL((MAX(CONVERT(INT, CASE WHEN ISNUMERIC(USER_ID) = 1 THEN USER_ID ELSE 0 END))),0) + 1 ID FROM USERS`
-        let pool = await connect(dbConfig)
+        const pool = await db.poolPromise
         let result = await pool.request()
             .query(querysql)
-        await close()
+        // await close()
         if (result.rowsAffected > 0) {
             count = result.recordset[0].ID
         } else {
@@ -46,10 +46,10 @@ async function GetCountLOVId() {
     let count = 0;
     try {
         const querysql = `SELECT ISNULL((MAX(CONVERT(INT, CASE WHEN ISNUMERIC(LOV_ID) = 1 THEN LOV_ID ELSE 0 END))),0) + 1 ID FROM LOV_DATA `
-        let pool = await connect(dbConfig)
+        const pool = await db.poolPromise
         let result = await pool.request()
             .query(querysql)
-        await close()
+        
         if (result.rowsAffected > 0) {
             count = result.recordset[0].ID
         } else {
@@ -67,10 +67,10 @@ async function GetCountACC_M_ACCOUNT_SALE() {
     let count = 0;
     try {
         const querysql = `SELECT ISNULL(MAX(FORMULARID),0) + 1 ID FROM ACC_M_ACCOUNT_SALE`
-        let pool = await connect(dbConfig)
+        const pool = await db.poolPromise
         let result = await pool.request()
             .query(querysql)
-        await close()
+        
         if (result.rowsAffected > 0) {
             count = result.recordset[0].ID
         } else {
@@ -108,10 +108,10 @@ async function GetCountACC_TERM_CLOSING() {
     let count = 0;
     try {
         const querysql = `SELECT ISNULL((MAX(CONVERT(INT, CASE WHEN ISNUMERIC(TERM_ID) = 1 THEN TERM_ID ELSE 0 END))),0) + 1 ID from ACC_TERM_CLOSING`
-        let pool = await connect(dbConfig)
+        const pool = await db.poolPromise
         let result = await pool.request()
             .query(querysql)
-        await close()
+        
         if (result.rowsAffected > 0) {
             count = result.recordset[0].ID
         } else {

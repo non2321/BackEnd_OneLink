@@ -50,7 +50,7 @@ export {
     ServicePLBalE1_ACTUALFile,
     ServicePLBalE1_ACTUAL_ADJFile,
     ServicePLBalE1_NetSalesFile,
-    ServicePLBalE1_ACTUAL_SPA_AND__ACTUAL_ADJ_SPAFile    
+    ServicePLBalE1_ACTUAL_SPA_AND__ACTUAL_ADJ_SPAFile
 }
 
 async function ServiceGetFinancialCode() {
@@ -59,14 +59,14 @@ async function ServiceGetFinancialCode() {
         let querysql = ` SELECT * FROM ACC_M_FINANCIAL_CODES 
         ORDER BY FINANCIAL_CODE ASC`
 
-        let pool = await connect(dbConfig)
+        const pool = await db.poolPromise
         let result = await pool.request().query(querysql)
         res = result
 
     } catch (err) {
 
     } finally {
-        await close()
+        // await close()
     }
 
     return await res
@@ -96,7 +96,7 @@ async function ServiceGetFinancialCodeById(fin_code) {
                     FROM   acc_m_financial_codes 
                     WHERE FINANCIAL_CODE = @input_fin_code `
         const input_fin_code = 'input_fin_code'
-        let pool = await connect(dbConfig)
+        const pool = await db.poolPromise
         let result = await pool.request().input(input_fin_code, NVarChar, fin_code).query(querysql)
         if (result !== undefined) {
             if (result.rowsAffected > 0) res = result
@@ -105,7 +105,7 @@ async function ServiceGetFinancialCodeById(fin_code) {
     } catch (err) {
 
     } finally {
-        await close()
+        // await close()
     }
 
     return await res
@@ -144,7 +144,7 @@ async function ServiceInsertFinancialCode(prm) {
             const input_create_date = 'input_create_date'
             const input_create_by = 'input_create_by'
 
-            let pool = await connect(dbConfig)
+            const pool = await db.poolPromise
             let result = await pool.request()
                 .input(input_fin_code, NVarChar, (prm.fin_code != undefined) ? prm.fin_code : '')
                 .input(input_fin_name, NVarChar, (prm.fin_name != undefined) ? prm.fin_name : '')
@@ -160,7 +160,7 @@ async function ServiceInsertFinancialCode(prm) {
     } catch (err) {
 
     } finally {
-        await close()
+        // await close()
     }
     return await res
 }
@@ -195,8 +195,7 @@ async function ServiceFinancialCodeCheckDuplicate(prmfin) {
         const input_remart_flag = 'input_remart_flag'
 
 
-        let pool = await connect(dbConfig)
-
+        const pool = await db.poolPromise
         let result = await pool.request()
 
         if (prmfin.fin_code != undefined) await result.input(input_fin_code, NVarChar, prmfin.fin_code.trim())
@@ -221,7 +220,7 @@ async function ServiceFinancialCodeCheckDuplicate(prmfin) {
     } catch (err) {
 
     } finally {
-        await close()
+        // await close()
     }
 
     return await res
@@ -267,7 +266,7 @@ async function ServiceEditFinancialCode(prmfin) {
             const input_update_date = 'input_update_date'
             const input_update_by = 'input_update_by'
 
-            let pool = await connect(dbConfig)
+            const pool = await db.poolPromise
             let result = await pool.request()
 
             if (prmfin.fin_code != undefined) await result.input(input_fin_code, NVarChar, prmfin.fin_code.trim())
@@ -295,7 +294,7 @@ async function ServiceEditFinancialCode(prmfin) {
     } catch (err) {
 
     } finally {
-        await close()
+        // await close()
     }
     return await res
 }
@@ -307,14 +306,14 @@ async function ServiceGetBankAccount() {
         let querysql = ` SELECT A.BANK_CODE,A.BANK_NAME, A.BANK_BRANCH, A.ACCOUNT_CODE
         FROM ACC_M_BANK A ORDER BY BANK_CODE `
 
-        let pool = await connect(dbConfig)
+        const pool = await db.poolPromise
         let result = await pool.request().query(querysql)
         res = result
 
     } catch (err) {
 
     } finally {
-        await close()
+        // await close()
     }
 
     return await res
@@ -335,7 +334,7 @@ async function ServiceGetBankAccountById(bank_code) {
                     FROM ACC_M_BANK 
                     WHERE BANK_CODE = @input_bank_code`
         const input_bank_code = 'input_bank_code'
-        let pool = await connect(dbConfig)
+        const pool = await db.poolPromise
         let result = await pool.request().input(input_bank_code, NVarChar, bank_code.trim()).query(querysql)
         if (result !== undefined) {
             if (result.rowsAffected > 0) res = result
@@ -344,7 +343,7 @@ async function ServiceGetBankAccountById(bank_code) {
     } catch (err) {
 
     } finally {
-        await close()
+        // await close()
     }
 
     return await res
@@ -375,7 +374,7 @@ async function ServiceInsertBankAccount(prm) {
             const input_account_code = 'input_account_code'
             const input_create_by = 'input_create_by'
 
-            let pool = await connect(dbConfig)
+            const pool = await db.poolPromise
             let result = await pool.request()
                 .input(input_bank_code, NVarChar, prm.bank_code.trim())
                 .input(input_bank_name, NVarChar, (prm.bank_name != undefined) ? prm.bank_name.trim() : '')
@@ -391,7 +390,7 @@ async function ServiceInsertBankAccount(prm) {
     } catch (err) {
 
     } finally {
-        await close()
+        // await close()
     }
 
     return await res
@@ -419,7 +418,7 @@ async function ServiceEditBankAccount(prm) {
             const input_update_date = 'input_update_date'
             const input_update_by = 'input_update_by'
 
-            let pool = await connect(dbConfig)
+            const pool = await db.poolPromise
             let result = await pool.request()
 
             if (prm.bank_code != undefined) await result.input(input_bank_code, NVarChar, prm.bank_code.trim())
@@ -437,7 +436,7 @@ async function ServiceEditBankAccount(prm) {
     } catch (err) {
 
     } finally {
-        await close()
+        // await close()
     }
     return await res
 }
@@ -451,7 +450,7 @@ async function ServiceDeleteBankAccountById(bank_code) {
 
             const input_bank_code = 'input_bank_code'
 
-            let pool = await connect(dbConfig)
+            const pool = await db.poolPromise
             let result = await pool.request()
                 .input(input_bank_code, NVarChar, bank_code.trim())
                 .query(querysql)
@@ -463,7 +462,7 @@ async function ServiceDeleteBankAccountById(bank_code) {
     } catch (err) {
 
     } finally {
-        await close()
+        // await close()
     }
 
     return await res
@@ -477,8 +476,7 @@ async function ServiceCheckDuplicateBankAccount(bank_code) {
 
         const input_bank_code = 'input_bank_code'
 
-        let pool = await connect(dbConfig)
-
+        const pool = await db.poolPromise
         let result = await pool.request()
             .input(input_bank_code, NVarChar, bank_code.trim())
             .query(querysql)
@@ -490,7 +488,7 @@ async function ServiceCheckDuplicateBankAccount(bank_code) {
     } catch (err) {
 
     } finally {
-        await close()
+        // await close()
     }
 
     return await res
@@ -504,14 +502,14 @@ async function ServiceGetAccountCodeForSale() {
     try {
         let querysql = `SELECT * FROM ACC_M_ACCOUNT_SALE ORDER BY FORMULARID ASC`
 
-        let pool = await connect(dbConfig)
+        const pool = await db.poolPromise
         let result = await pool.request().query(querysql)
         res = result
 
     } catch (err) {
 
     } finally {
-        await close()
+        // await close()
     }
 
     return await res
@@ -536,7 +534,7 @@ async function ServiceGetAccountCodeForSaleById(formular_id) {
                         FROM   acc_m_account_sale 
                         WHERE FORMULARID = @input_formular_id `
         const input_formular_id = 'input_formular_id'
-        let pool = await connect(dbConfig)
+        const pool = await db.poolPromise
         let result = await pool.request().input(input_formular_id, NVarChar, formular_id.trim()).query(querysql)
         if (result !== undefined) {
             if (result.rowsAffected > 0) res = result
@@ -545,7 +543,7 @@ async function ServiceGetAccountCodeForSaleById(formular_id) {
     } catch (err) {
 
     } finally {
-        await close()
+        // await close()
     }
 
     return await res
@@ -590,8 +588,8 @@ async function ServiceInsertAccountCodeForSale(prm) {
             const input_create_by = 'input_create_by'
             const input_fincode = 'input_fincode'
 
-            let pool = await connect(dbConfig)
-            let result = await pool.request()
+            const pool = await db.poolPromise
+        let result = await pool.request()
                 .input(input_formular_id, Int, id)
                 .input(input_formular_name, NVarChar, (prm.formular_name != undefined) ? prm.formular_name : '')
                 .input(input_account_code, NVarChar, (prm.account_code != undefined) ? prm.account_code : '')
@@ -610,7 +608,7 @@ async function ServiceInsertAccountCodeForSale(prm) {
     } catch (err) {
 
     } finally {
-        await close()
+        // await close()
     }
 
     return await res
@@ -646,7 +644,7 @@ async function ServiceEditAccountCodeForSale(prm) {
             const input_update_by = 'input_update_by'
             const input_fincode = 'input_fincode'
 
-            let pool = await connect(dbConfig)
+            const pool = await db.poolPromise
             let result = await pool.request()
 
             if (prm.formular_id != undefined) await result.input(input_formular_id, NVarChar, prm.formular_id)
@@ -668,7 +666,7 @@ async function ServiceEditAccountCodeForSale(prm) {
     } catch (err) {
 
     } finally {
-        await close()
+        // await close()
     }
     return await res
 }
@@ -682,12 +680,12 @@ async function ServiceGetDropDownBuType() {
         AND LOV_CODE = 'BU_TYPE' 
         ORDER BY LOV1 ASC`
 
-        let pool = await connect(dbConfig)
+        const pool = await db.poolPromise
         let result = await pool.request().query(querysql)
         res = result
     } catch (err) {
     } finally {
-        await close()
+        // await close()
     }
     return await res
 }
@@ -701,12 +699,12 @@ async function ServiceGetDropDownType() {
         AND LOV_CODE = 'ACC_TYPE' 
         ORDER BY LOV1 ASC`
 
-        let pool = await connect(dbConfig)
+        const pool = await db.poolPromise
         let result = await pool.request().query(querysql)
         res = result
     } catch (err) {
     } finally {
-        await close()
+        // await close()
     }
     return await res
 }
@@ -718,8 +716,7 @@ async function ServiceCheckDuplicateAccountCodeForSale(formular_name) {
 
         const input_formular_name = 'input_formular_name'
 
-        let pool = await connect(dbConfig)
-
+        const pool = await db.poolPromise
         let result = await pool.request()
             .input(input_formular_name, NVarChar, formular_name.trim())
             .query(querysql)
@@ -731,7 +728,7 @@ async function ServiceCheckDuplicateAccountCodeForSale(formular_name) {
     } catch (err) {
 
     } finally {
-        await close()
+        // await close()
     }
 
     return await res
@@ -748,8 +745,7 @@ async function ServiceCheckEditDuplicateAccountCodeForSale(prm) {
         const input_formular_id = 'input_formular_id'
         const input_formular_name = 'input_formular_name'
 
-        let pool = await connect(dbConfig)
-
+        const pool = await db.poolPromise
         let result = await pool.request()
         if (prm.formular_id != undefined) await result.input(input_formular_id, NVarChar, prm.formular_id.trim())
         if (prm.formular_name != undefined) await result.input(input_formular_name, NVarChar, prm.formular_name.trim())
@@ -762,7 +758,7 @@ async function ServiceCheckEditDuplicateAccountCodeForSale(prm) {
     } catch (err) {
 
     } finally {
-        await close()
+        // await close()
     }
 
     return await res
@@ -1253,7 +1249,7 @@ async function ServiceDeletePLBalE1(prm) {
                 .input(input_period_month, NVarChar, prm.period_month)
                 .input(input_period_year, NVarChar, prm.period_year)
                 .query(querysql)
-           
+
             if (result !== undefined) {
                 if (result.rowsAffected > 0) res = true
             }
@@ -1307,7 +1303,7 @@ async function ServicePLBalE1_BALFile(prm) {
                 .input(input_period_month, NVarChar, prm.period_month)
                 .input(input_period_year, NVarChar, prm.period_year)
                 .query(querysql)
-           
+
             if (result !== undefined) {
                 if (result.rowsAffected > 0) res = result
             }
@@ -1359,7 +1355,7 @@ async function ServicePLBalE1_BAL_ADJFile(prm) {
                 .input(input_period_month, NVarChar, prm.period_month)
                 .input(input_period_year, NVarChar, prm.period_year)
                 .query(querysql)
-           
+
             if (result !== undefined) {
                 if (result.rowsAffected > 0) res = result
             }
@@ -1411,7 +1407,7 @@ async function ServicePLBalE1_ACTUALFile(prm) {
                 .input(input_period_month, NVarChar, prm.period_month)
                 .input(input_period_year, NVarChar, prm.period_year)
                 .query(querysql)
-           
+
             if (result !== undefined) {
                 if (result.rowsAffected > 0) res = result
             }
@@ -1463,7 +1459,7 @@ async function ServicePLBalE1_ACTUAL_ADJFile(prm) {
                 .input(input_period_month, NVarChar, prm.period_month)
                 .input(input_period_year, NVarChar, prm.period_year)
                 .query(querysql)
-           
+
             if (result !== undefined) {
                 if (result.rowsAffected > 0) res = result
             }
@@ -1512,7 +1508,7 @@ async function ServicePLBalE1_NetSalesFile(prm) {
                 .input(input_period_month, NVarChar, prm.period_month)
                 .input(input_period_year, NVarChar, prm.period_year)
                 .query(querysql)
-           
+
             if (result !== undefined) {
                 if (result.rowsAffected > 0) res = result
             }
@@ -1528,18 +1524,18 @@ async function ServicePLBalE1_NetSalesFile(prm) {
 
 async function ServicePLBalE1_ACTUAL_SPA_AND__ACTUAL_ADJ_SPAFile(prm) {
     let res
-   
+
     try {
         if (prm) {
             const p_month = 'p_month'
-            const p_year = 'p_year'           
+            const p_year = 'p_year'
 
             let pool = await connect(dbConfig)
             let result = await pool.request()
                 .input(p_month, NVarChar, prm.period_month)
-                .input(p_year, NVarChar, prm.period_year)                
+                .input(p_year, NVarChar, prm.period_year)
                 .execute('EXPORT_NETSALES_P_AND_L')
-            if (result !== undefined) {                
+            if (result !== undefined) {
                 res = result
             }
         }

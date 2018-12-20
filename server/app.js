@@ -54,7 +54,7 @@ import { CodeW0002 } from "./models/msg_type";
 import { secretkey, webPort, tableautoken, mmxsftp } from "../settings";
 
 //Task Scheduler
-import { runTaskSDCInterface, GetDropDownSDCInterfaceFile, GetFileSDCInterfaceTypeActive, GetDataTableFileSDCInterfaceTypeActive, RerunTaskSDCInterface } from './controllers/scheduler/SDC_Interface'
+import { runTaskSDCInterface, GetDropDownSDCInterfaceFile, GetFileSDCInterfaceTypeActive, GetDataTableFileSDCInterfaceTypeActive, GetValidationFile, RerunTaskSDCInterface } from './controllers/scheduler/SDC_Interface'
 import taskDailyFins from './controllers/scheduler/DailyFins';
 
 // It extracts the data out of the request headers like the form data, etc,.
@@ -1102,6 +1102,11 @@ app.get('/api/sdcbatchfile/tablefiletypeactive', async (req, res) => {
   await GetDataTableFileSDCInterfaceTypeActive(req, res, req.body)
 })
 
+app.get('/api/sdcbatchfile/validationfile/:year/:month/:day', async (req, res) => {
+  console.log('sdcbatchfile/validationfile')
+  await GetValidationFile(req, res, req.body);
+})
+
 //Edit Term Closing
 app.post('/api/sdcbatchfile/rerunsdcinterface', verifyToken, async (req, res) => {
   console.log('sdcbatchfile_rerunsdcinterface')
@@ -1114,8 +1119,7 @@ app.post('/api/sdcbatchfile/rerunsdcinterface', verifyToken, async (req, res) =>
       await Expired(req, res, data)
 
     } else {
-      const user = authData.jwtdata
-      const body = req.body
+      const user = authData.jwtdata      
       await RerunTaskSDCInterface(req, res, req.body, user)     
     }
   })
@@ -1196,7 +1200,7 @@ function verifyToken(req, res, next) {
 
 //Task Scheduler
 schedule('0 0 8 * * *', async function () {
-  console.log(`running schedule SDCInterface 8 AM at ${new Date().toLocaleString()}`)
+  console.log(`running schedule SDCInterface at ${new Date().toLocaleString()}`)
   await runTaskSDCInterface()
 });
 

@@ -1,5 +1,6 @@
 import { connect, close, NVarChar } from 'mssql'; // MS Sql Server client
 
+import db from '../db'
 import { dbConfig } from '../../../settings';
 import { Lov_ID } from '../digit_number';
 import { FormatNumberLength, GetCountLOVId } from '../../models/Services/utils';
@@ -18,7 +19,7 @@ export {
 
 async function ServiceGetCompanyConfig() {
     let res = {}
-    try {  
+    try {
         let querysql = `SELECT LOV_ID,
                             LOV1, 
                             LOV2 
@@ -27,16 +28,16 @@ async function ServiceGetCompanyConfig() {
                             AND LOV_TYPE = 'SALES' 
                             AND LOV_CODE = 'COMPANY' 
                             AND ACTIVE_FLAG = 'A' 
-                            ORDER BY LOV1 ASC ` 
+                            ORDER BY LOV1 ASC `
 
-        let pool = await connect(dbConfig)      
-        let result = await pool.request().query(querysql)           
+        const pool = await db.poolPromise
+        let result = await pool.request().query(querysql)
         res = result
 
     } catch (err) {
 
     } finally {
-        await close()
+        // await close()
     }
 
     return await res
@@ -45,7 +46,7 @@ async function ServiceGetCompanyConfig() {
 
 async function ServiceGetLovById(Id) {
     let res = {}
-    try {  
+    try {
         let querysql = `SELECT lov_id, 
                             lov_group, 
                             lov_type, 
@@ -70,18 +71,18 @@ async function ServiceGetLovById(Id) {
                             Format(update_date, 'MM/dd/yyyy hh:mm:ss:mmm tt') AS UPDATE_DATE, 
                             update_by 
                     FROM   lov_data 
-                    WHERE  LOV_ID = @input_lov_id ` 
+                    WHERE  LOV_ID = @input_lov_id `
         const input_lov_id = 'input_lov_id'
-        let pool = await connect(dbConfig)      
-        let result = await pool.request().input(input_lov_id, NVarChar, Id.trim()).query(querysql) 
+        const pool = await db.poolPromise
+        let result = await pool.request().input(input_lov_id, NVarChar, Id.trim()).query(querysql)
         if (result !== undefined) {
             if (result.rowsAffected > 0) res = result
-        }  
+        }
 
     } catch (err) {
 
     } finally {
-        await close()
+        // await close()
     }
 
     return await res
@@ -155,7 +156,7 @@ async function ServiceInsertLov(prmlov) {
             const input_create_date = 'input_create_date'
             const input_create_by = 'input_create_by'
 
-            let pool = await connect(dbConfig)
+            const pool = await db.poolPromise
             let result = await pool.request()
                 .input(input_lov_id, NVarChar, lovid.trim())
                 .input(input_lov_group, NVarChar, (prmlov.lov_group != undefined) ? prmlov.lov_group.trim() : '')
@@ -185,7 +186,7 @@ async function ServiceInsertLov(prmlov) {
     } catch (err) {
 
     } finally {
-        await close()
+        // await close()
     }
 
     return await res
@@ -194,30 +195,30 @@ async function ServiceInsertLov(prmlov) {
 
 async function ServiceEditLov(prmlov) {
     let res
-    try {    
-        if (prmlov.lov_id) {          
-            let querysql = `UPDATE LOV_DATA SET LOV_ID=LOV_ID `    
+    try {
+        if (prmlov.lov_id) {
+            let querysql = `UPDATE LOV_DATA SET LOV_ID=LOV_ID `
             // var newStr = ["str1", "str2"].join(","); 
-            if (prmlov.lov_group != undefined) querysql =  [querysql ,`LOV_GROUP = @input_lov_group `].join(",")
-            if (prmlov.lov_type != undefined) querysql =  [querysql ,`LOV_TYPE = @input_lov_type `].join(",")
-            if (prmlov.parent_lov_id != undefined) querysql =  [querysql ,`PARENT_LOV_ID = @input_parent_lov_id `].join(",")
-            if (prmlov.lov_code != undefined) querysql =  [querysql ,`LOV_CODE = @input_lov_code `].join(",")
-            if (prmlov.lov_1 != undefined) querysql =  [querysql ,`LOV1 = @input_lov_1 `].join(",")
-            if (prmlov.lov_2 != undefined) querysql =  [querysql ,`LOV2 = @input_lov_2 `].join(",")
-            if (prmlov.lov_3 != undefined) querysql =  [querysql ,`LOV3 = @input_lov_3 `].join(",")
-            if (prmlov.lov_4 != undefined) querysql =  [querysql ,`LOV4 = @input_lov_4 `].join(",")
-            if (prmlov.lov_5 != undefined) querysql =  [querysql ,`LOV5 = @input_lov_5 `].join(",")
-            if (prmlov.lov_6 != undefined) querysql =  [querysql ,`LOV6 = @input_lov_6 `].join(",")
-            if (prmlov.lov_7 != undefined) querysql =  [querysql ,`LOV7 = @input_lov_7 `].join(",")
-            if (prmlov.lov_8 != undefined) querysql =  [querysql ,`LOV8 = @input_lov_8 `].join(",")
-            if (prmlov.lov_9 != undefined) querysql =  [querysql ,`LOV9 = @input_lov_9 `].join(",")
-            if (prmlov.lov_10 != undefined) querysql =  [querysql ,`LOV10 = @input_lov_10 `].join(",")
-            if (prmlov.lov_desc != undefined) querysql =  [querysql ,`LOV_DESC = @input_lov_desc `].join(",")
-            if (prmlov.lov_order != undefined) querysql =  [querysql ,`LOV_ORDER = @input_lov_order `].join(",")
-            if (prmlov.active_flage != undefined) querysql =  [querysql ,`ACTIVE_FLAG = @input_active_flage `].join(",")  
-            
-            if (prmlov.update_date != undefined) querysql =  [querysql ,`UPDATE_DATE = @input_update_date `].join(",") 
-            if (prmlov.update_by != undefined) querysql =  [querysql ,`UPDATE_BY = @input_update_by `].join(",") 
+            if (prmlov.lov_group != undefined) querysql = [querysql, `LOV_GROUP = @input_lov_group `].join(",")
+            if (prmlov.lov_type != undefined) querysql = [querysql, `LOV_TYPE = @input_lov_type `].join(",")
+            if (prmlov.parent_lov_id != undefined) querysql = [querysql, `PARENT_LOV_ID = @input_parent_lov_id `].join(",")
+            if (prmlov.lov_code != undefined) querysql = [querysql, `LOV_CODE = @input_lov_code `].join(",")
+            if (prmlov.lov_1 != undefined) querysql = [querysql, `LOV1 = @input_lov_1 `].join(",")
+            if (prmlov.lov_2 != undefined) querysql = [querysql, `LOV2 = @input_lov_2 `].join(",")
+            if (prmlov.lov_3 != undefined) querysql = [querysql, `LOV3 = @input_lov_3 `].join(",")
+            if (prmlov.lov_4 != undefined) querysql = [querysql, `LOV4 = @input_lov_4 `].join(",")
+            if (prmlov.lov_5 != undefined) querysql = [querysql, `LOV5 = @input_lov_5 `].join(",")
+            if (prmlov.lov_6 != undefined) querysql = [querysql, `LOV6 = @input_lov_6 `].join(",")
+            if (prmlov.lov_7 != undefined) querysql = [querysql, `LOV7 = @input_lov_7 `].join(",")
+            if (prmlov.lov_8 != undefined) querysql = [querysql, `LOV8 = @input_lov_8 `].join(",")
+            if (prmlov.lov_9 != undefined) querysql = [querysql, `LOV9 = @input_lov_9 `].join(",")
+            if (prmlov.lov_10 != undefined) querysql = [querysql, `LOV10 = @input_lov_10 `].join(",")
+            if (prmlov.lov_desc != undefined) querysql = [querysql, `LOV_DESC = @input_lov_desc `].join(",")
+            if (prmlov.lov_order != undefined) querysql = [querysql, `LOV_ORDER = @input_lov_order `].join(",")
+            if (prmlov.active_flage != undefined) querysql = [querysql, `ACTIVE_FLAG = @input_active_flage `].join(",")
+
+            if (prmlov.update_date != undefined) querysql = [querysql, `UPDATE_DATE = @input_update_date `].join(",")
+            if (prmlov.update_by != undefined) querysql = [querysql, `UPDATE_BY = @input_update_by `].join(",")
 
             querysql += ` WHERE LOV_ID = @input_lov_id `
 
@@ -241,33 +242,33 @@ async function ServiceEditLov(prmlov) {
             const input_active_flage = 'input_active_flage'
             const input_update_date = 'input_update_date'
             const input_update_by = 'input_update_by'
-           
 
-            let pool = await connect(dbConfig)
+
+            const pool = await db.poolPromise
             let result = await pool.request()
-            if(prmlov.lov_id != undefined) await result.input(input_lov_id, NVarChar, prmlov.lov_id.trim())
-            if(prmlov.lov_group != undefined) await result.input(input_lov_group, NVarChar, prmlov.lov_group.trim())
-            if(prmlov.lov_type != undefined) await result.input(input_lov_type, NVarChar, prmlov.lov_type.trim())
-            if(prmlov.parent_lov_id != undefined) await result.input(input_parent_lov_id, NVarChar, prmlov.parent_lov_id.trim())
-            if(prmlov.lov_code != undefined) await result.input(input_lov_code, NVarChar, prmlov.lov_code.trim())
-            if(prmlov.lov_1 != undefined) await result.input(input_lov_1, NVarChar, prmlov.lov_1.trim())
-            if(prmlov.lov_2 != undefined) await result.input(input_lov_2, NVarChar, prmlov.lov_2.trim())
-            if(prmlov.lov_3 != undefined) await result.input(input_lov_3, NVarChar, prmlov.lov_3.trim())
-            if(prmlov.lov_4 != undefined) await result.input(input_lov_4, NVarChar, prmlov.lov_4.trim())
-            if(prmlov.lov_5 != undefined) await result.input(input_lov_5, NVarChar, prmlov.lov_5.trim())
-            if(prmlov.lov_6 != undefined) await result.input(input_lov_6, NVarChar, prmlov.lov_6.trim())
-            if(prmlov.lov_7 != undefined) await result.input(input_lov_7, NVarChar, prmlov.lov_7.trim())
-            if(prmlov.lov_8 != undefined) await result.input(input_lov_8, NVarChar, prmlov.lov_8.trim())
-            if(prmlov.lov_9 != undefined) await result.input(input_lov_9, NVarChar, prmlov.lov_9.trim())
-            if(prmlov.lov_10 != undefined) await result.input(input_lov_10, NVarChar, prmlov.lov_10.trim())
-            if(prmlov.lov_desc != undefined) await result.input(input_lov_desc, NVarChar, prmlov.lov_desc.trim())
-            if(prmlov.lov_order != undefined) await result.input(input_lov_order, NVarChar, prmlov.lov_order.trim())
-            if(prmlov.active_flage != undefined) await result.input(input_active_flage, NVarChar, prmlov.active_flage.trim()) 
-            
-            if(prmlov.update_date != undefined) await result.input(input_update_date, NVarChar, prmlov.update_date.trim())   
-            if(prmlov.update_by != undefined) await result.input(input_update_by, NVarChar, prmlov.update_by.trim())   
-            result = await result.query(querysql)            
-            
+            if (prmlov.lov_id != undefined) await result.input(input_lov_id, NVarChar, prmlov.lov_id.trim())
+            if (prmlov.lov_group != undefined) await result.input(input_lov_group, NVarChar, prmlov.lov_group.trim())
+            if (prmlov.lov_type != undefined) await result.input(input_lov_type, NVarChar, prmlov.lov_type.trim())
+            if (prmlov.parent_lov_id != undefined) await result.input(input_parent_lov_id, NVarChar, prmlov.parent_lov_id.trim())
+            if (prmlov.lov_code != undefined) await result.input(input_lov_code, NVarChar, prmlov.lov_code.trim())
+            if (prmlov.lov_1 != undefined) await result.input(input_lov_1, NVarChar, prmlov.lov_1.trim())
+            if (prmlov.lov_2 != undefined) await result.input(input_lov_2, NVarChar, prmlov.lov_2.trim())
+            if (prmlov.lov_3 != undefined) await result.input(input_lov_3, NVarChar, prmlov.lov_3.trim())
+            if (prmlov.lov_4 != undefined) await result.input(input_lov_4, NVarChar, prmlov.lov_4.trim())
+            if (prmlov.lov_5 != undefined) await result.input(input_lov_5, NVarChar, prmlov.lov_5.trim())
+            if (prmlov.lov_6 != undefined) await result.input(input_lov_6, NVarChar, prmlov.lov_6.trim())
+            if (prmlov.lov_7 != undefined) await result.input(input_lov_7, NVarChar, prmlov.lov_7.trim())
+            if (prmlov.lov_8 != undefined) await result.input(input_lov_8, NVarChar, prmlov.lov_8.trim())
+            if (prmlov.lov_9 != undefined) await result.input(input_lov_9, NVarChar, prmlov.lov_9.trim())
+            if (prmlov.lov_10 != undefined) await result.input(input_lov_10, NVarChar, prmlov.lov_10.trim())
+            if (prmlov.lov_desc != undefined) await result.input(input_lov_desc, NVarChar, prmlov.lov_desc.trim())
+            if (prmlov.lov_order != undefined) await result.input(input_lov_order, NVarChar, prmlov.lov_order.trim())
+            if (prmlov.active_flage != undefined) await result.input(input_active_flage, NVarChar, prmlov.active_flage.trim())
+
+            if (prmlov.update_date != undefined) await result.input(input_update_date, NVarChar, prmlov.update_date.trim())
+            if (prmlov.update_by != undefined) await result.input(input_update_by, NVarChar, prmlov.update_by.trim())
+            result = await result.query(querysql)
+
             if (result !== undefined) {
                 if (result.rowsAffected > 0) res = true
             }
@@ -275,7 +276,7 @@ async function ServiceEditLov(prmlov) {
     } catch (err) {
 
     } finally {
-        await close()
+        // await close()
     }
 
     return await res
@@ -284,18 +285,18 @@ async function ServiceEditLov(prmlov) {
 
 async function ServiceDeleteLovById(id) {
     let res
-    try {    
-        if (id) {          
+    try {
+        if (id) {
             let querysql = `DELETE LOV_DATA
-            WHERE  LOV_ID = @input_lov_id `   
-           
-            const input_lov_id = 'input_lov_id'  
+            WHERE  LOV_ID = @input_lov_id `
 
-            let pool = await connect(dbConfig)
+            const input_lov_id = 'input_lov_id'
+
+            const pool = await db.poolPromise
             let result = await pool.request()
-            .input(input_lov_id, NVarChar, id.trim())           
-            .query(querysql)            
-            
+                .input(input_lov_id, NVarChar, id.trim())
+                .query(querysql)
+
             if (result !== undefined) {
                 if (result.rowsAffected > 0) res = true
             }
@@ -303,7 +304,7 @@ async function ServiceDeleteLovById(id) {
     } catch (err) {
 
     } finally {
-        await close()
+        // await close()
     }
 
     return await res
@@ -312,8 +313,8 @@ async function ServiceDeleteLovById(id) {
 
 async function ServiceCheckDuplicate(prmlov) {
     let res = true
-    try {  
-        let querysql = `SELECT LOV1,LOV2 FROM   LOV_DATA WHERE 1=1 `                              
+    try {
+        let querysql = `SELECT LOV1,LOV2 FROM   LOV_DATA WHERE 1=1 `
         if (prmlov.lov_id != undefined) querysql += `AND LOV_ID = @input_lov_id `
         if (prmlov.lov_group != undefined) querysql += `AND LOV_GROUP = @input_lov_group `
         if (prmlov.lov_type != undefined) querysql += `AND LOV_TYPE = @input_lov_type `
@@ -328,8 +329,8 @@ async function ServiceCheckDuplicate(prmlov) {
         if (prmlov.lov_8 != undefined) querysql += `AND LOV8 = @input_lov_8 `
         if (prmlov.lov_9 != undefined) querysql += `AND LOV9 = @input_lov_9 `
         if (prmlov.lov_10 != undefined) querysql += `AND LOV10 = @input_lov_10 `
-        if (prmlov.active_flage != undefined) querysql += `AND ACTIVE_FLAG  = @input_active_flage `       
-      
+        if (prmlov.active_flage != undefined) querysql += `AND ACTIVE_FLAG  = @input_active_flage `
+
         const input_lov_id = 'input_lov_id'
         const input_lov_group = 'input_lov_group'
         const input_lov_type = 'input_lov_type'
@@ -345,37 +346,36 @@ async function ServiceCheckDuplicate(prmlov) {
         const input_lov_9 = 'input_lov_9'
         const input_lov_10 = 'input_lov_10'
         const input_active_flage = 'input_active_flage'
-        
-        let pool = await connect(dbConfig)
-      
-        let result = await pool.request()  
 
-        if(prmlov.lov_id != undefined) await result.input(input_lov_id, NVarChar, prmlov.lov_id.trim())
-        if(prmlov.lov_group != undefined) await result.input(input_lov_group, NVarChar, prmlov.lov_group.trim())
-        if(prmlov.lov_type != undefined) await result.input(input_lov_type, NVarChar, prmlov.lov_type.trim())
-        if(prmlov.lov_code != undefined) await result.input(input_lov_code, NVarChar, prmlov.lov_code.trim())
-        if(prmlov.lov_1 != undefined) await result.input(input_lov_1, NVarChar, prmlov.lov_1.trim())
-        if(prmlov.lov_2 != undefined) await result.input(input_lov_2, NVarChar, prmlov.lov_2.trim())
-        if(prmlov.lov_3 != undefined) await result.input(input_lov_3, NVarChar, prmlov.lov_3.trim())
-        if(prmlov.lov_4 != undefined) await result.input(input_lov_4, NVarChar, prmlov.lov_4.trim())
-        if(prmlov.lov_5 != undefined) await result.input(input_lov_5, NVarChar, prmlov.lov_5.trim())
-        if(prmlov.lov_6 != undefined) await result.input(input_lov_6, NVarChar, prmlov.lov_6.trim())
-        if(prmlov.lov_7 != undefined) await result.input(input_lov_7, NVarChar, prmlov.lov_7.trim())
-        if(prmlov.lov_8 != undefined) await result.input(input_lov_8, NVarChar, prmlov.lov_8.trim())
-        if(prmlov.lov_9 != undefined) await result.input(input_lov_9, NVarChar, prmlov.lov_9.trim())
-        if(prmlov.lov_10 != undefined) await result.input(input_lov_10, NVarChar, prmlov.lov_10.trim())
-        if(prmlov.lov_order != undefined) await result.input(input_lov_order, NVarChar, prmlov.lov_order.trim())
-        if(prmlov.active_flage != undefined) await result.input(input_active_flage, NVarChar, prmlov.active_flage.trim())
+        const pool = await db.poolPromise
+        let result = await pool.request()
+
+        if (prmlov.lov_id != undefined) await result.input(input_lov_id, NVarChar, prmlov.lov_id.trim())
+        if (prmlov.lov_group != undefined) await result.input(input_lov_group, NVarChar, prmlov.lov_group.trim())
+        if (prmlov.lov_type != undefined) await result.input(input_lov_type, NVarChar, prmlov.lov_type.trim())
+        if (prmlov.lov_code != undefined) await result.input(input_lov_code, NVarChar, prmlov.lov_code.trim())
+        if (prmlov.lov_1 != undefined) await result.input(input_lov_1, NVarChar, prmlov.lov_1.trim())
+        if (prmlov.lov_2 != undefined) await result.input(input_lov_2, NVarChar, prmlov.lov_2.trim())
+        if (prmlov.lov_3 != undefined) await result.input(input_lov_3, NVarChar, prmlov.lov_3.trim())
+        if (prmlov.lov_4 != undefined) await result.input(input_lov_4, NVarChar, prmlov.lov_4.trim())
+        if (prmlov.lov_5 != undefined) await result.input(input_lov_5, NVarChar, prmlov.lov_5.trim())
+        if (prmlov.lov_6 != undefined) await result.input(input_lov_6, NVarChar, prmlov.lov_6.trim())
+        if (prmlov.lov_7 != undefined) await result.input(input_lov_7, NVarChar, prmlov.lov_7.trim())
+        if (prmlov.lov_8 != undefined) await result.input(input_lov_8, NVarChar, prmlov.lov_8.trim())
+        if (prmlov.lov_9 != undefined) await result.input(input_lov_9, NVarChar, prmlov.lov_9.trim())
+        if (prmlov.lov_10 != undefined) await result.input(input_lov_10, NVarChar, prmlov.lov_10.trim())
+        if (prmlov.lov_order != undefined) await result.input(input_lov_order, NVarChar, prmlov.lov_order.trim())
+        if (prmlov.active_flage != undefined) await result.input(input_active_flage, NVarChar, prmlov.active_flage.trim())
         result = await result.query(querysql)
-           
-        if (result !== undefined) {          
+
+        if (result !== undefined) {
             if (result.rowsAffected > 0) res = false
         }
 
     } catch (err) {
 
     } finally {
-        await close()
+        // await close()
     }
 
     return await res
@@ -384,8 +384,8 @@ async function ServiceCheckDuplicate(prmlov) {
 
 async function ServiceCheckEditDuplicate(prmlov) {
     let res = true
-    try {  
-        let querysql = `SELECT LOV1,LOV2 FROM   LOV_DATA WHERE 1=1 `                              
+    try {
+        let querysql = `SELECT LOV1,LOV2 FROM   LOV_DATA WHERE 1=1 `
         if (prmlov.lov_id != undefined) querysql += `AND LOV_ID <> @input_lov_id `
         if (prmlov.lov_group != undefined) querysql += `AND LOV_GROUP = @input_lov_group `
         if (prmlov.lov_type != undefined) querysql += `AND LOV_TYPE = @input_lov_type `
@@ -400,8 +400,8 @@ async function ServiceCheckEditDuplicate(prmlov) {
         if (prmlov.lov_8 != undefined) querysql += `AND LOV8 = @input_lov_8 `
         if (prmlov.lov_9 != undefined) querysql += `AND LOV9 = @input_lov_9 `
         if (prmlov.lov_10 != undefined) querysql += `AND LOV10 = @input_lov_10 `
-        if (prmlov.active_flage != undefined) querysql += `AND ACTIVE_FLAG  = @input_active_flage ` 
-      
+        if (prmlov.active_flage != undefined) querysql += `AND ACTIVE_FLAG  = @input_active_flage `
+
         const input_lov_id = 'input_lov_id'
         const input_lov_group = 'input_lov_group'
         const input_lov_type = 'input_lov_type'
@@ -417,30 +417,30 @@ async function ServiceCheckEditDuplicate(prmlov) {
         const input_lov_9 = 'input_lov_9'
         const input_lov_10 = 'input_lov_10'
         const input_active_flage = 'input_active_flage'
-        
-        let pool = await connect(dbConfig)
-      
-        let result = await pool.request()  
 
-        if(prmlov.lov_id != undefined) await result.input(input_lov_id, NVarChar, prmlov.lov_id.trim())
-        if(prmlov.lov_group != undefined) await result.input(input_lov_group, NVarChar, prmlov.lov_group.trim())
-        if(prmlov.lov_type != undefined) await result.input(input_lov_type, NVarChar, prmlov.lov_type.trim())
-        if(prmlov.lov_code != undefined) await result.input(input_lov_code, NVarChar, prmlov.lov_code.trim())
-        if(prmlov.lov_1 != undefined) await result.input(input_lov_1, NVarChar, prmlov.lov_1.trim())
-        if(prmlov.lov_2 != undefined) await result.input(input_lov_2, NVarChar, prmlov.lov_2.trim())
-        if(prmlov.lov_3 != undefined) await result.input(input_lov_3, NVarChar, prmlov.lov_3.trim())
-        if(prmlov.lov_4 != undefined) await result.input(input_lov_4, NVarChar, prmlov.lov_4.trim())
-        if(prmlov.lov_5 != undefined) await result.input(input_lov_5, NVarChar, prmlov.lov_5.trim())
-        if(prmlov.lov_6 != undefined) await result.input(input_lov_6, NVarChar, prmlov.lov_6.trim())
-        if(prmlov.lov_7 != undefined) await result.input(input_lov_7, NVarChar, prmlov.lov_7.trim())
-        if(prmlov.lov_8 != undefined) await result.input(input_lov_8, NVarChar, prmlov.lov_8.trim())
-        if(prmlov.lov_9 != undefined) await result.input(input_lov_9, NVarChar, prmlov.lov_9.trim())
-        if(prmlov.lov_10 != undefined) await result.input(input_lov_10, NVarChar, prmlov.lov_10.trim())
-        if(prmlov.lov_order != undefined) await result.input(input_lov_order, NVarChar, prmlov.lov_order.trim())
-        if(prmlov.active_flage != undefined) await result.input(input_active_flage, NVarChar, prmlov.active_flage.trim())
+        let pool = await connect(dbConfig)
+
+        let result = await pool.request()
+
+        if (prmlov.lov_id != undefined) await result.input(input_lov_id, NVarChar, prmlov.lov_id.trim())
+        if (prmlov.lov_group != undefined) await result.input(input_lov_group, NVarChar, prmlov.lov_group.trim())
+        if (prmlov.lov_type != undefined) await result.input(input_lov_type, NVarChar, prmlov.lov_type.trim())
+        if (prmlov.lov_code != undefined) await result.input(input_lov_code, NVarChar, prmlov.lov_code.trim())
+        if (prmlov.lov_1 != undefined) await result.input(input_lov_1, NVarChar, prmlov.lov_1.trim())
+        if (prmlov.lov_2 != undefined) await result.input(input_lov_2, NVarChar, prmlov.lov_2.trim())
+        if (prmlov.lov_3 != undefined) await result.input(input_lov_3, NVarChar, prmlov.lov_3.trim())
+        if (prmlov.lov_4 != undefined) await result.input(input_lov_4, NVarChar, prmlov.lov_4.trim())
+        if (prmlov.lov_5 != undefined) await result.input(input_lov_5, NVarChar, prmlov.lov_5.trim())
+        if (prmlov.lov_6 != undefined) await result.input(input_lov_6, NVarChar, prmlov.lov_6.trim())
+        if (prmlov.lov_7 != undefined) await result.input(input_lov_7, NVarChar, prmlov.lov_7.trim())
+        if (prmlov.lov_8 != undefined) await result.input(input_lov_8, NVarChar, prmlov.lov_8.trim())
+        if (prmlov.lov_9 != undefined) await result.input(input_lov_9, NVarChar, prmlov.lov_9.trim())
+        if (prmlov.lov_10 != undefined) await result.input(input_lov_10, NVarChar, prmlov.lov_10.trim())
+        if (prmlov.lov_order != undefined) await result.input(input_lov_order, NVarChar, prmlov.lov_order.trim())
+        if (prmlov.active_flage != undefined) await result.input(input_active_flage, NVarChar, prmlov.active_flage.trim())
         result = await result.query(querysql)
-           
-        if (result !== undefined) {          
+
+        if (result !== undefined) {
             if (result.rowsAffected > 0) res = false
         }
 
@@ -457,7 +457,7 @@ async function ServiceCheckEditDuplicate(prmlov) {
 ////////////////////////  CompanyAccount  ////////////////////////
 async function ServiceGetCompanyAccountConfig() {
     let res = {}
-    try {  
+    try {
         let querysql = `SELECT LOV_ID,
                             LOV1, 
                             LOV2,
@@ -467,16 +467,16 @@ async function ServiceGetCompanyAccountConfig() {
                             AND LOV_TYPE = 'SALES' 
                             AND LOV_CODE = 'COMPANY_ACC'  
                             AND ACTIVE_FLAG = 'A' 
-                            ORDER BY LOV1 ASC ` 
+                            ORDER BY LOV1 ASC `
 
-        let pool = await connect(dbConfig)      
-        let result = await pool.request().query(querysql)           
+        const pool = await db.poolPromise
+        let result = await pool.request().query(querysql)
         res = result
 
     } catch (err) {
 
     } finally {
-        await close()
+        // await close()
     }
 
     return await res

@@ -76,13 +76,13 @@ async function ServiceGetAccountCodeForInventory() {
         ORDER  BY M.ACTIONCODE, 
                 M.INV_CLASS ASC `
 
-        let pool = await connect(dbConfig)
+        const pool = await db.poolPromise
         let result = await pool.request().query(querysql)
         res = result
 
     } catch (err) {
     } finally {
-        await close()
+        // await close()
     }
     return await res
 }
@@ -99,12 +99,12 @@ async function ServiceGetDropDownGrpBy() {
         AND      ACTIVE_FLAG = 'A' 
         ORDER BY LOV1 ASC;`
 
-        let pool = await connect(dbConfig)
+        const pool = await db.poolPromise
         let result = await pool.request().query(querysql)
         res = result
     } catch (err) {
     } finally {
-        await close()
+        // await close()
     }
     return await res
 }
@@ -121,12 +121,12 @@ async function ServiceGetDropDownCatCode() {
         AND      ACTIVE_FLAG = 'A' 
         ORDER BY LOV1 ASC;`
 
-        let pool = await connect(dbConfig)
+        const pool = await db.poolPromise
         let result = await pool.request().query(querysql)
         res = result
     } catch (err) {
     } finally {
-        await close()
+        // await close()
     }
     return await res
 }
@@ -143,12 +143,12 @@ async function ServiceGetDropDownAccType() {
         AND      ACTIVE_FLAG = 'A' 
         ORDER BY LOV1 ASC;`
 
-        let pool = await connect(dbConfig)
+        const pool = await db.poolPromise
         let result = await pool.request().query(querysql)
         res = result
     } catch (err) {
     } finally {
-        await close()
+        // await close()
     }
     return await res
 }
@@ -165,8 +165,7 @@ async function ServiceCheckDuplicateAccountCodeForInventory(prm) {
         const input_inv_class = 'input_inv_class'
         const input_acctype = 'input_acctype'
 
-        let pool = await connect(dbConfig)
-
+        const pool = await db.poolPromise
         let result = await pool.request()
             .input(input_actioncode, NVarChar, prm.action_code.trim())
             .input(input_inv_class, NVarChar, prm.inv_class.trim())
@@ -180,7 +179,7 @@ async function ServiceCheckDuplicateAccountCodeForInventory(prm) {
     } catch (err) {
 
     } finally {
-        await close()
+        // await close()
     }
 
     return await res
@@ -230,7 +229,7 @@ async function ServiceInsertAccountCodeForInventory(prm) {
             const input_create_date = 'input_create_date'
             const input_create_by = 'input_create_by'
 
-            let pool = await connect(dbConfig)
+            const pool = await db.poolPromise
             let result = await pool.request()
                 .input(input_action_code, NVarChar, prm.action_code)
                 .input(input_inv_class, NVarChar, prm.inv_class)
@@ -251,7 +250,7 @@ async function ServiceInsertAccountCodeForInventory(prm) {
         }
     } catch (err) {
     } finally {
-        await close()
+        // await close()
     }
 
     return await res
@@ -285,7 +284,7 @@ async function ServiceGetTempAccountCodeForInventory(prm) {
             const input_inv_class = 'input_inv_class'
             const input_acc_type = 'input_acc_type'
 
-            let pool = await connect(dbConfig)
+            const pool = await db.poolPromise
             let result = await pool.request()
                 .input(input_action_code, NVarChar, prm.action_code)
                 .input(input_inv_class, NVarChar, prm.inv_class)
@@ -297,7 +296,7 @@ async function ServiceGetTempAccountCodeForInventory(prm) {
         }
     } catch (err) {
     } finally {
-        await close()
+        // await close()
     }
 
     return await res
@@ -336,7 +335,7 @@ async function ServiceEditAccountCodeForInventory(prm) {
             const input_update_date = 'input_update_date'
             const input_update_by = 'input_update_by'
 
-            let pool = await connect(dbConfig)
+            const pool = await db.poolPromise
             let result = await pool.request()
 
             if (prm.action_code != undefined) await result.input(input_action_code, NVarChar, prm.action_code)
@@ -353,14 +352,14 @@ async function ServiceEditAccountCodeForInventory(prm) {
             if (prm.update_by != undefined) await result.input(input_update_by, NVarChar, prm.update_by)
             result = await result.query(querysql)
 
-            if (result !== undefined) {                
+            if (result !== undefined) {
                 if (result.rowsAffected > 0) res = true
             }
         }
     } catch (err) {
 
     } finally {
-        await close()
+        // await close()
     }
     return await res
 }
@@ -370,12 +369,12 @@ async function ServiceGetValidationAccountCodeForInventory() {
     try {
         let querysql = `SELECT DISTINCT ACTIONCODE, INV_CLASS, ACCTYPE FROM ACC_M_ACCOUNT_INVEN `
 
-        let pool = await connect(dbConfig)
+        const pool = await db.poolPromise
         let result = await pool.request().query(querysql)
         res = result
     } catch (err) {
     } finally {
-        await close()
+        // await close()
     }
     return await res
 }
@@ -421,7 +420,7 @@ async function ServiceGetEndingInventory(prm) {
 
             const input_store = 'input_store'
             const input_period = 'input_period'
-            let pool = await connect(dbConfig)
+            const pool = await db.poolPromise
             let result = await pool.request()
                 .input(input_store, NVarChar, prm.store)
                 .input(input_period, NVarChar, prm.period)
@@ -491,7 +490,7 @@ async function ServiceGetEndingInventory(prm) {
             const input_store = 'input_store'
             const input_diff = 'input_diff'
             const input_period = 'input_period'
-            let pool = await connect(dbConfig)
+            const pool = await db.poolPromise
             let result = await pool.request()
                 .input(input_store, NVarChar, prm.store)
                 .input(input_diff, NVarChar, prm.diff)
@@ -501,7 +500,7 @@ async function ServiceGetEndingInventory(prm) {
         }
     } catch (err) {
     } finally {
-        await close()
+        // await close()
     }
     return await res
 }
@@ -516,7 +515,7 @@ async function ServiceGetEndingInventoryPeriod(prm) {
         const input_month = 'input_month'
         const input_year = 'input_year'
 
-        let pool = await connect(dbConfig)
+        const pool = await db.poolPromise
         let result = await pool.request()
             .input(input_month, NVarChar, prm.month)
             .input(input_year, NVarChar, prm.year)
@@ -524,7 +523,7 @@ async function ServiceGetEndingInventoryPeriod(prm) {
         res = result
     } catch (err) {
     } finally {
-        await close()
+        // await close()
     }
     return await res
 }
@@ -569,8 +568,7 @@ async function ServiceGetReceipts(prm) {
         const input_dateto = 'input_dateto'
         const input_invoice = 'input_invoice'
 
-        let pool = await connect(dbConfig)
-
+        const pool = await db.poolPromise
         let result = await pool.request()
         await result.input(input_store, NVarChar, prm.store)
         await result.input(input_datefrom, NVarChar, prm.datefrom)
@@ -579,7 +577,7 @@ async function ServiceGetReceipts(prm) {
         res = await result.query(querysql)
     } catch (err) {
     } finally {
-        await close()
+        // await close()
     }
     return res
 }
@@ -593,12 +591,12 @@ async function ServiceGetTermClosing() {
                         FROM   acc_term_closing 
                         WHERE  term_id > 0 
                         ORDER  BY term_id DESC`
-        let pool = await connect(dbConfig)
+        const pool = await db.poolPromise
         res = await pool.request().query(querysql)
 
     } catch (err) {
     } finally {
-        await close()
+        // await close()
     }
     return res
 }
@@ -617,7 +615,7 @@ async function ServiceGetTermClosingById(term_id) {
                     FROM   acc_term_closing 
                     WHERE TERM_ID = @input_term_id `
         const input_term_id = 'input_term_id'
-        let pool = await connect(dbConfig)
+        const pool = await db.poolPromise
         let result = await pool.request().input(input_term_id, NVarChar, term_id).query(querysql)
         if (result !== undefined) {
             if (result.rowsAffected > 0) res = result
@@ -626,7 +624,7 @@ async function ServiceGetTermClosingById(term_id) {
     } catch (err) {
 
     } finally {
-        await close()
+        // await close()
     }
 
     return await res
@@ -639,7 +637,7 @@ async function ServiceCheckDuplicateTermClosing(prm) {
 
         const input_year = 'input_year'
 
-        let pool = await connect(dbConfig)
+        const pool = await db.poolPromise
 
         let result = await pool.request()
             .input(input_year, NVarChar, prm.year.trim())
@@ -652,7 +650,7 @@ async function ServiceCheckDuplicateTermClosing(prm) {
     } catch (err) {
 
     } finally {
-        await close()
+        // await close()
     }
 
     return await res
@@ -666,7 +664,7 @@ async function ServiceCheckPeriodsTermClosing(prm) {
 
         const input_year = 'input_year'
 
-        let pool = await connect(dbConfig)
+        const pool = await db.poolPromise
 
         let result = await pool.request()
             .input(input_year, NVarChar, prm.year.trim())
@@ -683,7 +681,7 @@ async function ServiceCheckPeriodsTermClosing(prm) {
     } catch (err) {
 
     } finally {
-        await close()
+        // await close()
     }
 
     return await res
@@ -697,7 +695,7 @@ async function ServiceGetTermClosingForInsert(prm) {
 
         const input_year = 'input_year'
 
-        let pool = await connect(dbConfig)
+        const pool = await db.poolPromise
 
         let result = await pool.request()
             .input(input_year, NVarChar, prm.year.trim())
@@ -712,7 +710,7 @@ async function ServiceGetTermClosingForInsert(prm) {
     } catch (err) {
 
     } finally {
-        await close()
+        // await close()
     }
     return await res
 }
@@ -741,7 +739,7 @@ async function ServiceInsertTermClosing(prm) {
         const input_create_date = 'input_create_date'
         const input_create_by = 'input_create_by'
 
-        let pool = await connect(dbConfig)
+        const pool = await db.poolPromise
         let result = await pool.request()
             .input(input_term_id, Int, prm.term_id)
             .input(input_period_id, Int, prm.period_id)
@@ -755,7 +753,7 @@ async function ServiceInsertTermClosing(prm) {
         }
     } catch (err) {
     } finally {
-        await close()
+        // await close()
     }
 
     return await res
@@ -780,7 +778,7 @@ async function ServiceEditTermClosing(prm) {
             const input_update_date = 'input_update_date'
             const input_update_by = 'input_update_by'
 
-            let pool = await connect(dbConfig)
+            const pool = await db.poolPromise
             let result = await pool.request()
 
             if (prm.term_id != undefined) await result.input(input_term_id, NVarChar, prm.term_id.toString().trim())
@@ -797,7 +795,7 @@ async function ServiceEditTermClosing(prm) {
         }
     } catch (err) {
     } finally {
-        await close()
+        // await close()
     }
     return await res
 }
@@ -834,7 +832,7 @@ async function ServiceGetTransferInventory(prm) {
         const input_store = 'input_store'
         const input_datefrom = 'input_datefrom'
         const input_dateto = 'input_dateto'
-        let pool = await connect(dbConfig)
+        const pool = await db.poolPromise
         let result = await pool.request()
             .input(input_store, NVarChar, prm.store)
             .input(input_datefrom, NVarChar, prm.datefrom)
@@ -843,7 +841,7 @@ async function ServiceGetTransferInventory(prm) {
         res = result
     } catch (err) {
     } finally {
-        await close()
+        // await close()
     }
     return await res
 }
@@ -856,12 +854,12 @@ async function ServiceGetDropDownPeriod() {
                 YEAR_ID 
         FROM ACC_PERIODS`
 
-        let pool = await connect(dbConfig)
+        const pool = await db.poolPromise
         let result = await pool.request().query(querysql)
         res = result
     } catch (err) {
     } finally {
-        await close()
+        // await close()
     }
     return await res
 }
@@ -893,7 +891,7 @@ async function ServiceGetUnitCost(prm) {
         const input_invencategory = 'input_invencategory'
         const input_stockno = 'input_stockno'
 
-        let pool = await connect(dbConfig)
+        const pool = await db.poolPromise
 
         let result = await pool.request()
         await result.input(input_period, NVarChar, prm.period)
@@ -902,7 +900,7 @@ async function ServiceGetUnitCost(prm) {
         res = await result.query(querysql)
     } catch (err) {
     } finally {
-        await close()
+        // await close()
     }
     return res
 }
@@ -913,12 +911,12 @@ async function ServiceGetUnitCostDropDownInvenCategory() {
         let querysql = `SELECT INV_ITEM_CLASS, INV_ITEM_CL_DESC 
                     FROM ACC_M_INV_ITEM_CLASSES ORDER BY INV_ITEM_CLASS ASC`
 
-        let pool = await connect(dbConfig)
+        const pool = await db.poolPromise
         let result = await pool.request().query(querysql)
         res = result
     } catch (err) {
     } finally {
-        await close()
+        // await close()
     }
     return await res
 }
@@ -942,7 +940,7 @@ async function ServiceGetUnitCostByData(obj) {
         const input_period = 'input_period'
         const input_inv_item = 'input_inv_item'
 
-        let pool = await connect(dbConfig)
+        const pool = await db.poolPromise
         let result = await pool.request()
             .input(input_period, NVarChar, obj.period)
             .input(input_inv_item, NVarChar, obj.inv_item)
@@ -953,7 +951,7 @@ async function ServiceGetUnitCostByData(obj) {
     } catch (err) {
 
     } finally {
-        await close()
+        // await close()
     }
 
     return await res
@@ -963,7 +961,7 @@ async function ServiceEditUnitCost(prm) {
     let res
 
     try {
-        if (prm) {            
+        if (prm) {
             let querysql = `UPDATE ACC_UNIT_COST SET  PERIOD_ID=PERIOD_ID `
             if (prm.unitcost != undefined) querysql = [querysql, `UNIT_COST  = @input_unitcost `].join(",")
             if (prm.countunit != undefined) querysql = [querysql, `COUNT_PER_UNIT = @input_countunit `].join(",")
@@ -1009,12 +1007,12 @@ async function ServiceGetValidationInvItemUnitCost() {
                             ,INV_ITEM     
                         FROM ACC_UNIT_COST`
 
-        let pool = await connect(dbConfig)
+        const pool = await db.poolPromise
         let result = await pool.request().query(querysql)
         res = result
     } catch (err) {
     } finally {
-        await close()
+        // await close()
     }
     return await res
 }
@@ -1026,7 +1024,7 @@ async function ServiceGenUnitCost(prm) {
         if (prm) {
             const p_period_id = 'p_period_id'
 
-            let pool = await connect(dbConfig)
+            const pool = await db.poolPromise
             let result = await pool.request()
                 .input(p_period_id, NVarChar, prm.period)
                 .execute('GEN_IVENTORY_TO_E1')
@@ -1037,7 +1035,7 @@ async function ServiceGenUnitCost(prm) {
     } catch (err) {
 
     } finally {
-        await close()
+        // await close()
     }
     return await res
 }
@@ -1064,7 +1062,7 @@ async function ServiceSearchTempStampInventory(prm) {
         const input_post_date_type = 'input_post_date_type'
         const input_datefrom = 'input_datefrom'
         const input_dateto = 'input_dateto'
-        let pool = await connect(dbConfig)
+        const pool = await db.poolPromise
         let result = await pool.request()
             .input(input_post_date_type, NVarChar, prm.post_date_type)
             .input(input_datefrom, NVarChar, prm.datefrom)
@@ -1074,7 +1072,7 @@ async function ServiceSearchTempStampInventory(prm) {
     } catch (err) {
 
     } finally {
-        await close()
+        // await close()
     }
     return await res
 }
@@ -1092,7 +1090,7 @@ async function ServiceCountStampInventory(prm) {
         const input_dateto = 'input_dateto'
         const input_post_date_type = 'input_post_date_type'
 
-        let pool = await connect(dbConfig)
+        const pool = await db.poolPromise
         let result = await pool.request()
             .input(input_datefrom, NVarChar, prm.datefrom)
             .input(input_dateto, NVarChar, prm.dateto)
@@ -1102,7 +1100,7 @@ async function ServiceCountStampInventory(prm) {
 
     } catch (err) {
     } finally {
-        await close()
+        // await close()
     }
     return await res
 }
@@ -1134,7 +1132,7 @@ async function ServiceAddStampInventory(prm) {
             const input_create_date = 'input_create_date'
             const input_create_by = 'input_create_by'
 
-            let pool = await connect(dbConfig)
+            const pool = await db.poolPromise
             let result = await pool.request()
                 .input(input_post_date_type, NVarChar, prm.post_date_type)
                 .input(input_user_id, NVarChar, prm.owner)
@@ -1149,7 +1147,7 @@ async function ServiceAddStampInventory(prm) {
         }
     } catch (err) {
     } finally {
-        await close()
+        // await close()
     }
     return await res
 }
@@ -1174,7 +1172,7 @@ async function ServiceEditStampInventory(prm) {
             const input_update_by = 'input_update_by'
             const input_post_date_type = 'input_post_date_type'
 
-            let pool = await connect(dbConfig)
+            const pool = await db.poolPromise
             let result = await pool.request()
                 .input(input_datefrom, NVarChar, prm.datefrom)
                 .input(input_dateto, NVarChar, prm.dateto)
@@ -1188,7 +1186,7 @@ async function ServiceEditStampInventory(prm) {
         }
     } catch (err) {
     } finally {
-        await close()
+        // await close()
     }
     return await res
 }

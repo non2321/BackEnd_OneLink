@@ -35,13 +35,13 @@ async function ServiceGetMenuByUserID(userid) {
         // input parameter       
         const input_USER_ID = 'input_USER_ID'
         //    
-        let pool = await connect(dbConfig)
+        const pool = await db.poolPromise
 
         result = await pool.request()
             // set parameter
             .input(input_USER_ID, NVarChar, userid.trim())
             .query(querysql)
-        await close()
+        // await close()
 
     } catch (err) {
     }
@@ -57,7 +57,7 @@ async function ServiceGetScreenById(screen_id) {
         // input parameter           
         const input_SCREEN_ID = 'input_SCREEN_ID'
         //    
-        let pool = await connect(dbConfig)
+        const pool = await db.poolPromise
 
         let result = await pool.request()
             // set parameter
@@ -73,7 +73,7 @@ async function ServiceGetScreenById(screen_id) {
         //400 Bad Request
         res.sendStatus(500)
     } finally {
-        await close()
+        // await close()
     }
 
     return await res
@@ -96,7 +96,7 @@ async function ServiceGetModifyData(prm) {
         const input_USER_ID = 'input_USER_ID'
         const input_SCREEN_ID = 'input_SCREEN_ID'
 
-        let pool = await connect(dbConfig)
+        const pool = await db.poolPromise
 
         let result = await pool.request()
             // set parameter
@@ -111,7 +111,7 @@ async function ServiceGetModifyData(prm) {
         //400 Bad Request
         res.sendStatus(500)
     } finally {
-        await close()
+        // await close()
     }
 
     return await res

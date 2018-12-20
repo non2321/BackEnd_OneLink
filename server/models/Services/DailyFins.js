@@ -1,4 +1,5 @@
 import { connect, NVarChar, close } from 'mssql'; // MS Sql Server client
+import db from '../db'
 
 export {
     ServiceDeleteDailyFinsByDate,
@@ -12,8 +13,8 @@ async function ServiceDeleteDailyFinsByDate(prm) {
 
         const input_fin_date = 'input_fin_date'
 
-        let pool = await connect(settings.dbConfig)
-        let result = await pool.request()
+        const pool = await db.poolPromise
+        let result = await pool.request()  
             .input(input_fin_date, NVarChar, prm.fin_date)
             .query(querysql)
         if (result !== undefined) {
@@ -23,7 +24,7 @@ async function ServiceDeleteDailyFinsByDate(prm) {
     } catch (err) {
 
     } finally {
-        await close()
+        // await close()
     }
 
     return await res
@@ -37,8 +38,8 @@ async function ServicerunDailyFinsByDate(prm) {
 
         const input_fin_date = 'input_fin_date'
 
-        let pool = await connect(settings.dbConfig)
-        let result = await pool.request()
+        const pool = await db.poolPromise
+        let result = await pool.request()  
             .input(input_fin_date, NVarChar, prm.fin_date)
             .query(querysql)
         if (result !== undefined) {
@@ -48,7 +49,7 @@ async function ServicerunDailyFinsByDate(prm) {
     } catch (err) {
 
     } finally {
-        await close()
+        // await close()
     }
 
     return await res

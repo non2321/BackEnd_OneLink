@@ -8,9 +8,10 @@ export {
     ServiceGetFileTypeSDCInterfaceActive,
     ServiceInsertImpProcess,
     ServiceInsertImpData,
-    ServiceInsertImpRow,    
+    ServiceInsertImpRow,
     ServiceCheckImpDataStatus,
     ServiceUpdateEndProcess,
+    ServiceGetValidationsFile,
 
     ServiceGenInterFaceSql,
     ServiceGenInterFaceInvSql
@@ -18,12 +19,12 @@ export {
 
 async function ServiceGetImpProcessById(uid) {
     let res
-    try {       
+    try {
         const querysql = `SELECT * 
                     FROM   imp_process 
                     WHERE  process_id = '${uid}'`
 
-        let pool = await connect(dbConfig)
+        const pool = await db.poolPromise
 
         let result = await pool.request()
             .query(querysql)
@@ -33,7 +34,7 @@ async function ServiceGetImpProcessById(uid) {
     } catch (err) {
         console.log(err)
     } finally {
-        await close()
+        // await close()
     }
     return await res
 }
@@ -48,7 +49,7 @@ async function ServiceGetFileTypeSDCInterfaceActive() {
                         FROM   imp_file_type 
                         WHERE  act_flag = 'Y' `
 
-        let pool = await connect(dbConfig)
+        const pool = await db.poolPromise
 
         let result = await pool.request().query(querysql)
         if (result !== undefined) {
@@ -56,7 +57,7 @@ async function ServiceGetFileTypeSDCInterfaceActive() {
         }
     } catch (err) {
     } finally {
-        await close()
+        // await close()
     }
     return res
 }
@@ -87,7 +88,7 @@ async function ServiceInsertImpProcess(prm) {
         const input_message = 'input_message'
         const input_store = 'input_store'
         const input_data_date = 'input_data_date'
-        
+
         const uid = uuid()
         const pool = await db.poolPromise
         let result = await pool.request()
@@ -142,7 +143,7 @@ async function ServiceInsertImpData(prm) {
         const input_impdata_status = 'input_impdata_status'
         const input_impdata_message = 'input_impdata_message'
         const input_process_id = 'input_process_id'
-       
+
         const uid = uuid()
         const pool = await db.poolPromise
         let result = await pool.request()
@@ -218,7 +219,7 @@ async function ServiceInsertImpRow(prm) {
         const input_row_status = 'input_row_status'
         const input_row_message = 'input_row_message'
 
-       
+
         // let pool = await connect(dbConfig)
         const uid = uuid()
         const pool = await db.poolPromise
@@ -254,12 +255,12 @@ async function ServiceInsertImpRow(prm) {
 
 async function ServiceCheckImpDataStatus(uid) {
     let res
-    try {       
+    try {
         const querysql = `SELECT * 
                     FROM   imp_data 
                     WHERE  process_id = '${uid}'`
 
-        let pool = await connect(dbConfig)
+        const pool = await db.poolPromise
 
         let result = await pool.request()
             .query(querysql)
@@ -269,7 +270,7 @@ async function ServiceCheckImpDataStatus(uid) {
     } catch (err) {
         console.log(err)
     } finally {
-        await close()
+        // await close()
     }
     return await res
 }
@@ -286,7 +287,7 @@ async function ServiceUpdateEndProcess(prm) {
         // const input_process_status = '@input_process_status'
         // const input_process_id = '@input_process_id'
 
-        let pool = await connect(dbConfig)
+        const pool = await db.poolPromise
         let result = await pool.request()
             // .input(input_process_end, NVarChar, prm.process_end)
             // .input(input_process_status, NVarChar, prm.process_status)
@@ -300,7 +301,26 @@ async function ServiceUpdateEndProcess(prm) {
     } catch (err) {
         console.log(err)
     } finally {
-        await close()
+        // await close()
+    }
+    return await res
+}
+
+async function ServiceGetValidationsFile(prm) {
+    let res = true
+    try {
+        let querysql = `SELECT *
+                        FROM   ACC_DAILY_FINS  
+                        WHERE  FINANCIAL_DATE = @input_date `
+
+        const input_date = 'input_date'
+
+        const pool = await db.poolPromise
+        let result = await pool.request()
+            .input(input_date, NVarChar, prm.date)
+            .query(querysql)
+        if (result.rowsAffected > 0) res = false
+    } catch (err) {
     }
     return await res
 }
@@ -313,7 +333,7 @@ async function ServiceGenInterFaceSql(prm) {
         if (prm) {
             const p_process_id = 'p_process_id'
 
-            let pool = await connect(dbConfig)
+            const pool = await db.poolPromise
             let result = await pool.request()
                 .input(p_process_id, NVarChar, prm.process_id)
                 .execute('GEN_INTERFACE_SQL')
@@ -324,7 +344,7 @@ async function ServiceGenInterFaceSql(prm) {
     } catch (err) {
         console.log(err)
     } finally {
-        await close()
+        // await close()
     }
     return await res
 }
@@ -337,7 +357,7 @@ async function ServiceGenInterFaceInvSql(prm) {
         if (prm) {
             const p_process_id = 'p_process_id'
 
-            let pool = await connect(dbConfig)
+            const pool = await db.poolPromise
             let result = await pool.request()
                 .input(p_process_id, NVarChar, prm.process_id)
                 .execute('GEN_INTERFACE_INV_SQL')
@@ -348,7 +368,7 @@ async function ServiceGenInterFaceInvSql(prm) {
     } catch (err) {
 
     } finally {
-        await close()
+        // await close()
     }
     return await res
 }
