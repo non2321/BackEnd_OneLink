@@ -47,6 +47,20 @@ async function runTaskSDCInterface() {
         const datamonth = ("0" + (datetime.getMonth() + 1)).slice(-2)
 
         if (data.length > 0) {
+            const dir = mmxsftp.pathinterfacetemp
+            let clearfile = await readdir(dir)
+            for await (let file of clearfile) {
+                //Delete All Files
+                await fs.access(`${mmxsftp.pathinterfacetemp}/${file}`, error => {
+                    if (!error) {
+                        fs.unlinkSync(`${mmxsftp.pathinterfacetemp}/${file}`);
+                    } else {
+                        console.log(error);
+                    }
+                })
+            }
+            
+            await delay(5000)
             for await (let item of data) {
                 if (item.name == `${mmxsftp.filename.sdc}-${datetime.getFullYear()}-${datamonth}-${dataday}.${mmxsftp.filename.type}`
                     || item.name == `${mmxsftp.filename.pin}-${datetime.getFullYear()}-${datamonth}-${dataday}.${mmxsftp.filename.type}`) {
@@ -76,7 +90,7 @@ async function runTaskSDCInterface() {
             }
 
             await delay(5000)
-            const dir = mmxsftp.pathinterfacetemp
+           
 
             let filetypeActive = await ServiceGetFileTypeSDCInterfaceActive()
             let storename
@@ -132,12 +146,10 @@ async function runTaskSDCInterface() {
                                         prmImpRow['row_status'] = ''
                                         prmImpRow['row_message'] = ''
                                         for await (let item of tempdata) {
-                                            prmImpRow[`C${colume}`] = item
+                                            prmImpRow[`C${colume}`] = (item.length > 50) ? item.substring(0, 50) : item
                                             colume++
                                         }
-                                        const resImpRow = await ServiceInsertImpRow(prmImpRow)
-                                        if (resImpRow.uid) {
-                                        }
+                                        const resImpRow = await ServiceInsertImpRow(prmImpRow)                                       
                                     }
                                 }
                             }
@@ -611,12 +623,10 @@ async function RerunTaskSDCInterface(req, res, reqBody, authData) {
                                             prmImpRow['row_status'] = ''
                                             prmImpRow['row_message'] = ''
                                             for (let item of tempdata) {
-                                                prmImpRow[`C${colume}`] = item
+                                                prmImpRow[`C${colume}`] = (item.length > 50) ? item.substring(0, 50) : item
                                                 colume++
                                             }
-                                            const resImpRow = await ServiceInsertImpRow(prmImpRow)
-                                            if (resImpRow.uid) {
-                                            }
+                                            const resImpRow = await ServiceInsertImpRow(prmImpRow)                                           
                                         }
                                     }
                                 }
