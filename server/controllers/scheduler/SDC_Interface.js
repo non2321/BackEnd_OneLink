@@ -57,7 +57,7 @@ async function runTaskSDCInterface() {
                     const filename = item.name.replace('.zip', '')
                     const resfilename = filename.split('-')
                     let data_date_now = new Date(`${resfilename[1]}-${resfilename[2]}-${resfilename[3]}`)
-                    // data_date_now.setDate(data_date_now.getDate() - 1)
+                    data_date_now.setDate(data_date_now.getDate() - 1)
                     data_date = data_date_now
 
                     //Move file
@@ -490,6 +490,7 @@ async function RerunTaskSDCInterface(req, res, reqBody, authData) {
                     const filename = item.name.replace('.zip', '')
                     const resfilename = filename.split('-')
                     let data_date_now = new Date(`${resfilename[1]}-${resfilename[2]}-${resfilename[3]}`)
+                    data_date_now.setDate(data_date_now.getDate() - 1)
                     data_date = data_date_now
 
                     //Move file
