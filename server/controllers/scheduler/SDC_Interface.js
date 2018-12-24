@@ -247,7 +247,7 @@ async function runTaskSDCInterface() {
                 }
             }
 
-            await delay(5000)
+            await delay(10000)
             let filedelete = await readdir(dir)
             for await (let file of filedelete) {
                 //Delete All Files
@@ -543,7 +543,7 @@ async function RerunTaskSDCInterface(req, res, reqBody, authData) {
             await sign({ jwtdata }, secretkey, { expiresIn: tokenexpires }, (err, token) => {
                 res.json({
                     "status": StatusComplate,
-                    "message": 'Test',
+                    "message": '',
                     "user": {
                         "id": authData.id,
                         "firstname": authData.firstname,
@@ -723,7 +723,7 @@ async function RerunTaskSDCInterface(req, res, reqBody, authData) {
                 }
             }
 
-            await delay(5000)
+            await delay(10000)
             let filedelete = await readdir(dir)
             for await (let file of filedelete) {
                 //Delete All Files
