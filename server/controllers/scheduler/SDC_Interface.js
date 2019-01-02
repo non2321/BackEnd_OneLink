@@ -59,7 +59,7 @@ async function runTaskSDCInterface() {
                     }
                 })
             }
-            
+
             await delay(5000)
             for await (let item of data) {
                 if (item.name == `${mmxsftp.filename.sdc}-${datetime.getFullYear()}-${datamonth}-${dataday}.${mmxsftp.filename.type}`
@@ -90,7 +90,7 @@ async function runTaskSDCInterface() {
             }
 
             await delay(5000)
-           
+
 
             let filetypeActive = await ServiceGetFileTypeSDCInterfaceActive()
             let storename
@@ -149,7 +149,7 @@ async function runTaskSDCInterface() {
                                             prmImpRow[`C${colume}`] = (item.length > 50) ? item.substring(0, 50) : item
                                             colume++
                                         }
-                                        const resImpRow = await ServiceInsertImpRow(prmImpRow)                                       
+                                        const resImpRow = await ServiceInsertImpRow(prmImpRow)
                                     }
                                 }
                             }
@@ -356,6 +356,7 @@ async function GetValidationFile(req, res, reqBody) {
         const year = req.params.year
         const month = req.params.month
         const day = req.params.day
+        const store = req.params.store
 
         const msgfilenull = 'Disable the data'
         let dft = false, drt = false, dex = false, pin = false
@@ -385,7 +386,7 @@ async function GetValidationFile(req, res, reqBody) {
                     msgdex = ''
                 }
                 if (item.name == `${mmxsftp.filename.pin}-${datetimeProcess.getFullYear()}-${datamonth}-${dataday}.${mmxsftp.filename.type}`) {
-                    
+
                     pin = true
                 }
             }
@@ -399,7 +400,8 @@ async function GetValidationFile(req, res, reqBody) {
             dft = false
             // Validation DailyFins
             const prm = {
-                date: `${year}-${month}-${day}`
+                date: `${year}-${month}-${day}`,
+                store: store
             }
             let result = await ServiceGetValidationsFile(prm)
             if (result) {
@@ -407,7 +409,7 @@ async function GetValidationFile(req, res, reqBody) {
                 msgdft = ''
             }
         }
-              
+
         dataresult[`dft`] = {
             data: dft,
             msg: msgdft
@@ -443,12 +445,23 @@ async function RerunTaskSDCInterface(req, res, reqBody, authData) {
     const year = reqBody.year.toString().trim()
     const month = reqBody.month.toString().trim()
     const day = reqBody.day.toString().trim()
+    const store = reqBody.store.toString().trim()
     const screen_id = reqBody.screen_id
     let screen_name = ''
     let module_name = ''
 
     const readdir = promisify(fs.readdir)
     const readFile = promisify(fs.readFile)
+
+    // var re = /pp/gi;
+    var re = "are"
+    var str = "Apples are round, and apples are juicy.";
+    if (str.search(re) != -1) {
+        console.log("Contains Apples");
+    } else {
+        console.log(str.search(re));
+        console.log("Does not contain Apples");
+    }
 
     try {
         // Current DateTime
@@ -580,60 +593,123 @@ async function RerunTaskSDCInterface(req, res, reqBody, authData) {
                 if (filetypeActive.find(x => x.file_type == file.substring(5, 8))) {
                     //Check File Select
                     if (file_type.find(x => x.file_type == file.substring(5, 8))) {
-                        // Current DateTime
-                        const datetimestart = new Date().toLocaleString().replace(',', '')
 
-                        if (storename != file.substring(0, 5) || count == 1) {
-                            const prmImpProcess = {
-                                process_start: datetimestart,
-                                process_end: datetimestart,
-                                process_status: '',
-                                message: '',
-                                store: file.substring(0, 5),
-                                data_date: `${data_date.getFullYear()}-${data_date.getMonth() + 1}-${data_date.getDate()}`
-                            }
-                            //Insert ImpProcess
-                            resImpProcess = await ServiceInsertImpProcess(prmImpProcess)
-                            ObjectProcessID.push(resImpProcess.uid)
-                        }
-                        if (resImpProcess.uid) {
-                            const prmImpData = {
-                                filetype_id: filetypeActive.find(x => x.file_type == file.substring(5, 8)).file_type_id,
-                                filename: file,
-                                impdata_start: datetimestart,
-                                impdata_end: datetimestart,
-                                impdata_status: 'S',
-                                impdata_message: '',
-                                process_id: resImpProcess.uid
-                            }
-                            const resImpData = await ServiceInsertImpData(prmImpData)
+                        //Select store
+                        if (store) {
+                            if (file.search(store) != -1) {
+                                // Current DateTime
+                                const datetimestart = new Date().toLocaleString().replace(',', '')
 
-                            if (resImpData.uid) {
-                                const tempfile = await readFile(`${mmxsftp.pathinterfacetemp}/${file}`)
-                                const tempfiletostring = tempfile.toString('utf8')
-                                const tempfilebyline = tempfiletostring.match(/[^\r\n]+/g)
-                                if (tempfilebyline) {
-                                    for (let temp of tempfilebyline) {
-                                        let tempdata = temp.trim().split(',')
-                                        //Check empty row
-                                        if (tempdata.length > 1) {
-                                            let prmImpRow = {}
-                                            let colume = 1
-                                            prmImpRow['data_id'] = resImpData.uid
-                                            prmImpRow['row_status'] = ''
-                                            prmImpRow['row_message'] = ''
-                                            for (let item of tempdata) {
-                                                prmImpRow[`C${colume}`] = (item.length > 50) ? item.substring(0, 50) : item
-                                                colume++
+                                if (storename != file.substring(0, 5) || count == 1) {
+                                    const prmImpProcess = {
+                                        process_start: datetimestart,
+                                        process_end: datetimestart,
+                                        process_status: '',
+                                        message: '',
+                                        store: file.substring(0, 5),
+                                        data_date: `${data_date.getFullYear()}-${data_date.getMonth() + 1}-${data_date.getDate()}`
+                                    }
+                                    //Insert ImpProcess
+                                    resImpProcess = await ServiceInsertImpProcess(prmImpProcess)
+                                    ObjectProcessID.push(resImpProcess.uid)
+                                }
+                                if (resImpProcess.uid) {
+                                    const prmImpData = {
+                                        filetype_id: filetypeActive.find(x => x.file_type == file.substring(5, 8)).file_type_id,
+                                        filename: file,
+                                        impdata_start: datetimestart,
+                                        impdata_end: datetimestart,
+                                        impdata_status: 'S',
+                                        impdata_message: '',
+                                        process_id: resImpProcess.uid
+                                    }
+                                    const resImpData = await ServiceInsertImpData(prmImpData)
+
+                                    if (resImpData.uid) {
+                                        const tempfile = await readFile(`${mmxsftp.pathinterfacetemp}/${file}`)
+                                        const tempfiletostring = tempfile.toString('utf8')
+                                        const tempfilebyline = tempfiletostring.match(/[^\r\n]+/g)
+                                        if (tempfilebyline) {
+                                            for (let temp of tempfilebyline) {
+                                                let tempdata = temp.trim().split(',')
+                                                //Check empty row
+                                                if (tempdata.length > 1) {
+                                                    let prmImpRow = {}
+                                                    let colume = 1
+                                                    prmImpRow['data_id'] = resImpData.uid
+                                                    prmImpRow['row_status'] = ''
+                                                    prmImpRow['row_message'] = ''
+                                                    for (let item of tempdata) {
+                                                        prmImpRow[`C${colume}`] = (item.length > 50) ? item.substring(0, 50) : item
+                                                        colume++
+                                                    }
+                                                    const resImpRow = await ServiceInsertImpRow(prmImpRow)
+                                                }
                                             }
-                                            const resImpRow = await ServiceInsertImpRow(prmImpRow)                                           
+                                        }
+                                    }
+                                }
+                                storename = file.substring(0, 5)
+                                count++
+                            }
+                        } else {
+
+                            // Current DateTime
+                            const datetimestart = new Date().toLocaleString().replace(',', '')
+
+                            if (storename != file.substring(0, 5) || count == 1) {
+                                const prmImpProcess = {
+                                    process_start: datetimestart,
+                                    process_end: datetimestart,
+                                    process_status: '',
+                                    message: '',
+                                    store: file.substring(0, 5),
+                                    data_date: `${data_date.getFullYear()}-${data_date.getMonth() + 1}-${data_date.getDate()}`
+                                }
+                                //Insert ImpProcess
+                                resImpProcess = await ServiceInsertImpProcess(prmImpProcess)
+                                ObjectProcessID.push(resImpProcess.uid)
+                            }
+                            if (resImpProcess.uid) {
+                                const prmImpData = {
+                                    filetype_id: filetypeActive.find(x => x.file_type == file.substring(5, 8)).file_type_id,
+                                    filename: file,
+                                    impdata_start: datetimestart,
+                                    impdata_end: datetimestart,
+                                    impdata_status: 'S',
+                                    impdata_message: '',
+                                    process_id: resImpProcess.uid
+                                }
+                                const resImpData = await ServiceInsertImpData(prmImpData)
+
+                                if (resImpData.uid) {
+                                    const tempfile = await readFile(`${mmxsftp.pathinterfacetemp}/${file}`)
+                                    const tempfiletostring = tempfile.toString('utf8')
+                                    const tempfilebyline = tempfiletostring.match(/[^\r\n]+/g)
+                                    if (tempfilebyline) {
+                                        for (let temp of tempfilebyline) {
+                                            let tempdata = temp.trim().split(',')
+                                            //Check empty row
+                                            if (tempdata.length > 1) {
+                                                let prmImpRow = {}
+                                                let colume = 1
+                                                prmImpRow['data_id'] = resImpData.uid
+                                                prmImpRow['row_status'] = ''
+                                                prmImpRow['row_message'] = ''
+                                                for (let item of tempdata) {
+                                                    prmImpRow[`C${colume}`] = (item.length > 50) ? item.substring(0, 50) : item
+                                                    colume++
+                                                }
+                                                const resImpRow = await ServiceInsertImpRow(prmImpRow)
+                                            }
                                         }
                                     }
                                 }
                             }
+                            storename = file.substring(0, 5)
+                            count++
                         }
-                        storename = file.substring(0, 5)
-                        count++
+
                     }
                 }
             }
@@ -751,7 +827,7 @@ async function RerunTaskSDCInterface(req, res, reqBody, authData) {
 
         }
 
-    } catch (err) {        
+    } catch (err) {
         res.sendStatus(500)
     }
 }

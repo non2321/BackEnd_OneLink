@@ -311,14 +311,22 @@ async function ServiceGetValidationsFile(prm) {
     try {
         let querysql = `SELECT *
                         FROM   ACC_DAILY_FINS  
-                        WHERE  FINANCIAL_DATE = @input_date `
+                        WHERE  FINANCIAL_DATE = @input_date 
+                        AND FINANCIAL_CODE in (
+                                                SELECT FINANCIAL_CODE 
+                                                FROM ACC_M_FINANCIAL_CODES 
+                                                WHERE S_DAILY_FINS_FLAG = 1
+                                              )`
+        if (prm.store != undefined) querysql += ` AND STORE =  @input_store `
 
         const input_date = 'input_date'
+        const input_store = 'input_store'
 
         const pool = await db.poolPromise
         let result = await pool.request()
-            .input(input_date, NVarChar, prm.date)
-            .query(querysql)
+        await result.input(input_date, NVarChar, prm.date)
+        if (prm.store != undefined) result.input(input_store, NVarChar, prm.store)
+        result = await result.query(querysql)
         if (result.rowsAffected > 0) res = false
     } catch (err) {
     }

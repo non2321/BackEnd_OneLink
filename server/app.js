@@ -1107,6 +1107,11 @@ app.get('/api/sdcbatchfile/validationfile/:year/:month/:day', async (req, res) =
   await GetValidationFile(req, res, req.body);
 })
 
+app.get('/api/sdcbatchfile/validationfile/:year/:month/:day/:store', async (req, res) => {
+  console.log('sdcbatchfile/validationfile')
+  await GetValidationFile(req, res, req.body);
+})
+
 //Edit Term Closing
 app.post('/api/sdcbatchfile/rerunsdcinterface', verifyToken, async (req, res) => {
   console.log('sdcbatchfile_rerunsdcinterface')
@@ -1167,6 +1172,29 @@ const server = app.listen(webPort, () => {
 //   })
 // })
 
+var mysql = require('mysql');
+
+var connection = mysql.createConnection({
+  host     : 'prd-kfc-ph-tl-redshift-rds.c1iaphtcvqvg.us-east-1.redshift.amazonaws.com',
+  user     : 'rds_read',
+  password : 'a?e-eGuXCew=35dm',
+  port     : '5439'
+});
+
+//Please add AWS Lambda Permissions Model.
+app.get('/api/TestRDS', async (req, res) => {
+  console.log('test')
+  connection.connect(function(err) {
+    if (err) {
+      console.error('Database connection failed: ' + err.stack);
+      return;
+    }
+  
+    console.log('Connected to database.');
+  });
+  
+  connection.end();
+});
 
 
 // FORMAT OF TOKEN
