@@ -589,7 +589,7 @@ async function ServiceInsertAccountCodeForSale(prm) {
             const input_fincode = 'input_fincode'
 
             const pool = await db.poolPromise
-        let result = await pool.request()
+            let result = await pool.request()
                 .input(input_formular_id, Int, id)
                 .input(input_formular_name, NVarChar, (prm.formular_name != undefined) ? prm.formular_name : '')
                 .input(input_account_code, NVarChar, (prm.account_code != undefined) ? prm.account_code : '')
@@ -775,12 +775,12 @@ async function ServiceGetPopupStoreBankInAdjustment() {
                         WHERE COMPANY = 'Y' 
                         ORDER BY STORE_ID ASC;`
 
-        let pool = await connect(dbConfig)
+        const pool = await db.poolPromise
         let result = await pool.request().query(querysql)
         res = result
     } catch (err) {
     } finally {
-        await close()
+        // await close()
     }
     return await res
 }
@@ -793,12 +793,12 @@ async function ServiceGetValidationstoreBankInAdjustment() {
                         FROM   PH_STORES  
                         WHERE  COMPANY = 'Y' `
 
-        let pool = await connect(dbConfig)
+        const pool = await db.poolPromise
         let result = await pool.request().query(querysql)
         res = result
     } catch (err) {
     } finally {
-        await close()
+        // await close()
     }
     return await res
 }
@@ -810,12 +810,12 @@ async function ServiceGetValidationfinancialcodeBankInAdjustment() {
                         FROM   ACC_M_FINANCIAL_CODES F 
                         WHERE  F.FIXFLAG = 1`
 
-        let pool = await connect(dbConfig)
+        const pool = await db.poolPromise
         let result = await pool.request().query(querysql)
         res = result
     } catch (err) {
     } finally {
-        await close()
+        // await close()
     }
     return await res
 }
@@ -845,14 +845,13 @@ async function ServiceGetBankInAdjustment(store, dateofstore) {
         const input_store = 'input_store'
         const input_dateofstore = 'input_dateofstore'
 
-        let pool = await connect(dbConfig)
-
-        result = await pool.request()
+        const pool = await db.poolPromise
+        let result = await pool.request()
             // set parameter
             .input(input_store, NVarChar, store.trim())
             .input(input_dateofstore, NVarChar, dateofstore.trim())
             .query(querysql)
-        await close()
+        // await close()
 
     } catch (err) {
     }
@@ -880,7 +879,7 @@ async function ServiceGetDailyFinsByData(obj) {
         const input_store_id = 'input_store_id'
         const input_fin_code = 'input_fin_code'
         const input_fin_date = 'input_fin_date'
-        let pool = await connect(dbConfig)
+        const pool = await db.poolPromise
         let result = await pool.request()
             .input(input_store_id, NVarChar, obj.store_id)
             .input(input_fin_code, NVarChar, obj.fin_code)
@@ -892,7 +891,7 @@ async function ServiceGetDailyFinsByData(obj) {
     } catch (err) {
 
     } finally {
-        await close()
+        // await close()
     }
 
     return await res
@@ -957,7 +956,7 @@ async function ServiceGenGLBankInAdjustment(prm) {
             const p_from_store = 'p_from_store'
             const p_to_store = 'p_to_store'
 
-            let pool = await connect(dbConfig)
+            const pool = await db.poolPromise
             let result = await pool.request()
                 .input(p_doc_type, NVarChar, prm.gldoc_type)
                 .input(p_ledger_type, NVarChar, prm.glledger_type)
@@ -973,7 +972,7 @@ async function ServiceGenGLBankInAdjustment(prm) {
     } catch (err) {
 
     } finally {
-        await close()
+        // await close()
     }
     return await res
 }
@@ -1000,7 +999,7 @@ async function ServiceSearchTempStampCloseDaiyFins(prm) {
 
         const input_datefrom = 'input_datefrom'
         const input_dateto = 'input_dateto'
-        let pool = await connect(dbConfig)
+        const pool = await db.poolPromise
         let result = await pool.request()
             .input(input_datefrom, NVarChar, prm.datefrom)
             .input(input_dateto, NVarChar, prm.dateto)
@@ -1009,7 +1008,7 @@ async function ServiceSearchTempStampCloseDaiyFins(prm) {
     } catch (err) {
 
     } finally {
-        await close()
+        // await close()
     }
     return await res
 }
@@ -1025,7 +1024,7 @@ async function ServiceSearchTempReCloseDaiyFins(prm) {
 
         const input_datefrom = 'input_datefrom'
         const input_dateto = 'input_dateto'
-        let pool = await connect(dbConfig)
+        const pool = await db.poolPromise
         let result = await pool.request()
             .input(input_datefrom, NVarChar, prm.datefrom.trim())
             .input(input_dateto, NVarChar, prm.dateto.trim())
@@ -1034,7 +1033,7 @@ async function ServiceSearchTempReCloseDaiyFins(prm) {
     } catch (err) {
 
     } finally {
-        await close()
+        // await close()
     }
     return await res
 }
@@ -1052,7 +1051,7 @@ async function ServiceCountStampCloseDaiyFins(prm) {
         const input_datefrom = 'input_datefrom'
         const input_dateto = 'input_dateto'
 
-        let pool = await connect(dbConfig)
+        const pool = await db.poolPromise
         let result = await pool.request()
             .input(input_datefrom, NVarChar, prm.datefrom.trim())
             .input(input_dateto, NVarChar, prm.dateto.trim())
@@ -1061,7 +1060,7 @@ async function ServiceCountStampCloseDaiyFins(prm) {
 
     } catch (err) {
     } finally {
-        await close()
+        // await close()
     }
     return await res
 }
@@ -1092,7 +1091,7 @@ async function ServiceAddStampCloseDaiyFins(prm) {
             const input_create_date = 'input_create_date'
             const input_create_by = 'input_create_by'
 
-            let pool = await connect(dbConfig)
+            const pool = await db.poolPromise
             let result = await pool.request()
                 .input(input_user_id, NVarChar, prm.owner)
                 .input(input_datefrom, NVarChar, prm.datefrom)
@@ -1106,7 +1105,7 @@ async function ServiceAddStampCloseDaiyFins(prm) {
         }
     } catch (err) {
     } finally {
-        await close()
+        // await close()
     }
     return await res
 }
@@ -1130,8 +1129,8 @@ async function ServiceEditStampCloseDaiyFins(prm) {
             const input_update_date = 'input_update_date'
             const input_update_by = 'input_update_by'
 
-            let pool = await connect(dbConfig)
-            let result = await pool.request()
+            const pool = await db.poolPromise
+            let result = await pool.request()  
                 .input(input_datefrom, NVarChar, prm.datefrom)
                 .input(input_dateto, NVarChar, prm.dateto)
                 .input(input_update_date, NVarChar, prm.update_date)
@@ -1143,7 +1142,7 @@ async function ServiceEditStampCloseDaiyFins(prm) {
         }
     } catch (err) {
     } finally {
-        await close()
+        // await close()
     }
     return await res
 }
@@ -1158,8 +1157,8 @@ async function ServiceExportReportDailyFlashSales(prm) {
             const p_from_store = 'p_from_store'
             const p_to_store = 'p_to_store'
 
-            let pool = await connect(dbConfig)
-            let result = await pool.request()
+            const pool = await db.poolPromise
+            let result = await pool.request()  
             result.multiple = true
             await result.input(p_from_date, NVarChar, prm.datefrom)
             await result.input(p_to_date, NVarChar, prm.dateto)
@@ -1176,7 +1175,7 @@ async function ServiceExportReportDailyFlashSales(prm) {
         }
     } catch (err) {
     } finally {
-        await close()
+        // await close()
     }
     return await res
 }
@@ -1257,7 +1256,7 @@ async function ServiceDeletePLBalE1(prm) {
     } catch (err) {
 
     } finally {
-        await close()
+        // await close()
     }
 
     return await res
@@ -1530,8 +1529,8 @@ async function ServicePLBalE1_ACTUAL_SPA_AND__ACTUAL_ADJ_SPAFile(prm) {
             const p_month = 'p_month'
             const p_year = 'p_year'
 
-            let pool = await connect(dbConfig)
-            let result = await pool.request()
+            const pool = await db.poolPromise
+            let result = await pool.request()  
                 .input(p_month, NVarChar, prm.period_month)
                 .input(p_year, NVarChar, prm.period_year)
                 .execute('EXPORT_NETSALES_P_AND_L')

@@ -64,7 +64,7 @@ async function runTaskSDCInterface() {
             for await (let item of data) {
                 if (item.name == `${mmxsftp.filename.sdc}-${datetime.getFullYear()}-${datamonth}-${dataday}.${mmxsftp.filename.type}`
                     || item.name == `${mmxsftp.filename.pin}-${datetime.getFullYear()}-${datamonth}-${dataday}.${mmxsftp.filename.type}`) {
-
+                    
                     const moveFrom = `${mmxsftp.pathmmx}/${item.name}`
                     const moveTo = `${mmxsftp.temppath}${item.name}`
 
@@ -453,16 +453,6 @@ async function RerunTaskSDCInterface(req, res, reqBody, authData) {
     const readdir = promisify(fs.readdir)
     const readFile = promisify(fs.readFile)
 
-    // var re = /pp/gi;
-    var re = "are"
-    var str = "Apples are round, and apples are juicy.";
-    if (str.search(re) != -1) {
-        console.log("Contains Apples");
-    } else {
-        console.log(str.search(re));
-        console.log("Does not contain Apples");
-    }
-
     try {
         // Current DateTime
         const datetime = new Date().toLocaleString().replace(',', '');
@@ -504,10 +494,11 @@ async function RerunTaskSDCInterface(req, res, reqBody, authData) {
         })
         let data = await sftp.list(mmxsftp.pathmmx)
         const dataday = ("0" + datetimeProcess.getDate()).slice(-2)
-        const datamonth = ("0" + (datetimeProcess.getMonth() + 1)).slice(-2)
+        const datamonth = ("0" + (datetimeProcess.getMonth() + 1)).slice(-2)      
+        const datayear = datetimeProcess.getFullYear()        
         if (data.length > 0) {
-            for await (let item of data) {
-                if (item.name == `${mmxsftp.filename.sdc}-${datetimeProcess.getFullYear()}-${datamonth}-${dataday}.${mmxsftp.filename.type}`
+            for await (let item of data) {  
+                if (item.name == `${mmxsftp.filename.sdc}-${datayear}-${datamonth}-${dataday}.${mmxsftp.filename.type}`
                     || item.name == `${mmxsftp.filename.pin}-${datetimeProcess.getFullYear()}-${datamonth}-${dataday}.${mmxsftp.filename.type}`) {
                     const moveFrom = `${mmxsftp.pathmmx}/${item.name}`
                     const moveTo = `${mmxsftp.temppath}${item.name}`
@@ -726,12 +717,11 @@ async function RerunTaskSDCInterface(req, res, reqBody, authData) {
                     const impprocess = await ServiceGetImpProcessById(ProcessID)
                     if (impprocess) {
                         const dataimpprocess = impprocess.recordset[0]
-                        const datadate = impprocess.recordset[0].PROCESS_DATA_DATE
-                        datadate.setDate(datadate.getDate() - 1)
+                        const datadate = impprocess.recordset[0].PROCESS_DATA_DATE                        
 
-                        const datayear = datadate.getFullYear()
-                        const datamonth = ("0" + (datadate.getMonth() + 1)).slice(-2)
-                        const dataday = ("0" + datadate.getDate()).slice(-2)
+                        const datayears = datadate.getFullYear()
+                        const datamonths = ("0" + (datadate.getMonth() + 1)).slice(-2)
+                        const datadays = ("0" + datadate.getDate()).slice(-2)                        
 
                         let status = true
                         for (let itemdata of resStatus.recordset) {
@@ -740,22 +730,22 @@ async function RerunTaskSDCInterface(req, res, reqBody, authData) {
                                 if (!fs.existsSync(`${mmxsftp.pathinterfacefail}`)) {
                                     fs.mkdirSync(`${mmxsftp.pathinterfacefail}`)
                                 }
-                                if (!fs.existsSync(`${mmxsftp.pathinterfacefail}/${datayear}`)) {
-                                    fs.mkdirSync(`${mmxsftp.pathinterfacefail}/${datayear}`)
+                                if (!fs.existsSync(`${mmxsftp.pathinterfacefail}/${datayears}`)) {
+                                    fs.mkdirSync(`${mmxsftp.pathinterfacefail}/${datayears}`)
                                 }
-                                if (!fs.existsSync(`${mmxsftp.pathinterfacefail}/${datayear}/${datamonth}`)) {
-                                    fs.mkdirSync(`${mmxsftp.pathinterfacefail}/${datayear}/${datamonth}`)
+                                if (!fs.existsSync(`${mmxsftp.pathinterfacefail}/${datayears}/${datamonths}`)) {
+                                    fs.mkdirSync(`${mmxsftp.pathinterfacefail}/${datayears}/${datamonths}`)
                                 }
-                                if (!fs.existsSync(`${mmxsftp.pathinterfacefail}/${datayear}/${datamonth}/${dataday}`)) {
-                                    fs.mkdirSync(`${mmxsftp.pathinterfacefail}/${datayear}/${datamonth}/${dataday}`)
+                                if (!fs.existsSync(`${mmxsftp.pathinterfacefail}/${datayears}/${datamonths}/${datadays}`)) {
+                                    fs.mkdirSync(`${mmxsftp.pathinterfacefail}/${datayears}/${datamonths}/${datadays}`)
                                 }
-                                if (!fs.existsSync(`${mmxsftp.pathinterfacefail}/${datayear}/${datamonth}/${dataday}/${dataimpprocess.PROCESS_STORE.trim()}`)) {
-                                    fs.mkdirSync(`${mmxsftp.pathinterfacefail}/${datayear}/${datamonth}/${dataday}/${dataimpprocess.PROCESS_STORE.trim()}`)
+                                if (!fs.existsSync(`${mmxsftp.pathinterfacefail}/${datayears}/${datamonths}/${datadays}/${dataimpprocess.PROCESS_STORE.trim()}`)) {
+                                    fs.mkdirSync(`${mmxsftp.pathinterfacefail}/${datayears}/${datamonths}/${datadays}/${dataimpprocess.PROCESS_STORE.trim()}`)
                                 }
 
                                 await fs.access(`${mmxsftp.pathinterfacetemp}/${itemdata.FILE_NAME}`, error => {
                                     if (!error) {
-                                        fs.copyFileSync(`${mmxsftp.pathinterfacetemp}/${itemdata.FILE_NAME}`, `${mmxsftp.pathinterfacefail}/${datayear}/${datamonth}/${dataday}/${dataimpprocess.PROCESS_STORE.trim()}/${itemdata.FILE_NAME}`)
+                                        fs.copyFileSync(`${mmxsftp.pathinterfacetemp}/${itemdata.FILE_NAME}`, `${mmxsftp.pathinterfacefail}/${datayears}/${datamonths}/${datadays}/${dataimpprocess.PROCESS_STORE.trim()}/${itemdata.FILE_NAME}`)
                                     } else {
                                         console.log(error);
                                     }
@@ -764,21 +754,21 @@ async function RerunTaskSDCInterface(req, res, reqBody, authData) {
                                 if (!fs.existsSync(`${mmxsftp.pathinterfacesuccess}`)) {
                                     fs.mkdirSync(`${mmxsftp.pathinterfacesuccess}`)
                                 }
-                                if (!fs.existsSync(`${mmxsftp.pathinterfacesuccess}/${datayear}`)) {
-                                    fs.mkdirSync(`${mmxsftp.pathinterfacesuccess}/${datayear}`)
+                                if (!fs.existsSync(`${mmxsftp.pathinterfacesuccess}/${datayears}`)) {
+                                    fs.mkdirSync(`${mmxsftp.pathinterfacesuccess}/${datayears}`)
                                 }
-                                if (!fs.existsSync(`${mmxsftp.pathinterfacesuccess}/${datayear}/${datamonth}`)) {
-                                    fs.mkdirSync(`${mmxsftp.pathinterfacesuccess}/${datayear}/${datamonth}`)
+                                if (!fs.existsSync(`${mmxsftp.pathinterfacesuccess}/${datayears}/${datamonths}`)) {
+                                    fs.mkdirSync(`${mmxsftp.pathinterfacesuccess}/${datayears}/${datamonths}`)
                                 }
-                                if (!fs.existsSync(`${mmxsftp.pathinterfacesuccess}/${datayear}/${datamonth}/${dataday}`)) {
-                                    fs.mkdirSync(`${mmxsftp.pathinterfacesuccess}/${datayear}/${datamonth}/${dataday}`)
+                                if (!fs.existsSync(`${mmxsftp.pathinterfacesuccess}/${datayears}/${datamonths}/${datadays}`)) {
+                                    fs.mkdirSync(`${mmxsftp.pathinterfacesuccess}/${datayears}/${datamonths}/${datadays}`)
                                 }
-                                if (!fs.existsSync(`${mmxsftp.pathinterfacesuccess}/${datayear}/${datamonth}/${dataday}/${dataimpprocess.PROCESS_STORE.trim()}`)) {
-                                    fs.mkdirSync(`${mmxsftp.pathinterfacesuccess}/${datayear}/${datamonth}/${dataday}/${dataimpprocess.PROCESS_STORE.trim()}`)
+                                if (!fs.existsSync(`${mmxsftp.pathinterfacesuccess}/${datayears}/${datamonths}/${datadays}/${dataimpprocess.PROCESS_STORE.trim()}`)) {
+                                    fs.mkdirSync(`${mmxsftp.pathinterfacesuccess}/${datayears}/${datamonths}/${datadays}/${dataimpprocess.PROCESS_STORE.trim()}`)
                                 }
                                 await fs.access(`${mmxsftp.pathinterfacetemp}/${itemdata.FILE_NAME}`, error => {
                                     if (!error) {
-                                        fs.copyFileSync(`${mmxsftp.pathinterfacetemp}/${itemdata.FILE_NAME}`, `${mmxsftp.pathinterfacesuccess}/${datayear}/${datamonth}/${dataday}/${dataimpprocess.PROCESS_STORE.trim()}/${itemdata.FILE_NAME}`)
+                                        fs.copyFileSync(`${mmxsftp.pathinterfacetemp}/${itemdata.FILE_NAME}`, `${mmxsftp.pathinterfacesuccess}/${datayears}/${datamonths}/${datadays}/${dataimpprocess.PROCESS_STORE.trim()}/${itemdata.FILE_NAME}`)
                                     } else {
                                         console.log(error);
                                     }
