@@ -1,6 +1,5 @@
 import { connect, NVarChar, close } from 'mssql'; // MS Sql Server client
 import db from '../db'
-import { dbConfig } from '../../../settings';
 import { FormatNumberLength, GetCountUserId } from '../../models/Services/utils';
 
 import { User_ID } from '../../models/digit_number';

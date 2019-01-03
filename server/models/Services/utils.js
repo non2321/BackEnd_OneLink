@@ -1,5 +1,4 @@
 import { connect, close } from 'mssql'; // MS Sql Server client
-import { dbConfig } from '../../../settings';
 import db from '../db'
 export {
     FormatNumberLength,

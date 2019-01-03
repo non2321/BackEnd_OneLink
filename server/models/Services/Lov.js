@@ -1,7 +1,6 @@
 import { connect, close, NVarChar } from 'mssql'; // MS Sql Server client
 
 import db from '../db'
-import { dbConfig } from '../../../settings';
 import { Lov_ID } from '../digit_number';
 import { FormatNumberLength, GetCountLOVId } from '../../models/Services/utils';
 
@@ -418,7 +417,7 @@ async function ServiceCheckEditDuplicate(prmlov) {
         const input_lov_10 = 'input_lov_10'
         const input_active_flage = 'input_active_flage'
 
-        let pool = await connect(dbConfig)
+        const pool = await db.poolPromise
 
         let result = await pool.request()
 

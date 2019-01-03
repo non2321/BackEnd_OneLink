@@ -1,7 +1,6 @@
 import { connect, close, NVarChar, Int, Date } from 'mssql'; // MS Sql Server client
 import db from '../db'
 import uuid from 'uuid/v1'
-import { dbConfig } from '../../../settings'
 
 export {
     ServiceGetImpProcessById,
@@ -218,9 +217,7 @@ async function ServiceInsertImpRow(prm) {
         const input_data_id = 'input_data_id'
         const input_row_status = 'input_row_status'
         const input_row_message = 'input_row_message'
-
-
-        // let pool = await connect(dbConfig)
+      
         const uid = uuid()
         const pool = await db.poolPromise
         let result = await pool.request()

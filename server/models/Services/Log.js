@@ -1,7 +1,6 @@
 import { connect, NVarChar, Char, close } from 'mssql'; // MS Sql Server client
 import db from '../db'
 import uuid from 'uuid/v1';
-import { dbConfig } from '../../../settings';
 import { ObjectToString_UpperName } from './utils';
 
 export {

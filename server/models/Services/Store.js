@@ -1,6 +1,5 @@
 import { connect, close, NVarChar } from 'mssql'; // MS Sql Server client
 import db from '../db'
-import { dbConfig } from '../../../settings';
 
 export {
     // Store Config

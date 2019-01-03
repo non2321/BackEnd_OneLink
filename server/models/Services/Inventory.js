@@ -1,6 +1,5 @@
 import { connect, close, NVarChar, Int, Date } from 'mssql'; // MS Sql Server client
 import db from '../db'
-import { dbConfig } from '../../../settings';
 
 export {
     //Account Code For Inventory

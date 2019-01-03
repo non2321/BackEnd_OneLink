@@ -1,7 +1,6 @@
 import { connect, close, NVarChar, Int } from 'mssql'; // MS Sql Server client
 import db from '../db'
 
-import { dbConfig } from '../../../settings';
 import { GetCountACC_M_ACCOUNT_SALE } from '../../models/Services/utils';
 
 export {
@@ -846,12 +845,11 @@ async function ServiceGetBankInAdjustment(store, dateofstore) {
         const input_dateofstore = 'input_dateofstore'
 
         const pool = await db.poolPromise
-        let result = await pool.request()
+        result = await pool.request()
             // set parameter
             .input(input_store, NVarChar, store.trim())
             .input(input_dateofstore, NVarChar, dateofstore.trim())
-            .query(querysql)
-        // await close()
+            .query(querysql)          
 
     } catch (err) {
     }
