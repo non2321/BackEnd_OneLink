@@ -508,7 +508,7 @@ async function ServiceGetEndingInventoryPeriod(prm) {
     let res = {}
     try {
         let querysql = `SELECT PERIOD_ID  
-                    FROM [PHCDB_DEV].[dbo].[ACC_PERIODS] 
+                    FROM [dbo].[ACC_PERIODS] 
                     WHERE MONTH(PE_DATE) = @input_month AND YEAR(PE_DATE) = @input_year `
 
         const input_month = 'input_month'
