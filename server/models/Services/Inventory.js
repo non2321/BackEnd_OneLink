@@ -1,5 +1,7 @@
-import { connect, close, NVarChar, Int, Date } from 'mssql'; // MS Sql Server client
+import { connect, close, NVarChar, Int, Date, Float } from 'mssql'; // MS Sql Server client
 import db from '../db'
+import { FormatNumberLength, GetCountACC_INV_ITEMS } from '../../models/Services/utils'
+import { INV_ITEM } from '../../models/digit_number'
 
 export {
     //Account Code For Inventory
@@ -45,7 +47,14 @@ export {
     ServiceSearchTempStampInventory,
     ServiceCountStampInventory,
     ServiceAddStampInventory,
-    ServiceEditStampInventory
+    ServiceEditStampInventory,
+
+    //New Inventory Items
+    ServiceGetNewInventoryItems,
+    ServiceGetPopupVendorNewInventoryItems,
+    ServiceCheckDuplicateNewInventoryItems,
+    ServiceInventoryItemClassForNewInventoryItems,
+    ServiceInsertNewInventoryItems
 }
 
 
@@ -1188,6 +1197,262 @@ async function ServiceEditStampInventory(prm) {
         // await close()
     }
     return await res
+}
+
+async function ServiceGetNewInventoryItems() {
+    let res = {}
+    try {
+        let querysql = `SELECT I.INV_ITEM, 
+                                N.STOCK_NUM, 
+                                V.VENDOR_NAME, 
+                                I.INV_ITEM_DESC 
+                        FROM   ACC_INV_ITEMS I 
+                                JOIN ACC_ITEM_STOCK_NUMS N 
+                                ON I.INV_ITEM = N.INV_ITEM 
+                                JOIN ACC_M_VENDORS V 
+                                ON N.VENDOR = V.VENDOR 
+                        WHERE  N.STOCK_ZONE = 'S1' 
+                        ORDER  BY I.RECORD_NUM ASC`
+
+        const pool = await db.poolPromise
+        let result = await pool.request()
+            .query(querysql)
+        res = result
+    } catch (err) {
+    } finally {
+    }
+    return await res
+}
+
+async function ServiceGetPopupVendorNewInventoryItems() {
+    let res = {}
+    try {
+        let querysql = `SELECT V.VENDOR,V.VENDOR_NAME FROM ACC_M_VENDORS V ORDER BY V.VENDOR ASC`
+
+        const pool = await db.poolPromise
+        let result = await pool.request()
+            .query(querysql)
+        res = result
+    } catch (err) {
+    } finally {
+    }
+    return await res
+}
+
+async function ServiceCheckDuplicateNewInventoryItems(prm) {
+    let res = true
+    try {
+        let querysql = `SELECT I.INV_ITEM, 
+                                N.STOCK_NUM, 
+                                V.VENDOR_NAME, 
+                                I.INV_ITEM_DESC 
+                        FROM   ACC_INV_ITEMS I 
+                                JOIN ACC_ITEM_STOCK_NUMS N 
+                                ON I.INV_ITEM = N.INV_ITEM 
+                                JOIN ACC_M_VENDORS V 
+                                ON N.VENDOR = V.VENDOR 
+                        WHERE  N.STOCK_ZONE = 'S1' 
+                        AND N.STOCK_NUM = @input_stock_code
+                        AND N.VENDOR = @input_vendor
+                        ORDER  BY N.STOCK_NUM ASC`
+
+        const input_stock_code = 'input_stock_code'
+        const input_vendor = 'input_vendor'
+
+        const pool = await db.poolPromise
+
+        let result = await pool.request()
+            .input(input_stock_code, NVarChar, prm.stock_code)
+            .input(input_vendor, NVarChar, prm.vendor)
+            .query(querysql)
+
+        if (result !== undefined) {
+            if (result.rowsAffected > 0) res = false
+        }
+
+    } catch (err) {
+    } finally {
+    }
+
+    return await res
+}
+
+async function ServiceInventoryItemClassForNewInventoryItems(prm) {
+    let res = ''
+    try {
+        let querysql = `SELECT INV_ITEM_CLASS AS V_INV_ITEM_CLASS
+                        FROM ACC_M_INV_ITEM_CLASSES C 
+                        WHERE STOCK_CODE = @input_stock_code`
+
+        const input_stock_code = 'input_stock_code'
+
+        const pool = await db.poolPromise
+
+        let result = await pool.request()
+            .input(input_stock_code, NVarChar, prm.stock_code)
+            .query(querysql)
+
+        if (result !== undefined) {
+            if (result.rowsAffected > 0) {
+                res = result.recordset[0]['V_INV_ITEM_CLASS']
+            }
+        }
+
+    } catch (err) {
+    } finally {
+    }
+
+    return await res
+}
+
+async function ServiceInsertNewInventoryItems(prm) {
+    let res
+    try {
+        const record_num = await GetCountACC_INV_ITEMS()
+        let inv_item = FormatNumberLength(record_num, INV_ITEM)
+      
+        if (prm.stock_code && prm.description  && prm.vendor && prm.costperinvoice && prm.unitm2 && prm.scalm2 && prm.costm2 && prm.unitm3 && prm.scalm3 && prm.costm3 && prm.unitm4 && prm.scalm4 && prm.costm4) {
+            const querysql = `INSERT INTO [dbo].[ACC_INV_ITEMS]
+                                        ([INV_ITEM]
+                                        ,[INV_ITEM_DESC]
+                                        ,[INV_ITEM_CLASS]
+                                        ,[POST_TO_GL]
+                                        ,[COUNT_DESC]
+                                        ,[SERVE_PER_COUNT]
+                                        ,[SERVE_DESC]
+                                        ,[RECORD_NUM]
+                                        ,[INV_STAT]
+                                        ,[INV_TYPE]
+                                        ,[BUSNO]
+                                        ,[INV_PRSEQ]
+                                        ,[INV_PBUY]
+                                        ,[FMS_RPRD])
+                                VALUES
+                                        (@input_inv_item
+                                        ,@input_description
+                                        ,@input_itemclass
+                                        ,'N'
+                                        ,@input_unitm4
+                                        ,@input_costm3 / @input_costm4
+                                        ,@input_unitm3
+                                        ,@input_record_num
+                                        ,'A'
+                                        ,'R'
+                                        ,'010'
+                                        ,'001'
+                                        ,'N'
+                                        ,'N');
+                            -------------------------------------------------------------
+                            INSERT INTO [dbo].[ACC_ITEM_STOCK_NUMS]
+                                        ([INV_ITEM]
+                                        ,[VENDOR]
+                                        ,[STOCK_NUM]
+                                        ,[STOCK_ZONE]
+                                        ,[UNITS_DESC]
+                                        ,[COUNT_PER_UNIT]
+                                        ,[COST])
+                                VALUES
+                                        (@input_inv_item
+                                        ,@input_vendor
+                                        ,@input_stock_code
+                                        ,'S1'
+                                        ,@input_unitm2
+                                        ,@input_costm4 / @input_costm2
+                                        ,@input_costm2);
+                            -------------------------------------------------------------
+                            INSERT INTO [dbo].[ACC_M_STOCK_NUMS]
+                                        ([INV_ITEM]
+                                        ,[STOCK_NUM]
+                                        ,[UNITS_DESC])
+                                VALUES
+                                        (@input_inv_item
+                                        ,@input_stock_code
+                                        ,@input_unitm2);
+                            -------------------------------------------------------------
+                            INSERT INTO [dbo].[ACC_ZONE_COSTS]
+                                        ([INV_ITEM]
+                                        ,[STOCK_ZONE]
+                                        ,[COST_PER_COUNT]
+                                        ,[POSTING_INTERVAL]
+                                        ,[THEO_FOOD_COST]
+                                        ,[ITEM_CATEGORY])
+                                VALUES
+                                        (@input_inv_item
+                                        ,'S1'
+                                        ,@input_costm4
+                                        ,@input_postinginterval
+                                        ,'N'
+                                        ,@input_itemclass);
+                            -------------------------------------------------------------
+                            INSERT INTO [dbo].[ACC_UNIT_COST]
+                                        ([PERIOD_ID]
+                                        ,[INV_ITEM]
+                                        ,[UOM]
+                                        ,[UNIT_COST]
+                                        ,[STOCK_ZONE]
+                                        ,[COUNT_PER_UNIT]
+                                        ,[CREATE_DATE]
+                                        ,[CREATE_BY])
+                                VALUES
+                                        ('200'
+                                        ,@input_inv_item
+                                        ,@input_unitm4
+                                        ,@input_costm4
+                                        ,'S1'
+                                        ,@input_costm4 / @input_costm2
+                                        ,@input_create_date
+                                        ,@input_create_by)`            
+
+            const input_stock_code = 'input_stock_code'
+            const input_postinginterval = 'input_postinginterval'
+            const input_description = 'input_description'
+            const input_vendor = 'input_vendor'
+            const input_itemclass = 'input_itemclass'
+
+            const input_inv_item = 'input_inv_item'
+            const input_record_num = 'input_record_num'
+            const input_unitm2 = 'input_unitm2'
+            const input_scalm2 = 'input_scalm2'
+            const input_costm2 = 'input_costm2'
+            const input_unitm3 = 'input_unitm3'
+            const input_scalm3 = 'input_scalm3'
+            const input_costm3 = 'input_costm3'
+            const input_unitm4 = 'input_unitm4'
+            const input_scalm4 = 'input_scalm4'
+            const input_costm4 = 'input_costm4'
+
+            const input_create_date = 'input_create_date'
+            const input_create_by = 'input_create_by'
+
+            const pool = await db.poolPromise
+            let result = await pool.request()
+                .input(input_inv_item, NVarChar, inv_item)
+                .input(input_description, NVarChar, prm.description)
+                .input(input_itemclass, NVarChar, prm.itemclass)
+                .input(input_unitm4, NVarChar, prm.unitm4)
+                .input(input_costm3, Float, parseFloat(prm.costm3))
+                .input(input_costm4, Float, parseFloat(prm.costm4))
+                .input(input_unitm3, NVarChar, prm.unitm3)
+                .input(input_record_num, NVarChar, record_num.toString())
+                .input(input_vendor, NVarChar, prm.vendor)
+                .input(input_stock_code, NVarChar, prm.stock_code)
+                .input(input_unitm2, NVarChar, prm.unitm2)
+                .input(input_costm2, Float, parseFloat(prm.costm2))
+                .input(input_postinginterval, NVarChar, (prm.postinginterval) ? prm.postinginterval : '')
+                .input(input_create_date, NVarChar, prm.create_date)
+                .input(input_create_by, NVarChar, prm.create_by)
+                .query(querysql)
+                
+            if (result !== undefined) { 
+                if (result.rowsAffected[0] > 0) res = true
+            }
+        }
+    } catch (err) {        
+    } finally {
+    }
+
+    return await res
+
 }
 
 

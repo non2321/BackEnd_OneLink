@@ -43,6 +43,7 @@ import { GetDataTableTermClosing, AddTermClosing, EditTermClosing } from './cont
 import { GetDropDownPeriod } from './controllers/sdc/Inventory/ImportToJDE';
 import { GetDropDownInvenCategory, GetDataTableUnitCost, EditUnitCost, ImportUnitCost, GenInveotory, GetValidationInvItem } from './controllers/sdc/Inventory/UnitCost';
 import { AddStampInventory } from './controllers/sdc/Inventory/StampInventory';
+import { GetDataTableNewInventoryItems, GetPopupVendorNewInventoryItems, AddNewInventoryItems } from './controllers/sdc/Inventory/NewInventoryItems';
 
 //Report
 //--SDC
@@ -1076,6 +1077,37 @@ app.get('/api/transferinventory/:stamp/:store/:datefrom/:dateto', async (req, re
   console.log('get_endinginventory')
   await GetDataTableTransferInventory(req, res, req.body)
 })
+
+//Get New Inventory Items
+app.get('/api/newinventoryitems', async (req, res) => {
+  console.log('get_newinventoryitems')
+  await GetDataTableNewInventoryItems(req, res, req.body);
+})
+
+//Get New Inventory Items /Popup Vendor
+app.get('/api/newinventoryitems/popupvendor', async (req, res) => {
+  console.log('newinventoryitems/popupvendor')
+  await GetPopupVendorNewInventoryItems(req, res, req.body);
+})
+
+//Add New Inventory Items
+app.post('/api/newinventoryitems', verifyToken, async (req, res) => {
+  console.log('add_newinventoryitems')
+  await verify(req.token, secretkey, async (err, authData) => {
+    if (err) {
+      const data = {
+        status: StatusUnauthorized,
+        Code: CodeW0002,
+      }
+      await Expired(req, res, data)
+
+    } else {
+      const user = authData.jwtdata
+      await AddNewInventoryItems(req, res, req.body, user);
+    }
+  })
+})
+
 
 app.get('/api/tableautoken', async (req, res) => {
   const form = new FormData();

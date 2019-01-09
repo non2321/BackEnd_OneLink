@@ -5,6 +5,7 @@ export {
     GetCountUserId,
     GetCountLOVId,
     GetCountACC_M_ACCOUNT_SALE,
+    GetCountACC_INV_ITEMS,
     ObjectToString_UpperName,
 
     GetCountACC_TERM_CLOSING
@@ -66,6 +67,27 @@ async function GetCountACC_M_ACCOUNT_SALE() {
     let count = 0;
     try {
         const querysql = `SELECT ISNULL(MAX(FORMULARID),0) + 1 ID FROM ACC_M_ACCOUNT_SALE`
+        const pool = await db.poolPromise
+        let result = await pool.request()
+            .query(querysql)
+        
+        if (result.rowsAffected > 0) {
+            count = result.recordset[0].ID
+        } else {
+            count = 0;
+        }
+    } catch (err) {
+        //400 Bad Request
+    }
+
+    return count;
+}
+
+//Count ACC_INV_ITEMS
+async function GetCountACC_INV_ITEMS() {
+    let count = 0;
+    try {
+        const querysql = `SELECT  ISNULL((MAX(CONVERT(INT, CASE WHEN ISNUMERIC(INV_ITEM) = 1 THEN INV_ITEM ELSE 0 END))),0) + 1 ID FROM ACC_INV_ITEMS`
         const pool = await db.poolPromise
         let result = await pool.request()
             .query(querysql)
